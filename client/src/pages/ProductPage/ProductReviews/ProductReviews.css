@@ -1,0 +1,297 @@
+/* =========================================
+   1. MODULE VARIABLES (Scoped)
+   ========================================= */
+.product-reviews {
+  /* Inherited from Global/Header theme or Fallback */
+  --theme-primary: var(--header-bg, rgb(0, 191, 175));
+  --theme-primary-hover: var(--header-text-hover, #00998c);
+  
+  /* Local Module Colors */
+  --text-main: #1a1a1a;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --bg-card: #ffffff;
+  --bg-input: #f8f9fa;
+  --border-light: rgba(0, 0, 0, 0.08);
+  --border-focus: rgba(0, 191, 175, 0.5);
+  
+  /* Spacing & Radius */
+  --gap-md: 1.5rem;   /* ~24px */
+  --gap-sm: 0.75rem;  /* ~12px */
+  --radius-card: 12px;
+  --radius-input: 8px;
+  
+  color: var(--text-main);
+  margin-top: 2rem;
+  max-width: 800px; /* Оптимальна ширина для читання */
+  width: 100%;
+}
+
+/* =========================================
+   2. HEADER & STATS
+   ========================================= */
+/* Wrapper for: <div style={{ display: "flex"... }}> */
+.product-reviews__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--gap-sm);
+  margin-bottom: var(--gap-md);
+  padding-bottom: var(--gap-sm);
+  border-bottom: 2px solid var(--border-light);
+}
+
+.product-reviews__title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-main);
+}
+
+.product-reviews__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+}
+
+.product-reviews__count {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* =========================================
+   3. ALERTS & STATES
+   ========================================= */
+.product-reviews__alert {
+  padding: 1rem;
+  border-radius: var(--radius-input);
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.product-reviews__alert--error {
+  background-color: rgba(220, 20, 60, 0.1);
+  color: crimson;
+  border: 1px solid rgba(220, 20, 60, 0.2);
+}
+
+.product-reviews__empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* =========================================
+   4. REVIEW CARD (LIST ITEM)
+   ========================================= */
+/* Replace: <div key={r._id} style={{ padding... }}> */
+.review-card {
+  background-color: var(--bg-card);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 191, 175, 0.3);
+}
+
+.review-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.review-card__user {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-main);
+}
+
+.review-card__title {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--theme-primary);
+}
+
+.review-card__text {
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.review-card__date {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* =========================================
+   5. PAGINATION
+   ========================================= */
+.product-reviews__pagination {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 2rem;
+}
+
+.pagination-btn {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  padding: 8px 16px;
+  border-radius: var(--radius-input);
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--bg-input);
+}
+
+/* =========================================
+   6. SUBMIT FORM
+   ========================================= */
+.product-reviews__form-section {
+  margin-top: 3rem;
+  background: #fdfdfd;
+  padding: 2rem;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-light);
+}
+
+.form-title {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  color: var(--text-main);
+}
+
+/* Replace: <form ... style={{ display: "grid"... }}> */
+.review-form {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 100%;
+}
+
+.review-form__label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Input, Select, Textarea Shared Styles */
+.review-form__select,
+.review-form__input,
+.review-form__textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: var(--radius-input);
+  background-color: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box; /* Важливо для grid */
+}
+
+.review-form__select:focus,
+.review-form__input:focus,
+.review-form__textarea:focus {
+  outline: none;
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px var(--border-focus);
+}
+
+.review-form__textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Submit Button */
+.review-form__submit {
+  justify-self: start;
+  background-color: var(--theme-primary);
+  color: #fff;
+  border: none;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: var(--radius-input);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.review-form__submit:hover {
+  background-color: var(--theme-primary-hover);
+}
+
+.review-form__submit:active {
+  transform: scale(0.98);
+}
+.stars-rating {
+  display: inline-flex;
+  gap: 2px;
+  line-height: 1;
+}
+
+.star-filled {
+  color: #0f172a; /* або твій акцент */
+}
+
+.star-empty {
+  color: rgba(15, 23, 42, 0.22); /* світло-сірі */
+}
+
+/* =========================================
+   7. MOBILE ADAPTATION
+   ========================================= */
+@media (max-width: 600px) {
+  .product-reviews {
+    padding: 0 16px;
+    margin-top: 1.5rem;
+  }
+
+  .product-reviews__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .review-card {
+    padding: 1rem;
+  }
+  
+  .review-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .review-form__submit {
+    width: 100%; /* Кнопка на всю ширину на мобільному */
+    justify-self: stretch;
+  }
+}

@@ -1,0 +1,79 @@
+
+/* =========================================
+   4. DROPDOWNS (CATALOG & USER)
+   ========================================= */
+.dropdown-menu,
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 220px;
+  background: #ffffff;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-deep);
+  padding: 10px 0;
+  list-style: none;
+  
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(15px);
+  transition: all 0.3s var(--ease-premium);
+  z-index: 1100;
+  margin-top: 10px;
+}
+
+/* Arrows */
+.dropdown-menu::before,
+.user-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+.dropdown-menu::before { left: 20px; }
+.user-dropdown::before { right: 20px; }
+
+/* Show State */
+.catalog-dropdown:hover .dropdown-menu,
+.user-menu:hover .user-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Items */
+.dropdown-item a,
+.user-dropdown li a,
+.user-dropdown li button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 20px;
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-sizing: border-box;
+  text-transform: none; /* В меню текст звичайний */
+}
+
+.dropdown-item a:hover,
+.user-dropdown li a:hover,
+.user-dropdown li button:hover {
+  background-color: #f0fdfc;
+  color: var(--header-text-hover);
+  padding-left: 25px;
+}
+
+.user-dropdown svg {
+  margin-right: 10px;
+  color: var(--header-text-hover);
+}

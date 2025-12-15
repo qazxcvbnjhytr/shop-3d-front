@@ -1,0 +1,340 @@
+/* =========================================
+   Contacts.css: Фінальна версія стилів (Світла тема + Динамічні Градієнти)
+   ========================================= */
+
+/* --- Базові налаштування --- */
+body {
+    background-color: #f7f9fc; /* Ледь сірий фон тіла */
+    color: #1a2b2b; /* Основний темний текст */
+    line-height: 1.6;
+}
+
+/* --- Контейнер сторінки --- */
+.contacts-page-container {
+    padding: 80px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden; 
+}
+
+/* --- Динамічний Паралакс-Еліпс (Креативний фон) --- */
+.parallax-bg {
+    position: absolute;
+    top: -100px;
+    left: -50%;
+    width: 200%;
+    height: 400px;
+    background: linear-gradient(135deg, #00bfae, #a3e635); 
+    opacity: 0.12;
+    border-radius: 50%;
+    z-index: 0;
+    transition: transform 0.1s linear;
+    filter: blur(50px); /* М'яке розмиття */
+    pointer-events: none;
+}
+
+/* --- Загальні стилі секцій --- */
+section {
+    position: relative;
+    z-index: 1; 
+    margin-bottom: 60px;
+}
+
+/* --- Анімації (Fade In) --- */
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(20px);}
+    100% { opacity: 1; transform: translateY(0);}
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0;}
+    100% { opacity: 1;}
+}
+
+/* --- 1. Контактна інформація (Hero & Cards) --- */
+.contact-info h1 {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 900;
+    /* Градієнтний текст */
+    background: linear-gradient(90deg, #00bfae, #a3e635);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 40px;
+    animation: fadeInUp 1s ease forwards;
+}
+
+.info-grid {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.info-card {
+    background: #fff;
+    padding: 30px 20px;
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(0,191,174,0.15);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 280px; 
+    border: 1px solid #f0f0f0; 
+}
+
+.info-card:hover {
+    transform: translateY(-8px); 
+    box-shadow: 0 20px 40px rgba(0,191,174,0.25); 
+}
+
+.info-icon {
+    font-size: 2.5rem;
+    color: #00bfae;
+    margin-bottom: 12px;
+}
+
+/* КРЕАТИВ 1: Анімація Пульсу для Іконок */
+@keyframes iconPulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.info-card:hover .info-icon {
+    animation: iconPulse 1.5s infinite ease-in-out;
+}
+
+.info-card h3 {
+    color: #1a2b2b;
+    font-size: 1.25rem;
+    margin-top: 0;
+}
+.info-card p {
+    color: #4b6b6b;
+    font-size: 1rem;
+}
+
+
+/* --- 2. Форма зворотного зв'язку --- */
+.contact-form-section {
+    margin: 80px 0;
+    text-align: center;
+    
+}
+
+.contact-form-section h2 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 40px;
+        background: linear-gradient(90deg, #00bfae, #a3e635);
+    
+}
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 550px; 
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05); 
+    
+    /* КРЕАТИВ 2: База для Голографічної Обводки */
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+/* КРЕАТИВ 2: Голографічний/Неоновий Ефект Обводки */
+.contact-form::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    background: linear-gradient(
+        45deg,
+        #a3e635, 
+        #00bfae, 
+        #ff5722
+    );
+    z-index: -1;
+    border-radius: 25px;
+    opacity: 0;
+    filter: blur(20px); 
+    transition: opacity 0.5s ease-in-out;
+}
+
+.contact-form:hover::before {
+    opacity: 0.3; /* Світиться при наведенні */
+}
+/* Кінець Креативу 2 */
+
+.contact-form input,
+.contact-form textarea {
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid #e0f7f4; 
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    background-color: #fcfcfc;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    border-color: #00bfae;
+    box-shadow: 0 0 15px rgba(0, 191, 174, 0.4); /* Додана тінь фокусу */
+}
+
+.contact-form textarea {
+    resize: vertical;
+    min-height: 140px;
+}
+
+.contact-form button {
+    background: linear-gradient(90deg, #00bfae, #a3e635);
+    color: #fff;
+    padding: 16px 0;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.contact-form button:hover {
+    transform: scale(1.01); 
+    box-shadow: 0 12px 25px rgba(0,191,174,0.35);
+}
+
+.success-msg {
+    margin-top: 12px;
+    color: #28a745;
+    font-weight: 600;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+/* --- 3. FAQ (Часті питання) --- */
+.faq-section {
+    padding-bottom: 80px;
+}
+
+.faq-section h2 {
+    text-align: center;
+    font-size: 2.4rem;
+    font-weight: 800;
+    margin-bottom: 40px;
+    /* Градієнтний текст */
+    background: linear-gradient(90deg, #00bfae, #a3e635);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.faq-grid {
+    display: grid;
+    gap: 15px; 
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.faq-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,191,174,0.1);
+    padding: 15px 25px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s;
+    border: 1px solid transparent; 
+}
+
+.faq-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,191,174,0.15);
+}
+
+/* КРЕАТИВ 3: Світіння Активного FAQ */
+.faq-card.active {
+    border-color: #00bfae;
+    box-shadow: 
+        0 0 10px rgba(0, 191, 174, 0.1), 
+        0 0 30px rgba(163, 230, 53, 0.2); /* Акцентне світіння */
+}
+
+.faq-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #1a2b2b;
+}
+
+.faq-icon {
+    font-size: 1.1rem;
+    color: #00bfae;
+    /* КРЕАТИВ 3: Пружний перехід */
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.faq-card.active .faq-icon {
+    transform: rotate(45deg); 
+    color: #a3e635; /* Зміна кольору на акцентний */
+}
+
+/* Структура для плавного розкриття в JSX */
+.faq-answer-wrapper {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, margin-top 0.4s ease-in-out;
+}
+
+.faq-card.active .faq-answer-wrapper {
+    max-height: 500px;
+    margin-top: 14px;
+}
+
+.faq-answer {
+    color: #4b6b6b;
+    line-height: 1.7;
+    padding-bottom: 10px;
+    
+    /* КРЕАТИВ 3: Анімація "проявлення" тексту */
+    transform: translateY(10px);
+    opacity: 0;
+    transition: transform 0.4s ease-out 0.1s, opacity 0.4s ease-out 0.1s;
+}
+
+.faq-card.active .faq-answer {
+    transform: translateY(0);
+    opacity: 1;
+}
+/* Кінець Креативу 3 */
+
+
+/* --- Адаптивність --- */
+@media (max-width: 992px) {
+    .info-card {
+        width: 45%; 
+    }
+}
+
+@media (max-width: 768px) {
+    .contacts-page-container {
+        padding: 50px 15px;
+    }
+    .contact-info h1 {
+        font-size: 2.4rem;
+    }
+    .faq-section h2, .contact-form-section h2 {
+        font-size: 2rem;
+    }
+    .info-card {
+        width: 100%; 
+    }
+}

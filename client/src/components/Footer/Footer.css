@@ -1,0 +1,273 @@
+/* Імпорт шрифтів (якщо ще не підключені) */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap');
+
+.footer {
+    /* Глибокий темний колір для преміального вигляду */
+    background: #1a2b2b; 
+    /* Легкий градієнт для глибини */
+    background: linear-gradient(to bottom, #1a2b2b, #111a1a);
+    color: #e0e0e0; /* Не чисто білий, а м'який світло-сірий для комфорту очей */
+    padding-top: 80px;
+    font-family: 'Montserrat', sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Декоративна лінія зверху (ваш фірмовий градієнт) */
+.footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #00bfae, #a3e635);
+}
+
+/* Сітка */
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr; 
+    gap: 60px; /* Більше повітря між колонками */
+}
+
+/* Заголовки колонок */
+.footer-col h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #fff;
+    position: relative;
+    display: inline-block;
+}
+
+/* Маленька риска під заголовком */
+.footer-col h3::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    width: 40px;
+    height: 2px;
+    background-color: #00bfae; /* Акцентний колір */
+    transition: width 0.3s ease;
+}
+
+.footer-col:hover h3::after {
+    width: 100%; /* Анімація лінії при наведенні на колонку */
+    background: linear-gradient(90deg, #00bfae, #a3e635);
+}
+
+/* --- КОЛОНКА 1: Бренд --- */
+.footer-logo-wrapper {
+    margin-bottom: 20px;
+    /* Робимо логотип світлим для темного фону */
+    /* Якщо ваш логотип використовує кольори, спробуйте прибрати цей фільтр, 
+       або налаштуйте його, щоб зберегти золоті/акцентні кольори */
+    filter: brightness(0) invert(1) opacity(0.9);
+    transition: opacity 0.3s ease;
+}
+
+.footer-logo-wrapper:hover {
+    opacity: 1;
+}
+
+.footer-slogan {
+    font-size: 0.95rem;
+    color: #a0a0a0;
+    margin-bottom: 30px;
+    font-style: italic;
+    line-height: 1.6;
+    max-width: 300px;
+}
+
+/* Соцмережі */
+.footer-social {
+    display: flex;
+    gap: 12px;
+}
+
+.footer-social a {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px; /* Трохи квадратніші, сучасніші кути */
+    background: rgba(255, 255, 255, 0.05); /* Ефект скла */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.1rem;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-social a:hover {
+    background: #00bfae;
+    border-color: #00bfae;
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 10px 20px rgba(0, 191, 174, 0.3);
+}
+
+/* --- КОЛОНКА 2: Навігація --- */
+.footer-nav ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px 30px; /* Вертикальний / Горизонтальний відступ */
+}
+
+.footer-nav a {
+    color: #b0b0b0;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+    position: relative;
+}
+
+/* Ефект зсуву та підсвітки при наведенні */
+.footer-nav a:hover {
+    color: #fff;
+    transform: translateX(5px);
+}
+
+.footer-nav a::before {
+    content: '›';
+    position: absolute;
+    left: -15px;
+    opacity: 0;
+    color: #00bfae;
+    transition: all 0.3s ease;
+    transform: translateX(-5px);
+}
+
+.footer-nav a:hover::before {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* --- КОЛОНКА 3: Контакти --- */
+.footer-contacts {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: flex-start; /* Вирівнювання по верху, якщо текст довгий */
+    gap: 15px;
+    font-size: 0.95rem;
+    color: #b0b0b0;
+    line-height: 1.5;
+}
+
+.contact-item .icon {
+    font-size: 1.2rem;
+    color: #00bfae;
+    margin-top: 2px; /* Вирівнювання іконки */
+    filter: drop-shadow(0 0 5px rgba(0, 191, 174, 0.4)); /* Легке світіння іконки */
+}
+
+.contact-item a {
+    color: #b0b0b0;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    position: relative;
+}
+
+.contact-item a:hover {
+    color: #fff;
+}
+
+/* Підкреслення для посилань контактів */
+.contact-item a::after {
+    content: '';
+    position: absolute;
+    width: 0%;
+    height: 1px;
+    bottom: -2px;
+    left: 0;
+    background-color: #a3e635;
+    transition: width 0.3s ease;
+}
+
+.contact-item a:hover::after {
+    width: 100%;
+}
+
+/* --- НИЖНЯ ЧАСТИНА --- */
+.footer-bottom {
+    background-color: #111a1a; /* Найтемніший відтінок */
+    padding: 25px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.footer-bottom-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #666;
+    display: flex;
+    justify-content: space-between; /* Розводимо копірайт і "З любов'ю" по боках */
+    align-items: center;
+}
+
+.footer-bottom span {
+    opacity: 0.7;
+}
+
+/* === АДАПТИВНІСТЬ === */
+@media (max-width: 900px) {
+    .footer-container {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        text-align: center;
+    }
+
+    .footer-col h3::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .footer-social {
+        justify-content: center;
+    }
+
+    .footer-nav ul {
+        /* На мобільному навігація в одну колонку виглядає чистіше */
+        grid-template-columns: 1fr; 
+        text-align: center;
+    }
+
+    .footer-nav a:hover {
+        transform: translateX(0); /* Вимикаємо зсув на мобільному */
+    }
+    
+    .contact-item {
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .footer-logo-wrapper {
+        display: flex;
+        justify-content: center;
+    }
+    
+    .footer-slogan {
+        margin: 0 auto 30px;
+    }
+
+    .footer-bottom-content {
+        flex-direction: column;
+        gap: 10px;
+    }
+}

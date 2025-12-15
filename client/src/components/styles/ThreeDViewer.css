@@ -1,0 +1,163 @@
+/* === 3D VIEWER / PREMIUM CYBER-GLASS STYLE === */
+
+.viewer-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 880px;
+  height: 500px;
+  margin: 60px auto;
+  border-radius: 32px;
+
+  /* PREMIUM GLASS */
+  background: rgba(20, 24, 32, 0.48);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* SHADOW + FLOATING */
+  box-shadow:
+    0 25px 45px rgba(0, 0, 0, 0.3),
+    0 0 80px rgba(0, 191, 174, 0.12),
+    inset 0 0 20px rgba(255, 255, 255, 0.04);
+
+  overflow: hidden;
+  transition: all 0.45s cubic-bezier(.23,1,.32,1);
+}
+
+.viewer-wrapper:hover {
+  transform: translateY(-6px) scale(1.015);
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.36),
+    0 0 120px rgba(163,230,53,0.22),
+    inset 0 0 26px rgba(255, 255, 255, 0.08);
+  border-color: rgba(163, 230, 53, 0.32);
+}
+
+/* === CANVAS === */
+.viewer-wrapper canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+ 
+}
+
+/* === NEXT MODEL BUTTON (NEON CIRCLE) === */
+.next-model-btn {
+  position: absolute;
+  bottom: 30px;
+  right: 32px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(0,191,174,0.42);
+
+  color: #a3e635;
+  font-size: 2rem;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow:
+    0 0 14px rgba(163,230,53,0.35),
+    inset 0 0 12px rgba(0,191,174,0.35);
+
+  transition: all 0.35s cubic-bezier(.23,1,.32,1);
+  z-index: 10;
+}
+
+/* Hover effect = floating neon pulse */
+.next-model-btn:hover {
+  transform: scale(1.17) rotate(12deg);
+  color: #fff;
+
+  border-color: #a3e635;
+  background: rgba(163,230,53,0.25);
+
+  box-shadow:
+    0 0 28px rgba(163,230,53,0.55),
+    inset 0 0 16px rgba(0, 191, 174, 0.6);
+}
+
+/* === LOADER (PREMIUM CARD) === */
+.loader-text {
+  color: #a3e635;
+  font-family: "Cormorant SC", serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+
+  background: rgba(0,0,0,0.6);
+  padding: 18px 36px;
+  border-radius: 18px;
+
+  border: 1.5px solid rgba(163,230,53,0.4);
+
+  box-shadow:
+    0 0 20px rgba(163,230,53,0.3),
+    inset 0 0 12px rgba(0,191,174,0.25);
+
+  letter-spacing: 1.2px;
+}
+
+/* === DECOR LIGHTS === */
+.viewer-wrapper::before,
+.viewer-wrapper::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Left glowing orb */
+.viewer-wrapper::before {
+  top: -120px;
+  left: -100px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(163,230,53,0.25), transparent 70%);
+  filter: blur(16px);
+}
+
+/* Right turquoise glow */
+.viewer-wrapper::after {
+  bottom: -100px;
+  right: -80px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(0,191,174,0.22), transparent 75%);
+  filter: blur(18px);
+}
+
+/* === ADAPTIVE === */
+@media (max-width: 900px) {
+  .viewer-wrapper {
+    height: 360px;
+  }
+
+  .next-model-btn {
+    right: 18px;
+    bottom: 18px;
+    width: 48px;
+    height: 48px;
+    font-size: 1.45rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .viewer-wrapper {
+    height: 260px;
+    border-radius: 20px;
+  }
+  
+  .next-model-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+}

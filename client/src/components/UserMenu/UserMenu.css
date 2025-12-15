@@ -1,0 +1,201 @@
+/* =========================================
+   USER CONTROLS (ФОН: ЧИСТИЙ БІЛИЙ / ТЕКСТ: ЧОРНИЙ)
+   ========================================= */
+
+/* Контейнер */
+.user-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Видимість */
+.user-menu,
+.user-trigger {
+    display: inline-flex !important;
+}
+
+/* Кнопка зміни мови */
+.lang-button {
+    width: 42px;
+    height: 42px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 12px;
+    border-radius: 14px;
+
+    /* ✅ ФОН: ЧИСТИЙ БІЛИЙ */
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: #ffffff; 
+
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    /* ✅ ТЕКСТ: ЧОРНИЙ */
+    color: #0f172a; 
+
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.lang-button:hover {
+    /* Легкий сірий фон при hover */
+    background: #f8f8f8;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08); 
+}
+
+.lang-button:active {
+    transform: scale(0.98);
+}
+
+.user-menu {
+    position: relative;
+}
+
+/* Тригер (іконка акаунта) */
+.user-trigger {
+    width: 42px;
+    height: 42px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 14px;
+    /* ✅ ФОН: ЧИСТИЙ БІЛИЙ */
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: #ffffff; 
+
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+    padding: 0;
+}
+
+.user-trigger:hover {
+    /* Легкий сірий фон при hover */
+    background: #f8f8f8;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+
+.user-trigger:active {
+    transform: scale(0.98);
+}
+
+.user-icon {
+    font-size: 20px;
+    line-height: 1;
+    /* ✅ СИМВОЛ: ЧОРНИЙ */
+    color: #0f172a; 
+}
+
+/* =========================================
+   DROPDOWN
+   ========================================= */
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 270px;
+
+    border-radius: 18px;
+    border: 1px solid rgba(0, 0, 0, 0.18); 
+    background: #ffffff; /* ЧИСТИЙ БІЛИЙ ФОН ДРОПДАУНУ */
+
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.20); 
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+
+    transition: opacity 0.14s ease, transform 0.14s ease;
+}
+
+/* open */
+.user-menu.open .user-dropdown {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.user-dd-head {
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.user-dd-title {
+    font-weight: 800;
+    font-size: 14px;
+    color: #0f172a; /* Темний текст */
+}
+
+.user-dd-sub {
+    margin-top: 4px;
+    font-size: 12px;
+    color: rgba(15, 23, 42, 0.75);
+}
+
+.user-dd-list {
+    padding: 8px;
+    display: grid;
+    gap: 6px;
+}
+
+.user-dd-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+   
+    padding: 10px 12px;
+
+    border-radius: 12px;
+    text-decoration: none;
+    
+    /* ✅ ФОН ЕЛЕМЕНТА: ЧИСТИЙ БІЛИЙ */
+    border: 1px solid rgba(0, 0, 0, 0.08); 
+  background: linear-gradient(135deg, #c3ffe8, #00bfaf);
+
+    color: #0f172a; /* Темний текст */
+    font-weight: 700;
+    font-size: 13px;
+
+    cursor: pointer;
+    transition: background 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
+}
+
+.user-dd-item:hover {
+    /* Яскравий сірий фон при hover */
+  background: linear-gradient(135deg, #259268, #00bfaf);
+
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+.user-dd-item:active {
+    transform: scale(0.99);
+}
+
+.user-dd-divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.15);
+    margin: 4px 2px;
+}
+
+.user-dd-item.danger {
+    color: #b91c1c; /* Червоний колір залишаємо */
+}
+
+/* =========================================
+   ADAPTIVE
+   ========================================= */
+
+@media (max-width: 720px) {
+    .user-dropdown {
+        width: 260px;
+    }
+}

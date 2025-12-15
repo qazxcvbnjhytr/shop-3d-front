@@ -1,0 +1,299 @@
+/* =========================
+   HEADER TOP (HeaderTop)
+   Layout: Logo | Search | Controls
+   Mobile: Row1 (Logo + Controls), Row2 (Search)
+   ========================= */
+
+.header-top {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  /* desktop */
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+
+  align-items: center;
+  padding: 12px 18px;
+
+  background: linear-gradient(135deg, #c3ffe8, #00bfaf);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* LEFT */
+.header-top-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* CENTER: search */
+.header-top-center {
+  display: flex; /* ✅ було display: right; (НЕВІРНО) */
+  align-items: center;
+  justify-content: center;
+  min-width: 0; /* щоб search не ламав grid */
+}
+
+/* RIGHT: controls */
+.header-top-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+
+  flex-wrap: nowrap; /* ✅ щоб іконки не переносило і не “випадали” */
+  min-width: max-content;
+}
+
+/* =========================
+   PHONE (desktop only)
+   ========================= */
+
+.header-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  text-decoration: none;
+
+  padding: 8px 10px;
+  border-radius: 12px;
+
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.8);
+
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.header-phone:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.header-phone:active {
+  transform: scale(0.98);
+}
+
+/* =========================
+   ICONS (wishlist/cart/phone/user/lang)
+   ========================= */
+
+.header-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  border-radius: 14px;
+  text-decoration: none;
+  font-size: 18px;
+  color: #0f172a;
+
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+
+  transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+/* ... десь у вашому HeaderTop.css */
+
+.header-icon {
+    position: relative; /* ВАЖЛИВО: для позиціювання бейджа */
+    /* ... інші стилі header-icon ... */
+}
+
+.header-icon__badge {
+    position: absolute;
+    top: -4px; /* Зсув вгору */
+    right: -4px; /* Зсув вправо */
+    
+    min-width: 18px; /* Мінімальна ширина для 1 або 2 цифр */
+    height: 18px; 
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+
+    color: #fff;
+    background: #ef4444; /* Червоний */
+    border-radius: 999px; /* Ідеальне коло */
+    
+    border: 2px solid rgba(255, 255, 255, 0.95);
+    
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* На мобільному */
+@media (max-width: 720px) {
+    .header-icon__badge {
+        top: -2px;
+        right: -2px;
+        min-width: 17px;
+        height: 17px;
+        font-size: 10px;
+    }
+}
+.header-icon:hover {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+}
+
+.header-icon:active {
+  transform: scale(0.98);
+}
+
+/* SVG inside icons */
+.header-icon__svg {
+  display: block;
+  line-height: 1;
+  font-size: 18px;
+}
+
+/* Badge (optional) */
+.header-icon .badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+
+  color: #fff;
+  background: #ef4444;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+}
+
+/* =========================
+   WISHLIST WRAP (hover-safe)
+   ========================= */
+
+.header-like-wrap {
+  position: relative; /* щоб dropdown позиціонувався від іконки */
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Hover-місток між іконкою та dropdown */
+@media (hover: hover) and (pointer: fine) {
+  .header-like-wrap::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 380px; /* як у dropdown */
+    height: 14px; /* запас */
+    background: transparent;
+  }
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 1024px) {
+  .header-top {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  /* ховаємо телефон на моб/планшеті */
+  .header-phone {
+    display: none;
+  }
+
+  /* якщо твій search має клас .header-search */
+  .header-search {
+    width: 100%;
+    border-radius: 12px;
+  }
+}
+
+/* ✅ Мобільна сітка як на твоєму скріні:
+   1 рядок: logo (ліва) + іконки (права)
+   2 рядок: search на всю ширину
+*/
+@media (max-width: 720px) {
+  .header-top {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "left right"
+      "center center";
+    gap: 10px;
+  }
+
+  .header-top-left {
+    grid-area: left;
+  }
+
+  .header-top-right {
+    grid-area: right;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .header-top-center {
+    grid-area: center;
+    justify-content: stretch;
+  }
+
+  /* трохи зменшимо іконки, щоб усе вміщалось */
+  .header-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 12px;
+  }
+
+  .header-icon__svg {
+    font-size: 17px;
+  }
+
+  /* якщо кнопка в search займає багато місця — хай буде на всю ширину */
+  .header-search {
+    grid-template-columns: 1fr;
+  }
+
+  .header-search button {
+    width: 100%;
+  }
+}
+
+/* дуже вузькі екрани */
+@media (max-width: 380px) {
+  .header-top-right {
+    gap: 6px;
+  }
+
+  .header-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+  }
+
+  .header-icon__svg {
+    font-size: 16px;
+  }
+}
