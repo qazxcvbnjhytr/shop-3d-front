@@ -1,6 +1,0 @@
-// C:/Users/Lenovo/shop-3d/client/src/admin/AdminDashboard.jsx
-// ...
-import OrdersAdmin from "./orders/OrdersAdmin.jsx";
-// 7 | import UsersAdmin from "./users/UsersAdmin.jsx";  <-- ЦЕЙ РЯДОК
-import SalesReport from "./reports/SalesReport.jsx";
-// ...

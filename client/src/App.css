@@ -9,9 +9,7 @@
 /* 2) Variables: Deeper, richer colors */
 :root {
   /* Основной фон: Глубокий графит с оттенком морской волны */
-  --bg-deep: #0f172a;
-  --bg-accent-1: #134e4a; /* Dark Teal */
-  --bg-accent-2: #334155; /* Slate */
+  --bg-deep:rgb(0, 191, 175);
   
   /* Текст: Не чисто белый, а "молочный" для мягкости */
   --text-main: #f1f5f9;

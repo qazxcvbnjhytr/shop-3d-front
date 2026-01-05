@@ -1,23 +1,35 @@
-import React, { useContext, useMemo } from "react";
-import { CurrencyContext } from "../context/CurrencyContext.jsx";
-import { applyDiscount, convertFromUAH, formatMoney } from "../utils/money.js";
+import React from "react";
+import "./Price.css";
 
-export default function Price({ priceUAH, discountPercent = 0 }) {
-  const { currency, rates, loadingRates } = useContext(CurrencyContext);
+export default function Price({
+  value,
+  oldValue,
+  suffix = "грн",
+  className = "",
+}) {
+  const v = Number(value);
+  const ov = Number(oldValue);
 
-  const { converted } = useMemo(() => {
-    const baseValueUAH = applyDiscount(priceUAH, discountPercent);
-    const converted = convertFromUAH(baseValueUAH, currency, rates);
-    return { baseValueUAH, converted };
-  }, [priceUAH, discountPercent, currency, rates]);
+  const ok = Number.isFinite(v) && v > 0;
+  const hasOld = Number.isFinite(ov) && ov > v;
 
-  if (loadingRates && currency !== "UAH") {
-    return <span>…</span>;
+  if (!ok) {
+    return <span className={`price price--empty ${className}`}>—</span>;
   }
 
   return (
-    <span>
-      {formatMoney(converted, currency)}
+    <span className={`price ${className}`}>
+      {hasOld && (
+        <span className="price__old">
+          <span className="price__value">{Math.round(ov)}</span>
+          <span className="price__suffix">{suffix}</span>
+        </span>
+      )}
+
+      <span className={`price__current ${hasOld ? "price__current--sale" : ""}`}>
+        <span className="price__value">{Math.round(v)}</span>
+        <span className="price__suffix">{suffix}</span>
+      </span>
     </span>
   );
 }

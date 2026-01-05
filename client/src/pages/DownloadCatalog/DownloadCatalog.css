@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Montserrat:wght@300;400;700&display=swap');
+
+.catalog-page {
+  width: 210mm;
+  height: 296.8mm;
+  padding: 20mm;
+  box-sizing: border-box;
+  background: #fff;
+  font-family: 'Montserrat', sans-serif;
+  position: relative;
+  page-break-after: always; /* КОЖНА СТОРІНКА ОКРЕМО */
+}
+
+.catalog-inner { height: 100%; display: flex; flex-direction: column; }
+
+/* Верстка товару */
+.product-meta { display: flex; justify-content: space-between; font-size: 8pt; color: #999; letter-spacing: 2px; margin-bottom: 10mm; }
+
+.main-content { display: flex; gap: 15mm; flex: 1; align-items: flex-start; }
+
+.image-section { flex: 1.2; height: 150mm; background: #f9f9f9; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+.main-image { max-width: 90%; max-height: 90%; object-fit: contain; }
+
+.info-section { flex: 1; }
+.product-title { font-family: 'Playfair Display', serif; font-size: 34pt; margin: 0 0 8mm 0; line-height: 1; color: #1a1a1a; }
+.product-description { font-size: 10pt; line-height: 1.6; color: #555; margin-bottom: 10mm; }
+
+.specifications h3 { font-size: 9pt; letter-spacing: 2px; color: #aaa; margin-bottom: 5mm; }
+.spec-row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 3mm 0; font-size: 10pt; }
+
+.price-container { margin-top: 15mm; background: #1a1a1a; color: #fff; padding: 10mm; border-radius: 4px; }
+.price-label { display: block; font-size: 8pt; letter-spacing: 3px; margin-bottom: 2mm; opacity: 0.6; }
+.price-value { font-size: 24pt; font-weight: 700; }
+
+.catalog-footer { position: absolute; bottom: 10mm; left: 20mm; right: 20mm; }
+.footer-line { height: 1px; background: #eee; margin-bottom: 3mm; }
+.footer-row { display: flex; justify-content: space-between; font-size: 8pt; color: #ccc; }
+.product-top-meta {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #000;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+  font-size: 9pt;
+  font-weight: bold;
+}
+
+.product-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.main-image-box {
+  background: #f4f4f4;
+  height: 120mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.badge-3d {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #d32f2f;
+  color: white;
+  padding: 4px 8px;
+  font-size: 7pt;
+  font-weight: bold;
+}
+
+.product-main-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28pt;
+  margin: 0 0 10px 0;
+  line-height: 1;
+}
+
+.product-tags {
+  margin-bottom: 15px;
+}
+
+.tag {
+  font-size: 8pt;
+  color: #888;
+  margin-right: 10px;
+  text-transform: uppercase;
+}
+
+.product-lead-desc {
+  font-size: 10pt;
+  line-height: 1.4;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.specs-grid {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+.specs-title {
+  font-size: 9pt;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9pt;
+  margin-bottom: 4px;
+}
+
+.product-price-footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1a1a1a;
+  color: white;
+  padding: 20px;
+  border-radius: 4px;
+}
+
+.current-price {
+  font-size: 24pt;
+  font-weight: 900;
+}
+
+.old-price {
+  text-decoration: line-through;
+  opacity: 0.5;
+  margin-right: 15px;
+  font-size: 14pt;
+}
+
+.stock-status {
+  font-size: 10pt;
+  letter-spacing: 1px;
+}
+
+.qty {
+  display: block;
+  font-size: 8pt;
+  opacity: 0.6;
+}

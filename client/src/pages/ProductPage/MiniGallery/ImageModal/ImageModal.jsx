@@ -1,65 +1,114 @@
-import React, { useEffect, useRef, useState } from "react";
-import "../MiniGallery.css";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
+import "./ImageModal.css";
+
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
 export default function ImageModal({
   open,
-  src,
+  images = [],
+  startIndex = 0,
+  title,
   alt,
   onClose,
-  onPrev,
-  onNext,
-  hasMany,
-  index = 0,
-  total = 0,
+  onApply,
 }) {
+  const total = Array.isArray(images) ? images.length : 0;
+  const hasMany = total > 1;
+
+  const [index, setIndex] = useState(0);
+
+  // animation states
+  const [mounted, setMounted] = useState(false); // для анімації закриття
+  const [imgVisible, setImgVisible] = useState(true); // для crossfade
+
+  // zoom / pan
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
-
   const draggingRef = useRef(false);
   const lastRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!open) return;
+    setMounted(true);
+    setIndex(startIndex || 0);
+
+    // reset zoom each open
     setZoom(1);
     setPan({ x: 0, y: 0 });
-  }, [open, src]);
 
-  // lock scroll
-  useEffect(() => {
-    if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [open]);
+  }, [open, startIndex]);
 
-  // keys
+  // unmount after close animation
+  useEffect(() => {
+    if (open) return;
+    if (!mounted) return;
+    const t = setTimeout(() => setMounted(false), 180);
+    return () => clearTimeout(t);
+  }, [open, mounted]);
+
+  const src = useMemo(() => images?.[index] || "/placeholder.png", [images, index]);
+
+  const close = useCallback(() => {
+    onApply?.(index);
+    onClose?.();
+  }, [index, onApply, onClose]);
+
+  const prev = useCallback(() => {
+    if (!hasMany) return;
+    setImgVisible(false);
+    setTimeout(() => {
+      setIndex((i) => (i - 1 + total) % total);
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+      setImgVisible(true);
+    }, 90);
+  }, [hasMany, total]);
+
+  const next = useCallback(() => {
+    if (!hasMany) return;
+    setImgVisible(false);
+    setTimeout(() => {
+      setIndex((i) => (i + 1) % total);
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+      setImgVisible(true);
+    }, 90);
+  }, [hasMany, total]);
+
+  // keyboard
   useEffect(() => {
     if (!open) return;
-
     const onKey = (e) => {
-      if (e.key === "Escape") onClose?.();
-      if (hasMany && e.key === "ArrowLeft") onPrev?.();
-      if (hasMany && e.key === "ArrowRight") onNext?.();
-      if (e.key === "+" || e.key === "=") setZoom((z) => clamp(z + 0.2, 1, 4));
-      if (e.key === "-" || e.key === "_") setZoom((z) => clamp(z - 0.2, 1, 4));
-      if (e.key === "0") {
-        setZoom(1);
-        setPan({ x: 0, y: 0 });
-      }
+      if (e.key === "Escape") close();
+      if (hasMany && e.key === "ArrowLeft") prev();
+      if (hasMany && e.key === "ArrowRight") next();
     };
-
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose, onPrev, onNext, hasMany]);
+  }, [open, close, hasMany, prev, next]);
 
+  // zoom (double click)
+  const toggleZoom = () => {
+    setZoom((z) => {
+      const nextZ = z > 1 ? 1 : 2;
+      if (nextZ === 1) setPan({ x: 0, y: 0 });
+      return nextZ;
+    });
+  };
+
+  // wheel zoom
   const onWheel = (e) => {
     e.preventDefault();
     setZoom((z) => clamp(z + (e.deltaY > 0 ? -0.15 : 0.15), 1, 4));
   };
 
+  // drag when zoomed
   const onMouseDown = (e) => {
     if (zoom <= 1) return;
     draggingRef.current = true;
@@ -78,107 +127,86 @@ export default function ImageModal({
     draggingRef.current = false;
   };
 
-  const toggleZoom = () => {
-    setZoom((z) => {
-      const next = z > 1 ? 1 : 2;
-      if (next === 1) setPan({ x: 0, y: 0 });
-      return next;
-    });
-  };
+  if (!mounted) return null;
 
-  if (!open) return null;
+  return createPortal(
+    <div className={`viewer ${open ? "is-open" : "is-closing"}`} role="dialog" aria-modal="true">
+      {/* BACKDROP: клік закриває */}
+      <button className="viewer__backdrop" type="button" aria-label="Close" onClick={close} />
 
-  return (
-    <div
-      className="img-modal img-modal--full"
-      role="dialog"
-      aria-modal="true"
-      onMouseUp={stopDrag}
-      onMouseLeave={stopDrag}
-    >
-      <div className="img-modal__backdrop" onClick={onClose} />
-
-      {/* TOP BAR (overlay) */}
-      <div className="img-modal__topbar img-modal__topbar--full" onClick={(e) => e.stopPropagation()}>
-        <div className="img-modal__counter">
-          {total ? `${index + 1} / ${total}` : ""}
+      {/* TOP */}
+      <div className="viewer__top" onClick={(e) => e.stopPropagation()}>
+        <div className="viewer__title" title={title || ""}>
+          {title || ""}
         </div>
-
-        <div className="img-modal__tools">
-          <button type="button" onClick={() => setZoom((z) => clamp(z - 0.2, 1, 4))} aria-label="Zoom out">
-            −
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setZoom(1);
-              setPan({ x: 0, y: 0 });
-            }}
-            aria-label="Reset"
-          >
-            Reset
-          </button>
-          <button type="button" onClick={() => setZoom((z) => clamp(z + 0.2, 1, 4))} aria-label="Zoom in">
-            +
-          </button>
-        </div>
-
-        <button className="img-modal__close" type="button" onClick={onClose} aria-label="Close">
+        <button className="viewer__close" type="button" onClick={close} aria-label="Close">
           ✕
         </button>
       </div>
 
-      {/* ARROWS (outside) */}
-      {hasMany && (
-        <>
-          <button
-            className="img-modal__nav img-modal__nav--prev"
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onPrev?.();
-            }}
-            aria-label="Prev"
-          >
-            ‹
-          </button>
-          <button
-            className="img-modal__nav img-modal__nav--next"
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onNext?.();
-            }}
-            aria-label="Next"
-          >
-            ›
-          </button>
-        </>
-      )}
-
-      {/* FULL SCREEN STAGE */}
+      {/* STAGE */}
       <div
-        className={`img-modal__stage img-modal__stage--full ${zoom > 1 ? "is-zoomed" : ""}`}
+        className={`viewer__stage ${zoom > 1 ? "is-zoomed" : ""}`}
+        onClick={(e) => e.stopPropagation()}
         onWheel={onWheel}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={stopDrag}
-        onDoubleClick={toggleZoom}
-        onClick={(e) => e.stopPropagation()}
+        onMouseLeave={stopDrag}
       >
+        {hasMany && (
+          <button className="viewer__nav viewer__nav--left" type="button" onClick={prev} aria-label="Prev">
+            ‹
+          </button>
+        )}
+
         <img
-          className="img-modal__img img-modal__img--full"
+          className={`viewer__image ${imgVisible ? "is-visible" : ""}`}
           src={src}
           alt={alt || "Image"}
           draggable={false}
-          onError={(e) => (e.currentTarget.src = "/placeholder.png")}
+          onDoubleClick={toggleZoom}
           style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
+          onError={(e) => (e.currentTarget.src = "/placeholder.png")}
         />
+
+        {hasMany && (
+          <button className="viewer__nav viewer__nav--right" type="button" onClick={next} aria-label="Next">
+            ›
+          </button>
+        )}
       </div>
 
-      <div className="img-modal__hint img-modal__hint--full">
-        Wheel — zoom, drag — move (when zoomed), double click — toggle zoom, ESC — close
-      </div>
-    </div>
+      {/* THUMBS */}
+      {hasMany && (
+        <div className="viewer__thumbs" onClick={(e) => e.stopPropagation()}>
+          <div className="viewer__thumbsTrack">
+            {images.map((u, i) => (
+              <button
+                key={`${i}-${u}`}
+                type="button"
+                className={`viewer__thumb ${i === index ? "is-active" : ""}`}
+                onClick={() => {
+                  if (i === index) return;
+                  setImgVisible(false);
+                  setTimeout(() => {
+                    setIndex(i);
+                    setZoom(1);
+                    setPan({ x: 0, y: 0 });
+                    setImgVisible(true);
+                  }, 90);
+                }}
+                aria-label={`Open image ${i + 1}`}
+              >
+                <img src={u} alt="" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+    
+    </div>,
+    document.body
   );
 }

@@ -1,3 +1,4 @@
+// server/models/Review.js
 import mongoose from "mongoose";
 
 const reviewSchema = new mongoose.Schema(
@@ -9,12 +10,11 @@ const reviewSchema = new mongoose.Schema(
     title: { type: String, trim: true, maxlength: 80 },
     text: { type: String, trim: true, maxlength: 2000 },
 
-    isApproved: { type: Boolean, default: true }, // якщо потрібна модерація
+    isApproved: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
 
-// один користувач — один відгук на товар (можна змінити, якщо хочеш кілька)
 reviewSchema.index({ product: 1, user: 1 }, { unique: true });
 
 export default mongoose.model("Review", reviewSchema);

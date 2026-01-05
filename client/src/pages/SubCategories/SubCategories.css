@@ -1,0 +1,261 @@
+/* client/src/pages/SubCategories/SubCategories.css */
+/* Контейнер для ряду чіпсів */
+.sc-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 15px 0;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+/* Базовий стиль чіпса */
+.sc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #f0f0f0;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sc-chip:hover {
+  background: #e8e8e8;
+  border-color: #ccc;
+}
+
+/* Іконка ікса всередині чіпса */
+.sc-chip-x {
+  font-size: 16px;
+  line-height: 1;
+  color: #999;
+  transition: color 0.2s;
+}
+
+.sc-chip:hover .sc-chip-x {
+  color: #000;
+}
+
+/* Спеціальний стиль для кнопки "Скинути всі" */
+.sc-chip--reset {
+  background: transparent;
+  border: 1px dashed #999;
+  color: #666;
+}
+
+.sc-chip--reset:hover {
+  background: #fff0f0; /* Легкий червоний відтінок при наведенні */
+  border-color: #ff4d4f;
+  color: #ff4d4f;
+}
+
+.sc-chip--reset:hover .sc-chip-x {
+  color: #ff4d4f;
+}
+
+/* Анімація появи чіпсів */
+.sc-chip {
+  animation: chipAppear 0.2s ease-out;
+}
+
+@keyframes chipAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Адаптивність */
+@media (max-width: 768px) {
+  .sc-chips-row {
+    gap: 6px;
+    padding: 10px 0;
+  }
+  
+  .sc-chip {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+}
+.sc-page{
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 18px 18px 36px;
+}
+
+.sc-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  margin-bottom: 10px;
+}
+
+.sc-back{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  text-decoration:none;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.72);
+  backdrop-filter: blur(6px);
+}
+
+.sc-head{
+  display:flex;
+  justify-content:center;
+  text-align:center;
+  margin: 10px 0 18px;
+}
+
+.sc-title{
+  margin:0;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: .2px;
+}
+
+/* states */
+.sc-state{
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px dashed rgba(0,0,0,.16);
+  background: rgba(255,255,255,.70);
+}
+
+.sc-state--error{
+  border-style: solid;
+  border-color: rgba(255,0,0,.25);
+}
+
+/* ===== CIRCLES STRIP ===== */
+.sc-strip{
+  display:flex;
+  align-items:flex-start;
+  gap: 34px;
+  padding: 8px 10px 10px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sc-strip::-webkit-scrollbar{
+  height: 8px;
+}
+.sc-strip::-webkit-scrollbar-thumb{
+  background: rgba(0,0,0,.12);
+  border-radius: 999px;
+}
+.sc-strip::-webkit-scrollbar-track{
+  background: rgba(0,0,0,.04);
+  border-radius: 999px;
+}
+
+/* ✅ ВАЖЛИВО: прибираємо будь-який фон/карточку під серіями */
+.sc-item{
+  flex: 0 0 auto;
+  width: 140px;
+  scroll-snap-align: start;
+
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  gap: 10px;
+
+  /* перебиває глобальні стилі для <a> */
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+
+  text-decoration: none;
+  color: inherit;
+}
+
+/* circle */
+.sc-avatar{
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  background: #fff;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 10px 26px rgba(0,0,0,.08);
+  transition: transform .18s ease, box-shadow .18s ease;
+  overflow:hidden;
+}
+
+/* ✅ фото заповнює круг */
+.sc-avatar img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sc-avatar__fallback{
+  width: 100%;
+  height: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 900;
+  letter-spacing: .8px;
+  opacity: .7;
+}
+
+.sc-item:hover .sc-avatar{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(0,0,0,.12);
+}
+
+/* ✅ текст без фону */
+.sc-name{
+  width: 100%;
+  text-align:center;
+  font-weight: 800;
+  line-height: 1.2;
+
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+
+  display:-webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow:hidden;
+  min-height: 2.4em;
+}
+
+/* hint */
+.sc-hint{
+  margin-top: 16px;
+  text-align:center;
+  opacity: .7;
+  font-weight: 700;
+}
+
+@media (min-width: 1200px){
+  .sc-strip{
+    justify-content:center;
+  }
+}

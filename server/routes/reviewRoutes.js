@@ -7,20 +7,45 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+async function recomputeAndUpdateProductRating(productId) {
+  const productObjId = new mongoose.Types.ObjectId(productId);
+
+  const stats = await Review.aggregate([
+    { $match: { product: productObjId, isApproved: true } },
+    {
+      $group: {
+        _id: "$product",
+        avgRating: { $avg: "$rating" },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const meta = stats?.[0] || { avgRating: 0, count: 0 };
+  const avgRating = Math.round(Number(meta.avgRating || 0) * 10) / 10;
+  const count = Number(meta.count || 0);
+
+  await Product.findByIdAndUpdate(productId, {
+    $set: { ratingAvg: avgRating, ratingCount: count },
+  });
+
+  return { avgRating, count };
+}
+
 /**
  * GET /api/reviews/product/:productId?page=1&limit=10
- * Повертає відгуки по товару + середній рейтинг/кількість
  */
 router.get("/product/:productId", async (req, res) => {
   try {
-    // ✅ не кешуємо (щоб не було 304 / stale)
     res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     res.set("Pragma", "no-cache");
     res.set("Expires", "0");
 
     const { productId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
+    if (!isValidId(productId)) {
       return res.status(400).json({ message: "Invalid productId" });
     }
 
@@ -28,7 +53,6 @@ router.get("/product/:productId", async (req, res) => {
     const limit = Math.min(Math.max(parseInt(req.query.limit || "10", 10), 1), 50);
     const skip = (page - 1) * limit;
 
-    // ✅ ВАЖЛИВО: aggregate не кастить рядок в ObjectId автоматично
     const productObjId = new mongoose.Types.ObjectId(productId);
     const filter = { product: productObjId, isApproved: true };
 
@@ -44,7 +68,7 @@ router.get("/product/:productId", async (req, res) => {
         {
           $group: {
             _id: "$product",
-            avgRating: { $avg: "$rating" }, // якщо rating Number — ок
+            avgRating: { $avg: "$rating" },
             count: { $sum: 1 },
           },
         },
@@ -52,7 +76,6 @@ router.get("/product/:productId", async (req, res) => {
     ]);
 
     const meta = stats?.[0] || { avgRating: 0, count: 0 };
-
     const avgRating = Math.round(Number(meta.avgRating || 0) * 10) / 10;
 
     res.json({
@@ -71,8 +94,6 @@ router.get("/product/:productId", async (req, res) => {
 
 /**
  * POST /api/reviews
- * body: { productId, rating, title, text }
- * Створити або оновити відгук (upsert)
  */
 router.post("/", protect, async (req, res) => {
   try {
@@ -82,18 +103,22 @@ router.post("/", protect, async (req, res) => {
       return res.status(400).json({ message: "productId and rating are required" });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
+    if (!isValidId(productId)) {
       return res.status(400).json({ message: "Invalid productId" });
     }
 
-    // перевірка що товар існує
+    const r = Number(rating);
+    if (!Number.isFinite(r) || r < 1 || r > 5) {
+      return res.status(400).json({ message: "rating must be 1..5" });
+    }
+
     const exists = await Product.findById(productId).select("_id");
     if (!exists) return res.status(404).json({ message: "Product not found" });
 
     const doc = await Review.findOneAndUpdate(
       { product: productId, user: req.user._id },
       {
-        rating: Number(rating),
+        rating: r,
         title: title || "",
         text: text || "",
         isApproved: true,
@@ -101,8 +126,13 @@ router.post("/", protect, async (req, res) => {
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    res.json(doc);
+    const { avgRating, count } = await recomputeAndUpdateProductRating(productId);
+
+    res.json({ review: doc, avgRating, count });
   } catch (e) {
+    if (e?.code === 11000) {
+      return res.status(409).json({ message: "You already reviewed this product" });
+    }
     console.error("POST /api/reviews error:", e);
     res.status(500).json({ message: "Server error" });
   }
@@ -110,7 +140,6 @@ router.post("/", protect, async (req, res) => {
 
 /**
  * DELETE /api/reviews/:id
- * видалити свій відгук
  */
 router.delete("/:id", protect, async (req, res) => {
   try {
@@ -121,8 +150,13 @@ router.delete("/:id", protect, async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
+    const productId = String(review.product);
+
     await review.deleteOne();
-    res.json({ ok: true });
+
+    const { avgRating, count } = await recomputeAndUpdateProductRating(productId);
+
+    res.json({ ok: true, avgRating, count });
   } catch (e) {
     console.error("DELETE /api/reviews/:id error:", e);
     res.status(500).json({ message: "Server error" });

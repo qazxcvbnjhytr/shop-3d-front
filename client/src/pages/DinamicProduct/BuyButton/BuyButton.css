@@ -1,0 +1,83 @@
+/* =========================
+   BUY BUTTON (dp-buy-btn)
+   ========================= */
+/* =========================
+   BUY BUTTON (dp-buy-btn)
+   ========================= */
+
+.dp-buy-btn {
+  --dp-primary: var(--cart-primary, var(--color-primary, #00bfae));
+  --dp-primary-dark: var(--cart-primary-dark, var(--color-primary-dark, #009e8e));
+
+  width: 100%;
+  margin-top: 12px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 12px 14px;
+  border-radius: 14px;
+
+  /* акуратний бордер під “скляний” стиль */
+  border: 1px solid rgba(255, 255, 255, 0.28);
+
+  background: linear-gradient(180deg, var(--dp-primary), var(--dp-primary-dark));
+  color: #ffffff;
+
+  font-weight: 700;
+  letter-spacing: 0.2px;
+
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease,
+    opacity 0.15s ease;
+
+  position: relative;
+  overflow: hidden;
+}
+
+/* легкий “shine” зверху */
+.dp-buy-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 90% at 50% 0%,
+    rgba(255, 255, 255, 0.30),
+    rgba(255, 255, 255, 0) 60%
+  );
+  pointer-events: none;
+}
+
+.dp-buy-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03) saturate(1.05);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+}
+
+.dp-buy-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+}
+
+.dp-buy-btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--dp-primary) 55%, #ffffff 45%);
+  outline-offset: 3px;
+}
+
+/* fallback якщо color-mix не підтримується */
+@supports not (color: color-mix(in srgb, #000 50%, #fff 50%)) {
+  .dp-buy-btn:focus-visible {
+    outline: 3px solid rgba(0, 191, 174, 0.55);
+  }
+}
+
+.dp-buy-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}

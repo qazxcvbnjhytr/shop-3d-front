@@ -1,0 +1,63 @@
+.specs {
+  margin-top: 14px;
+}
+
+.specs-head {
+  margin-bottom: 12px;
+}
+
+.specs-title {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.specs-subtitle {
+  margin: 0;
+  opacity: 0.75;
+  line-height: 1.4;
+}
+
+.specs-card {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.04);
+  overflow: hidden;
+}
+
+.specs-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.specs-row {
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+
+.specs-row:last-child {
+  border-bottom: none;
+}
+
+.specs-k {
+  width: 260px;
+  padding: 12px 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  color: rgba(0,0,0,.78);
+  background: rgba(0,0,0,.015);
+}
+
+.specs-v {
+  padding: 12px 14px;
+  color: rgba(0,0,0,.85);
+}
+
+.specs-empty {
+  padding: 14px;
+  border: 1px dashed rgba(0,0,0,.2);
+  border-radius: 14px;
+  opacity: 0.85;
+  background: rgba(255,255,255,.6);
+}

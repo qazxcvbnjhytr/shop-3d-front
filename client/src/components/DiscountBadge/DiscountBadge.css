@@ -1,51 +1,38 @@
-.discount-badge {
-    /* Твоя база, але модернізована */
-    position: absolute;
-    top: 15px; /* Трошки змістимо, щоб було місце для тіні */
-    left: -5px; /* Винесемо трохи за край */
-    
-    background-color: #990404; /* Яскравіший червоний */
-    color: #fff;
-    font-weight: 900; /* Жирніший шрифт */
-    padding: 8px 16px; /* Більше простору */
-    
-    font-size: 1rem;
-    line-height: 1; /* Для чіткості тексту */
-    text-transform: uppercase; /* Великі літери - більше уваги */
-    
-    box-shadow: 0 6px 15px rgba(173, 96, 96, 0.3); /* Жирніша тінь */
-    z-index: 100; /* На всяк випадок, щоб було зверху */
-    pointer-events: none;
-    
-    /* Додаємо скошені краї, щоб не було прямокутником */
-    border-radius: 0 4px 4px 0;
-    
-    /* Креативна анімація: 'пульсує' */
-    animation: pulseBadge 2s infinite ease-in-out;
-    
-    /* 3D-ефект "знизу" */
-    border-bottom: 5px solid #b71c1c; /* Темніший колір знизу */
+/* Default: overlay badge (для карток товарів) */
+.badge-wrapper{
+  position: absolute;
+  top:3px;
+  left: 3px;
+  z-index: 5;
+  pointer-events: none;
 }
 
-/* Створюємо "відірваний" нижній кутик - це найкрутіше! */
-.discount-badge::before {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 0;
-    /* Трикутник - це основа, братуха */
-    border-top: 5px solid #b71c1c; /* Колір "підкладки" */
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    
-    width: 0;
-    height: 0;
-    z-index: 99; /* Трохи нижче за бейдж */
+/* Inline: для таблиць (кошик) */
+.badge-wrapper--inline{
+  position: static;
+  top: auto;
+  left: auto;
+  z-index: auto;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
 }
 
-/* Пульсація для привернення уваги */
-@keyframes pulseBadge {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+/* Pill */
+.discount-badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 6px;
+  border-radius: 999px;
+
+  font-weight: 900;
+  font-size: 13px;
+
+  color: #ef4444;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+
+  white-space: nowrap;
 }

@@ -1,223 +1,307 @@
-// controllers/productController.js (ПОВНА ФІНАЛЬНА ВЕРСІЯ)
-
 import Product from "../models/Product.js";
-import Category from "../models/Category.js";
 import path from "path";
 import fs from "fs";
 
-// Функція для видалення файлу (для reuse)
+/* =========================
+    FS helpers
+========================= */
+const normalizePublicPath = (p) => String(p || "").replace(/^\/+/, "");
+const isHttp = (p) => /^https?:\/\//i.test(String(p || ""));
+
 const deleteFile = (filePath) => {
-    const absolutePath = path.join(process.cwd(), "public", filePath);
-    if (fs.existsSync(absolutePath)) {
-        fs.unlinkSync(absolutePath, (err) => {
-            if (err) console.error(`Failed to delete file: ${absolutePath}`, err);
-        });
-    }
+  try {
+    if (!filePath || isHttp(filePath)) return;
+    const rel = normalizePublicPath(filePath);
+    if (!rel) return;
+
+    const absolutePath = path.join(process.cwd(), "public", rel);
+    if (fs.existsSync(absolutePath)) fs.unlinkSync(absolutePath);
+  } catch (err) {
+    console.error("Failed to delete file:", filePath, err);
+  }
 };
 
+/* =========================
+    Query helpers
+========================= */
+const isEmpty = (v) => v === undefined || v === null || String(v).trim() === "";
+const toNumberOrNull = (v) => (isEmpty(v) ? null : Number(v));
+const truthy = (v) => ["1", "true", "yes", "on"].includes(String(v).toLowerCase());
 
-// =======================
-// 1. Отримати всі продукти
-// =======================
+const getQueryParam = (req, key) => {
+  if (req?.query?.[key] !== undefined) return req.query[key];
+  if (req?.query?.[`${key}[]`] !== undefined) return req.query[`${key}[]`];
+  return undefined;
+};
+
+const parseCsv = (v) => {
+  if (v === undefined || v === null) return null;
+  if (Array.isArray(v)) {
+    const arr = v.map((x) => String(x).trim()).filter(Boolean);
+    return arr.length ? arr : null;
+  }
+  const raw = String(v);
+  const items = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  return items.length ? items : null;
+};
+
+const addRange = (obj, field, minV, maxV) => {
+  const min = toNumberOrNull(minV);
+  const max = toNumberOrNull(maxV);
+  if (min === null && max === null) return;
+  obj[field] = obj[field] && typeof obj[field] === "object" ? obj[field] : {};
+  if (min !== null) obj[field].$gte = min;
+  if (max !== null) obj[field].$lte = max;
+};
+
+const escapeRegExp = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/* =======================
+    Facets helpers
+======================= */
+const cleanUniq = (arr) =>
+  Array.from(
+    new Set(
+      (arr || [])
+        .flat()
+        .map((x) => String(x || "").trim())
+        .filter(Boolean)
+    )
+  ).sort();
+
+/* =======================
+    ✅ GET /api/products/facets
+======================= */
+export const getProductFacets = async (req, res) => {
+  try {
+    const category = String(req.query.category || "").trim();
+    const subCategory = String(req.query.subCategory || "").trim();
+
+    const match = {};
+    if (category) match.category = category;
+    if (subCategory && subCategory !== "all") match.subCategory = subCategory;
+
+    const [
+      colorKeys,
+      styleKeys,
+      roomKeys,
+      collectionKeys,
+      materialKeys,
+      manufacturerKeys,
+    ] = await Promise.all([
+      Product.distinct("colorKeys", match),
+      Product.distinct("styleKeys", match),
+      Product.distinct("roomKeys", match),
+      Product.distinct("collectionKeys", match),
+      Product.distinct("specifications.materialKey", match),
+      Product.distinct("specifications.manufacturerKey", match),
+    ]);
+
+    res.set("Cache-Control", "no-store");
+    res.json({
+      colorKeys: cleanUniq(colorKeys),
+      styleKeys: cleanUniq(styleKeys),
+      roomKeys: cleanUniq(roomKeys),
+      collectionKeys: cleanUniq(collectionKeys),
+      materialKeys: cleanUniq(materialKeys),
+      manufacturerKeys: cleanUniq(manufacturerKeys),
+    });
+  } catch (e) {
+    console.error("[getProductFacets] error:", e);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/* =======================
+    1) GET /api/products
+======================= */
 export const getProducts = async (req, res) => {
-    try {
-        const filter = req.query.category ? { category: req.query.category } : {};
-        const products = await Product.find(filter).sort({ createdAt: -1 });
-        res.json(products);
-    } catch (err) {
-        console.error("Помилка при отриманні продуктів:", err);
-        res.status(500).json({ message: "Помилка при отриманні продуктів" });
+  try {
+    const category = getQueryParam(req, "category");
+    const subCategory = getQueryParam(req, "subCategory");
+    const typeKey = getQueryParam(req, "typeKey");
+    const materialKey = getQueryParam(req, "materialKey");
+    const manufacturerKey = getQueryParam(req, "manufacturerKey");
+    const priceMin = getQueryParam(req, "priceMin");
+    const priceMax = getQueryParam(req, "priceMax");
+    const hasModel = getQueryParam(req, "hasModel");
+    const hasDiscount = getQueryParam(req, "hasDiscount");
+    const inStock = getQueryParam(req, "inStock");
+    const colorKeys = getQueryParam(req, "colorKeys");
+    const styleKeys = getQueryParam(req, "styleKeys");
+    const roomKeys = getQueryParam(req, "roomKeys");
+    const collectionKeys = getQueryParam(req, "collectionKeys");
+    const q = getQueryParam(req, "q");
+    const sort = getQueryParam(req, "sort");
+
+    const filter = {};
+    if (!isEmpty(category)) filter.category = String(category);
+    if (!isEmpty(subCategory) && subCategory !== "all") filter.subCategory = String(subCategory);
+    if (!isEmpty(typeKey)) filter.typeKey = String(typeKey);
+
+    const arrayFields = { colorKeys, styleKeys, roomKeys, collectionKeys };
+    Object.entries(arrayFields).forEach(([key, val]) => {
+      const parsed = parseCsv(val);
+      if (parsed) filter[key] = { $in: parsed };
+    });
+
+    const materialList = parseCsv(materialKey);
+    if (materialList) filter["specifications.materialKey"] = { $in: materialList };
+
+    const manufacturerList = parseCsv(manufacturerKey);
+    if (manufacturerList) filter["specifications.manufacturerKey"] = { $in: manufacturerList };
+
+    addRange(filter, "price", priceMin, priceMax);
+
+    if (truthy(hasDiscount)) filter.discount = { $gt: 0 };
+    if (inStock !== undefined) filter.inStock = truthy(inStock);
+    if (truthy(hasModel)) filter.modelUrl = { $exists: true, $ne: "" };
+
+    if (!isEmpty(q)) {
+      const rx = new RegExp(escapeRegExp(q), "i");
+      filter.$or = [
+        { "name.ua": rx }, { "name.en": rx },
+        { "description.ua": rx }, { "description.en": rx },
+        { sku: rx }, { slug: rx },
+      ];
     }
+
+    let sortObj = { createdAt: -1 };
+    switch (String(sort || "").toLowerCase()) {
+      case "price_asc": sortObj = { price: 1 }; break;
+      case "price_desc": sortObj = { price: -1 }; break;
+      case "discount_desc": sortObj = { discount: -1 }; break;
+      case "updated": sortObj = { updatedAt: -1 }; break;
+      default: sortObj = { createdAt: -1 }; break;
+    }
+
+    const list = await Product.find(filter).sort(sortObj);
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.json(list);
+  } catch (err) {
+    console.error("Products load error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
-// =======================
-// 2. Отримати ОДИН продукт по ID
-// =======================
+/* =======================
+    🆕 ДОДАТКОВІ МЕТОДИ (NEW)
+======================= */
+
+/**
+ * 2) GET /api/products/by-slug/:slug
+ * Для отримання товару за SEO-посиланням (slug)
+ */
+export const getProductBySlug = async (req, res) => {
+  try {
+    const product = await Product.findOne({ slug: req.params.slug });
+    if (!product) return res.status(404).json({ message: "Товар не знайдено" });
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ message: "Помилка сервера" });
+  }
+};
+
+/**
+ * 3) GET /api/products/stats
+ * Коротка статистика для адмін-панелі
+ */
+export const getProductsStats = async (req, res) => {
+  try {
+    const total = await Product.countDocuments();
+    const inStock = await Product.countDocuments({ inStock: true });
+    const hasDiscount = await Product.countDocuments({ discount: { $gt: 0 } });
+    res.json({ total, inStock, outOfStock: total - inStock, hasDiscount });
+  } catch (err) {
+    res.status(500).json({ message: "Статистика недоступна" });
+  }
+};
+
+/* =======================
+    СТАНДАРТНІ CRUD (ПРОДОВЖЕННЯ)
+======================= */
+
 export const getProductById = async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id);
-        
-        if (!product) {
-            return res.status(404).json({ message: "Товар не знайдено" });
-        }
-        
-        res.json(product);
-    } catch (err) {
-        console.error("Помилка при отриманні товару:", err);
-        if (err.kind === 'ObjectId') {
-            return res.status(404).json({ message: "Товар не знайдено" });
-        }
-        res.status(500).json({ message: "Помилка сервера" });
-    }
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Товар не знайдено" });
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ message: "Помилка сервера" });
+  }
 };
 
-// =======================
-// 3. Створити новий продукт
-// =======================
 export const createProduct = async (req, res) => {
-    try {
-        const {
-            name_ua, name_en, category, typeKey,
-            width, height, depth, weight, bedSize,
-            materialKey, manufacturerKey, warranty, manualLink,
-            price, discount
-        } = req.body;
-
-        if (!name_ua || !name_en || !category) {
-            return res.status(400).json({ message: "Обов'язкові поля: назва та категорія" });
-        }
-
-        const existingCategory = await Category.findOne({ category });
-        if (!existingCategory) {
-            return res.status(400).json({ message: "Категорія не знайдена" });
-        }
-
-        // 🔥🔥🔥 ОБРОБКА МАСИВУ ФАЙЛІВ (GALLERY) 🔥🔥🔥
-        const uploadedImages = req.files?.images; 
-        
-        const images = uploadedImages?.length > 0 
-             ? uploadedImages.map(file => `/uploads/products/${category}/${file.filename}`)
-             : [];
-        // 🔥🔥🔥 КІНЕЦЬ ОБРОБКИ МАСИВУ ФАЙЛІВ 🔥🔥🔥
-
-        const modelUrl = req.files?.modelFile?.[0]
-            ? `/uploads/products/${category}/${req.files.modelFile[0].filename}`
-            : "";
-
-        const product = new Product({
-            name: { ua: name_ua, en: name_en },
-            category,
-            typeKey,
-            images, // 🔥 ЗАПИСУЄМО МАСИВ images
-            modelUrl,
-            specifications: {
-                width: parseFloat(width) || null,
-                height: parseFloat(height) || null,
-                depth: parseFloat(depth) || null,
-                weight: parseFloat(weight) || null,
-                bedSize,
-                materialKey,
-                manufacturerKey,
-                warranty: warranty ? Number(warranty) : null,
-                manualLink,
-            },
-            price: price ? Number(price) : null,
-            discount: discount ? Number(discount) : null
-        });
-
-        await product.save();
-        res.status(201).json(product);
-
-    } catch (err) {
-        console.error("Помилка при створенні продукту:", err);
-        res.status(500).json({ message: "Помилка при створенні продукту" });
+  try {
+    const { name_ua, name_en, category, price } = req.body;
+    if (!name_ua || !name_en || !category || isEmpty(price)) {
+      return res.status(400).json({ message: "Заповніть обов'язкові поля" });
     }
+
+    const images = req.files?.images?.map((f) => `/uploads/products/${category}/${f.filename}`) || [];
+    const modelUrl = req.files?.modelFile?.[0]
+        ? `/uploads/products/${category}/${req.files.modelFile[0].filename}`
+        : (req.body.modelUrl || "");
+
+    const product = new Product({
+      ...req.body,
+      name: { ua: name_ua, en: name_en },
+      price: Number(price),
+      images,
+      modelUrl,
+      styleKeys: parseCsv(req.body.styleKeys) || [],
+      colorKeys: parseCsv(req.body.colorKeys) || [],
+      roomKeys: parseCsv(req.body.roomKeys) || [],
+      collectionKeys: parseCsv(req.body.collectionKeys) || [],
+    });
+
+    await product.save();
+    res.status(201).json(product);
+  } catch (err) {
+    console.error("[createProduct] error:", err);
+    res.status(500).json({ message: "Помилка при створенні" });
+  }
 };
 
-// =======================
-// 4. Оновити продукт
-// =======================
 export const updateProduct = async (req, res) => {
-    try {
-        const productId = req.params.id;
-        const {
-            name_ua, name_en, category, typeKey,
-            width, height, depth, weight, bedSize,
-            materialKey, manufacturerKey, warranty, manualLink,
-            price, discount
-        } = req.body;
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Не знайдено" });
 
-        const product = await Product.findById(productId);
-        if (!product) {
-            return res.status(404).json({ message: "Товар для оновлення не знайдено" });
-        }
+    const updateData = { ...req.body };
+    ["styleKeys", "colorKeys", "roomKeys", "collectionKeys"].forEach((key) => {
+      if (req.body[key] !== undefined) updateData[key] = parseCsv(req.body[key]) || [];
+    });
 
-        // --- 1. ПІДГОТОВКА ДАНИХ (для $set) ---
-        const updateData = {};
-        
-        // 1.1 Основні поля
-        if (name_ua) updateData['name.ua'] = name_ua;
-        if (name_en) updateData['name.en'] = name_en;
-        if (category) updateData.category = category;
-        if (typeKey) updateData.typeKey = typeKey;
-        
-        // 1.2 Фінансові поля
-        updateData.price = price ? Number(price) : null;
-        updateData.discount = discount ? Number(discount) : null;
+    const category = String(req.body.category || product.category || "uncategorized");
 
-        // 1.3 Специфікації
-        const specifications = product.specifications || {};
-        specifications.width = width ? parseFloat(width) : null;
-        specifications.height = height ? parseFloat(height) : null;
-        specifications.depth = depth ? parseFloat(depth) : null;
-        specifications.weight = weight ? parseFloat(weight) : null;
-        specifications.bedSize = bedSize || null;
-        specifications.materialKey = materialKey || null;
-        specifications.manufacturerKey = manufacturerKey || null;
-        specifications.warranty = warranty ? Number(warranty) : null;
-        specifications.manualLink = manualLink || null;
-        
-        updateData.specifications = specifications;
-        
-        // --- 2. ОБРОБКА ФАЙЛІВ (Оновлюємо, якщо надано нові) ---
-        
-        const uploadedImages = req.files?.images; // 🔥 Multer очікує images
-        const uploadedModel = req.files?.modelFile?.[0];
-        const newCategory = category || product.category; 
-
-        // 2.1 Оновлення ЗОБРАЖЕНЬ (Галерея)
-        if (uploadedImages && uploadedImages.length > 0) {
-            // 🔥 Видаляємо всі старі файли з галереї
-            if (product.images && product.images.length > 0) {
-                product.images.forEach(deleteFile);
-            }
-            // Зберігаємо шляхи до нових файлів
-            updateData.images = uploadedImages.map(file => `/uploads/products/${newCategory}/${file.filename}`);
-        }
-        
-        // 2.2 Оновлення 3D МОДЕЛІ
-        if (uploadedModel) {
-            if (product.modelUrl) {
-                deleteFile(product.modelUrl);
-            }
-            updateData.modelUrl = `/uploads/products/${newCategory}/${uploadedModel.filename}`;
-        }
-
-        // --- 3. ЗБЕРЕЖЕННЯ ---
-        const updatedProduct = await Product.findByIdAndUpdate(productId, 
-            { $set: updateData }, 
-            { new: true, runValidators: true } 
-        );
-
-        res.json(updatedProduct);
-
-    } catch (err) {
-        console.error("Помилка при оновленні продукту:", err);
-        if (err.name === 'ValidationError') {
-            return res.status(400).json({ message: "Помилка валідації даних" });
-        }
-        res.status(500).json({ message: "Помилка сервера при оновленні продукту" });
+    if (req.files?.images?.length) {
+      (product.images || []).forEach(deleteFile);
+      updateData.images = req.files.images.map((f) => `/uploads/products/${category}/${f.filename}`);
     }
+
+    if (req.files?.modelFile?.[0]) {
+      if (product.modelUrl) deleteFile(product.modelUrl);
+      updateData.modelUrl = `/uploads/products/${category}/${req.files.modelFile[0].filename}`;
+    }
+
+    const updated = await Product.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
+    res.json(updated);
+  } catch (err) {
+    console.error("[updateProduct] error:", err);
+    res.status(500).json({ message: "Помилка оновлення" });
+  }
 };
 
-
-// =======================
-// 5. Видалити продукт
-// =======================
 export const deleteProduct = async (req, res) => {
-    try {
-        const deleted = await Product.findByIdAndDelete(req.params.id);
-        if (!deleted) return res.status(404).json({ message: "Продукт не знайдено" });
-
-        // Утилізація старих файлів
-        if (deleted.images && deleted.images.length > 0) {
-            deleted.images.forEach(deleteFile); // 🔥 Видаляємо всі фото з галереї
-        }
-        if (deleted.modelUrl) deleteFile(deleted.modelUrl);
-        
-        res.json({ message: "Продукт успішно видалено" });
-    } catch (err) {
-        console.error("Помилка при видаленні продукту:", err);
-        res.status(500).json({ message: "Помилка при видаленні продукту" });
-    }
+  try {
+    const deleted = await Product.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Не знайдено" });
+    (deleted.images || []).forEach(deleteFile);
+    if (deleted.modelUrl) deleteFile(deleted.modelUrl);
+    res.json({ message: "Видалено" });
+  } catch (err) {
+    console.error("[deleteProduct] error:", err);
+    res.status(500).json({ message: "Помилка видалення" });
+  }
 };

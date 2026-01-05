@@ -1,0 +1,179 @@
+/* Основний контейнер */
+.pfbar-container {
+  position: relative;
+  width: 100%;
+  padding: 1rem 0;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  z-index: 100;
+}
+
+/* Флекс-сітка для кнопок */
+.pfbar-flex {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap; /* Щоб на мобільних кнопки переносились, якщо не влізуть */
+}
+
+/* Обгортка кожного фільтра */
+.pfbar-item {
+  position: relative;
+}
+
+/* Базова кнопка фільтра */
+.pfbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #f5f5f5;
+  border: 1px solid transparent;
+  border-radius: 50px; /* Округлі кнопки */
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.pfbar-btn:hover {
+  background: #ebebeb;
+}
+
+/* Активний стан кнопки (коли дропдаун відкритий) */
+.pfbar-btn.is-active {
+  background: #fff;
+  border-color: #000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Стрілочка */
+.pfbar-arrow {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.pfbar-arrow.up {
+  transform: rotate(180deg);
+}
+
+/* Чорна кнопка "Всі фільтри" */
+.pfbar-btn-black {
+  background: #000;
+  color: #fff;
+  margin-left: auto; /* Притискає кнопку вправо */
+}
+
+.pfbar-btn-black:hover {
+  background: #333;
+}
+
+.pfbar-icon-filters {
+  margin-left: 4px;
+}
+
+/* Випадаюче вікно (Popover) */
+.pfbar-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 240px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-out;
+  z-index: 1000;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Область скролу всередині поповера */
+.pfbar-popover-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+/* Стиль опції (label) */
+.pfbar-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pfbar-option:hover {
+  background: #f9f9f9;
+}
+
+.pfbar-option input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #000; /* Чорний колір для чекбоксів */
+}
+
+.pfbar-option-text {
+  font-size: 14px;
+  color: #444;
+}
+
+/* Футер поповера з кнопкою Застосувати */
+.pfbar-popover-footer {
+  padding: 12px;
+  border-top: 1px solid #eee;
+  background: #fafafa;
+  display: flex;
+  justify-content: center;
+}
+
+.pfbar-btn-apply {
+  width: 100%;
+  padding: 8px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.pfbar-btn-apply:hover {
+  opacity: 0.8;
+}
+
+/* Адаптивність для телефонів */
+@media (max-width: 768px) {
+  .pfbar-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  
+  /* На мобільних можна приховати окремі дропдауни, залишивши тільки "Всі фільтри" */
+  .pfbar-item {
+    display: none; /* Сховати швидкі фільтри */
+  }
+  
+  .pfbar-item:nth-child(1), 
+  .pfbar-item:nth-child(2) {
+    display: block; /* Залишити тільки перші два, наприклад Колір та Наявність */
+  }
+
+  .pfbar-btn-black {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+}

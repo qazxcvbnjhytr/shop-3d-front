@@ -1,0 +1,108 @@
+.col-card{
+  display: grid;
+  grid-template-rows: 160px auto;
+
+  text-decoration: none;
+  color: inherit;
+
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.88);
+  overflow: hidden;
+
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.col-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(0,0,0,.08);
+  border-color: rgba(0,0,0,.18);
+}
+
+.col-card__media{
+  width: 100%;
+  height: 160px;
+  background: rgba(0,0,0,.06);
+  position: relative;
+}
+
+.col-card__img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.col-card__ph{
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.col-card__phBadge{
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.75);
+
+  font-weight: 900;
+  letter-spacing: .12em;
+  opacity: .75;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.col-card__body{
+  padding: 12px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.col-card__row{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.col-card__name{
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.2;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 78%;
+}
+
+.col-card__count{
+  min-width: 42px;
+  height: 28px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.85);
+
+  font-weight: 900;
+  font-size: 12px;
+  opacity: .9;
+}
+
+.col-card__hint{
+  width: fit-content;
+  padding: 10px 12px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.92);
+
+  font-weight: 900;
+  font-size: 13px;
+}
+ 

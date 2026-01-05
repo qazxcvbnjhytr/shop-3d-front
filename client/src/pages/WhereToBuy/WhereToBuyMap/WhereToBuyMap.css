@@ -1,0 +1,140 @@
+.wtb-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  --accent: #2563eb;
+  --text-dark: #0f172a;
+  --text-gray: #64748b;
+  --border: #e2e8f0;
+}
+
+/* Фільтри */
+.wtb-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.wtb-select-minimal {
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: var(--text-dark);
+  outline: none;
+  background: #fff;
+  cursor: pointer;
+}
+
+.wtb-type-group {
+  display: flex;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.wtb-tab {
+  padding: 8px 18px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-gray);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.wtb-tab.active {
+  background: #fff;
+  color: var(--text-dark);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Контент */
+.wtb-content-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+  height: 700px;
+}
+
+.wtb-sidebar-list {
+  overflow-y: auto;
+  padding-right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wtb-sidebar-list::-webkit-scrollbar { width: 4px; }
+.wtb-sidebar-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+/* КАРТКА ОБ'ЄКТА */
+.wtb-location-card {
+  padding: 24px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wtb-location-card:hover {
+  border-color: #cbd5e1;
+  background: #fafafa;
+}
+
+.wtb-location-card.active {
+  border-color: var(--accent);
+  background: #f0f7ff;
+  box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.1);
+}
+
+.wtb-location-card h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+/* Рядки інфо */
+.info-line {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.address-text {
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.phone-text {
+  color: var(--text-gray);
+  font-weight: 600;
+}
+
+.hours-text {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* КАРТА */
+.wtb-map-viewport {
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #f8fafc;
+}
+
+/* Адаптивність */
+@media (max-width: 1024px) {
+  .wtb-content-grid { grid-template-columns: 1fr; height: auto; }
+  .wtb-sidebar-list { max-height: 400px; }
+  .wtb-map-viewport { height: 450px; }
+}

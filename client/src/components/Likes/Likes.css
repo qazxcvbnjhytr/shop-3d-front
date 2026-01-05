@@ -1,167 +1,159 @@
-/* ----------------- 1. Загальна стилізація кнопки (.like-button) ----------------- */
+/* =========================
+   LIKE BUTTON (smaller)
+   ========================= */
 
-.like-button {
-    /* Позиціонування на картці товару */
-    position: absolute; 
-    top: 0px;
-    right: 5px;
-    z-index: 100;
-    
-    /* 💥 ФІКС БІЛОГО КВАДРАТА: Робимо фон прозорим */
-    background: transparent; 
-    
-    /* Залишаємо тонку рамку для візуального відділення */
-    border: 1px solid rgba(0, 0, 0, 0.1); 
-    
-    border-radius: 50%; /* Кругла кнопка */
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    
-    /* Пружиниста анімація для "живого" відчуття */
-    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    
-    /* Важливо для Фонтану Сердечок */
-    overflow: visible; 
+.like-button{
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 100;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+
+  background: rgba(255,255,255,.65);
+  border: 1px solid rgba(0,0,0,.10);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,.10);
+
+  overflow: visible;
 }
 
-.like-button:hover {
-    background: rgba(255, 255, 255, 0.3); /* Легкий фон при наведенні */
-    transform: scale(1.1);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+.like-button:hover{
+
+  transform: scale(1.06);
+  box-shadow: 0 6px 14px rgba(0,0,0,.18);
 }
 
-.like-button:active {
-    transform: scale(0.95); /* Легке натискання */
+.like-button:active{
+  transform: scale(.96);
 }
 
-/* Стан завантаження */
-.like-button.loading {
-    opacity: 0.8;
-    cursor: wait;
-    animation: spin-load 0.5s infinite linear;
+/* loading */
+.like-button.loading{
+  opacity: .8;
+  cursor: wait;
+  animation: spin-load .55s linear infinite;
 }
 
-@keyframes spin-load {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+@keyframes spin-load{
+  from{ transform: rotate(0deg); }
+  to{ transform: rotate(360deg); }
 }
 
-/* ----------------- 2. СТИЛІЗАЦІЯ ІКОНКИ (FaHeart SVG) ----------------- */
-
-.like-button .heart-icon {
-    width: 20px;
-    height: 20px;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 2; /* Щоб було над фонтаном */
-}
-/* =========================================
-   ДОДАТКОВІ СТИЛІ ДЛЯ ЛАЙКА НА ФОТО
-   ========================================= */
-
-/* Контейнер лайка на зображенні */
-.like-container-on-image {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    z-index: 15; /* Вище, ніж бейдж знижки */
-    pointer-events: auto; /* Дозволяє клік */
+/* icon */
+.like-button .heart-icon{
+  width: 18px;
+  height: 18px;
+  transition: transform .2s ease, filter .2s ease;
+  z-index: 2;
 }
 
-/* Якщо у тебе є стилі для LikesComponent, 
-   вони автоматично застосуються до кнопки всередині */
-.like-container-on-image button {
-    /* Додаткові стилі, якщо потрібні: наприклад, прозорий фон */
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 50%;
-    padding: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+/* not liked */
+.heart-icon.is-unliked{
+  fill: none;
+  stroke: #374151;
+  stroke-width: 20px;
+  opacity: .85;
 }
 
-@media (max-width: 600px) {
-    .like-container-on-image {
-        top: 10px;
-        right: 10px;
-    }
-}
-/* 1. НЕ ЛАЙКНУТЕ (ПУСТЕ) */
-.heart-icon.is-unliked {
-    fill: none; 
-    stroke: #444; /* Сіра лінія */
-    stroke-width: 20px; /* Товщина обведення для FaHeart */
-    opacity: 0.8;
+/* liked */
+.like-button.liked .heart-icon.is-liked{
+  fill: #ff3040;
+  stroke: #ff3040;
+  stroke-width: 0;
+  animation: heart-pop .25s ease-in-out;
+  filter: drop-shadow(0 0 3px rgba(255,48,64,.55));
 }
 
-/* 2. ЛАЙКНУТЕ (ПОВНЕ - Яскраве) */
-.like-button.liked .heart-icon.is-liked {
-    fill: #ff3040; /* Червоне заповнення */
-    stroke: #ff3040; 
-    stroke-width: 0; 
-    
-    /* Анімація "стрибка" */
-    animation: heart-pop 0.3s ease-in-out; 
-    filter: drop-shadow(0 0 4px rgba(255, 48, 64, 0.8)); /* Світіння */
+@keyframes heart-pop{
+  0%{ transform: scale(1); }
+  60%{ transform: scale(1.18); }
+  100%{ transform: scale(1.08); }
 }
 
-@keyframes heart-pop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
-    100% { transform: scale(1.2) rotate(5deg); }
+/* =========================
+   Fountain (smaller)
+   ========================= */
+.like-button.liked::before{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform: translate(-50%, -50%);
+  width: 1px;
+  height: 1px;
+  z-index: 0;
+
+  box-shadow:
+    0 0 0 1px rgba(255,130,142,.95),
+    -8px 0 0 1px rgba(255,89,107,.95),
+    10px 0 0 1px rgba(255,48,64,.95),
+    4px 0 0 1px rgba(255,130,142,.85);
+
+  animation: fountain-rise .8s ease-out forwards;
 }
 
-/* ----------------- 3. КРЕАТИВ: ФОНТАН СЕРДЕЧОК (::before) ----------------- */
+.like-button:not(.liked)::before{
+  display:none;
+}
 
-/* ⛲️ ПСЕВДОЕЛЕМЕНТ ДЛЯ ЕФЕКТУ "ФОНТАНУ СЕРДЕЧОК" ⛲️ */
-.like-button.liked::before {
-    content: '';
-    position: absolute;
-    top: 50%; 
-    left: 50%;
+@keyframes fountain-rise{
+  0%{
     transform: translate(-50%, -50%);
-    width: 1px; 
-    height: 1px;
-    z-index: -1; 
-    
-    /* Генеруємо 4 "сердечка" (точки) через box-shadow */
-    box-shadow: 
-        0 0 0 1px #ff828e, 
-        -10px 0 0 1px #ff596b,
-        15px 0 0 1.5px #ff3040, 
-        5px 0 0 0.5px #ff828e;
-        
-    /* Запускаємо анімацію "підйому" */
-    animation: fountain-rise 1s ease-out forwards;
+    opacity: 1;
+  }
+  100%{
+    transform: translate(-50%, -55px);
+    opacity: 0;
+    box-shadow:
+      -14px -44px 0 0 rgba(255,130,142,.85),
+      -22px -38px 0 0 rgba(255,89,107,.85),
+      22px -48px 0 0 rgba(255,48,64,.85),
+      8px -32px 0 0 rgba(255,130,142,.75);
+  }
 }
 
-/* Прибираємо фонтан, коли лайк знято */
-.like-button:not(.liked)::before {
-    display: none;
+/* =========================
+   On-image wrapper (smaller)
+   ========================= */
+.like-container-on-image{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 15;
+  pointer-events: auto;
 }
 
-/* 💨 АНІМАЦІЯ ПІДЙОМУ І ЗНИКНЕННЯ (Opacity) 💨 */
-@keyframes fountain-rise {
-    0% {
-        transform: translate(-50%, -50%); /* Початок в центрі */
-        opacity: 1;
-        /* Тіні на старті */
-        box-shadow: 
-            0 0 0 1px #ff828e,
-            -10px 0 0 1px #ff596b,
-            15px 0 0 1.5px #ff3040,
-            5px 0 0 0.5px #ff828e;
-    }
-    100% {
-        /* Піднімаємо всі тіні вгору і розводимо в сторони, зникаємо */
-        transform: translate(-50%, -100px); /* Підняття вгору */
-        opacity: 0; 
-        box-shadow: 
-            -20px -80px 0 0 #ff828e, 
-            -30px -70px 0 0 #ff596b,
-            30px -90px 0 0 #ff3040,
-            10px -60px 0 0 #ff828e;
-    }
+/* якщо кнопка всередині */
+.like-container-on-image button{
+  background: rgba(255,255,255,.65);
+  border-radius: 999px;
+  padding: 0; /* щоб не роздувало кнопку */
+  box-shadow: none;
+}
+
+/* Mobile */
+@media (max-width: 600px){
+  .like-button{
+    width: 28px;
+    height: 28px;
+    top: 6px;
+    right: 6px;
+  }
+  .like-button .heart-icon{
+    width: 16px;
+    height: 16px;
+  }
+  .like-container-on-image{
+    top: 8px;
+    right: 8px;
+  }
 }

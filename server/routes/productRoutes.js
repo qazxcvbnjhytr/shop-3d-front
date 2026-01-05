@@ -1,82 +1,129 @@
-// routes/productRoutes.js (ПОВНА ФІНАЛЬНА ВЕРСІЯ)
-
 import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// 🔥 Імпортуємо всі контролери, включаючи НОВИЙ updateProduct
-import { 
-    getProducts, 
-    getProductById, 
-    createProduct, 
-    updateProduct, 
-    deleteProduct 
-} from "../controllers/productController.js"; 
-import { protect } from "../middleware/authMiddleware.js"; // Захист для адмінських дій
+import Product from "../models/Product.js";
+import {
+  getProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getProductFacets,
+  getProductBySlug,    // ✅ НОВЕ: з контролера
+  getProductsStats     // ✅ НОВЕ: з контролера
+} from "../controllers/productController.js";
+
+import { protect, admin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// --- НАЛАШТУВАННЯ MULTER ДЛЯ ЗБЕРІГАННЯ ФАЙЛІВ ТОВАРІВ ---
+/* =========================
+   MULTER STORAGE (ЗБЕРЕЖЕНО)
+========================= */
 const baseUploadPath = path.join(process.cwd(), "public/uploads/products");
 
-// Функція, що створює папку, якщо її немає (важливо для Multer)
 const ensureCategoryFolder = (categoryKey) => {
-    const folderPath = path.join(baseUploadPath, categoryKey);
-    if (!fs.existsSync(folderPath)) {
-        fs.mkdirSync(folderPath, { recursive: true });
-    }
-    return folderPath;
+  const safeKey = String(categoryKey || "uncategorized").trim() || "uncategorized";
+  const folderPath = path.join(baseUploadPath, safeKey);
+  if (!fs.existsSync(folderPath)) {
+    fs.mkdirSync(folderPath, { recursive: true });
+  }
+  return folderPath;
+};
+
+const attachCategoryFromProduct = async (req, res, next) => {
+  try {
+    if (req.body?.category) return next();
+    if (!req.params?.id) return next();
+    const product = await Product.findById(req.params.id).select("category");
+    if (product?.category) req.body.category = String(product.category);
+    return next();
+  } catch (err) {
+    return next();
+  }
 };
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        // Multer очікує поле 'category' у req.body.
-        let category = req.body.category || 'uncategorized';
-        const folderPath = ensureCategoryFolder(category);
-        cb(null, folderPath);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        const ext = path.extname(file.originalname);
-        // Зберігаємо у форматі: 'imageFile-12345678.jpg'
-        cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-    },
+  destination: (req, file, cb) => {
+    const category = req.body.category || "uncategorized";
+    const folderPath = ensureCategoryFolder(category);
+    cb(null, folderPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+  },
 });
 
 const upload = multer({ storage });
-// --- КІНЕЦЬ MULTER ---
 
-// =======================
-// 🔥 МАРШРУТИ ТОВАРІВ 🔥
-// =======================
+/* =========================
+   ROUTES
+========================= */
 
-// 1. GET /api/products — Отримати ВСІ товари (або з фільтром по категорії)
+// 1) Статистика для адмін-панелі (Додано)
+// Важливо: ставити перед /:id, щоб 'stats' не сприйнялося як ID
+router.get("/stats", protect, getProductsStats);
+
+// 2) GET /api/products — список + query filter
 router.get("/", getProducts);
+router.get("/filter", getProducts);
 
-// 2. GET /api/products/:id — Отримати ОДИН товар
+// 3) GET /api/products/facets — ключі фільтрів
+router.get("/facets", getProductFacets);
+
+/**
+ * 4) SEO URL: /api/products/by-slug/...
+ */
+// Повна версія (категорія + підкатегорія + slug)
+router.get("/by-slug/:category/:subCategory/:slug", async (req, res) => {
+  try {
+    const { category, subCategory, slug } = req.params;
+    const product = await Product.findOne({
+      slug: String(slug || "").trim(),
+      category: String(category || "").trim(),
+      subCategory: String(subCategory || "").trim(),
+    });
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.json(product);
+  } catch (e) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Глобальна версія по одному slug (Оновлено через контролер)
+router.get("/by-slug/:slug", getProductBySlug);
+
+// 5) GET /api/products/:id — по ID
 router.get("/:id", getProductById);
 
-// 3. POST /api/products — Створити товар (Тільки для авторизованих)
-router.post("/", 
-  protect, 
+// 6) POST /api/products — Створення
+router.post(
+  "/",
+  protect,
   upload.fields([
-    { name: "images", maxCount: 5 }, // 🔥 Нове ім'я поля для багатьох фото
-    { name: "modelFile", maxCount: 1 }
-  ]), 
+    { name: "images", maxCount: 5 },
+    { name: "modelFile", maxCount: 1 },
+  ]),
   createProduct
 );
 
-router.put("/:id", 
-  protect, 
+// 7) PUT /api/products/:id — Оновлення
+router.put(
+  "/:id",
+  protect,
+  attachCategoryFromProduct,
   upload.fields([
-    { name: "images", maxCount: 5 }, // 🔥 Нове ім'я поля для багатьох фото
-    { name: "modelFile", maxCount: 1 }
-  ]), 
-  updateProduct 
+    { name: "images", maxCount: 5 },
+    { name: "modelFile", maxCount: 1 },
+  ]),
+  updateProduct
 );
 
-// 5. DELETE /api/products/:id — Видалити товар
+// 8) DELETE /api/products/:id — Видалення
 router.delete("/:id", protect, deleteProduct);
 
 export default router;

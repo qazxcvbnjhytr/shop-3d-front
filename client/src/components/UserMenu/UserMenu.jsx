@@ -136,7 +136,7 @@ export default function UserMenu({ texts = {}, language = "ua", toggleLanguage }
                 </Link>
 
                 {isAdmin && (
-                  <Link className="user-dd-item" to="/admin/dashboard" onClick={() => setOpen(false)}>
+                  <Link className="user-dd-item" to="/admin" onClick={() => setOpen(false)}>
                     <FaUserShield />
                     <span>{adminPanelLabel}</span>
                   </Link>

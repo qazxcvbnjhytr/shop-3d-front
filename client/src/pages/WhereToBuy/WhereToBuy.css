@@ -1,0 +1,54 @@
+.where-to-buy-page{
+  width: 100%;
+}
+
+/* ✅ Головний контейнер: центрує контент і дає “повітря” */
+.where-to-buy-container{
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Якщо хочеш ще більше “не на весь екран” — зроби менший max-width */
+/* .where-to-buy-container{ max-width: 1180px; } */
+
+.where-to-buy-hero{
+  margin-bottom: 24px;
+}
+
+/* опціонально: зробити hero як картку, щоб відділити від фону */
+.where-to-buy-hero{
+  background: rgba(255,255,255,0.75);
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 22px 24px;
+  backdrop-filter: blur(8px);
+}
+
+.where-to-buy-title{
+  margin: 0 0 8px 0;
+  font-size: 36px;
+  font-weight: 900;
+  color: #1e293b;
+  text-align: left;
+}
+
+.where-to-buy-subtitle{
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.wtb-loading,
+.wtb-error{
+  margin-top: 14px;
+}
+
+/* ✅ ВАЖЛИВО: щоб карта/контент не “липли” до країв контейнера */
+@media (max-width: 900px) {
+  .where-to-buy-container{
+    padding: 18px 14px;
+  }
+}

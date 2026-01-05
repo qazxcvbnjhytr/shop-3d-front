@@ -1,3 +1,4 @@
+// client/src/pages/ProductPage/MiniGallery/MiniGallery.jsx
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import "./MiniGallery.css";
 
@@ -57,34 +58,33 @@ export default function MiniGallery({ product }) {
   }, [product?._id]);
 
   const mainSrc = imagesArray[mainIndex] || "/placeholder.png";
-
   const selectImage = useCallback((idx) => setMainIndex(idx), []);
-  const prev = useCallback(() => {
-    if (!hasMany) return;
-    setMainIndex((i) => (i - 1 + imagesArray.length) % imagesArray.length);
-  }, [hasMany, imagesArray.length]);
-
-  const next = useCallback(() => {
-    if (!hasMany) return;
-    setMainIndex((i) => (i + 1) % imagesArray.length);
-  }, [hasMany, imagesArray.length]);
 
   if (!imagesArray.length) return null;
 
   const discount = Number(product?.discount) || 0;
   const hasDiscount = discount > 0;
 
-  const alt = product?.name?.ua || product?.name?.en || "Product";
+  const title = product?.name?.ua || product?.name?.en || "Товар";
+  const alt = title;
 
   return (
     <div className="gallery">
       <div className="gallery__main">
-        <div className="gallery__like" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+        <div
+          className="gallery__like"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
           <LikesComponent product={product} />
         </div>
 
         {hasDiscount && (
-          <div className="gallery__badge" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+          <div
+            className="gallery__badge"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
             <DiscountBadge discount={discount} />
           </div>
         )}
@@ -97,6 +97,8 @@ export default function MiniGallery({ product }) {
           onClick={() => setModalOpen(true)}
         />
       </div>
+
+      {hasMany && <div className="gallery__divider" />}
 
       {hasMany && (
         <div className="gallery__thumbs">
@@ -115,14 +117,12 @@ export default function MiniGallery({ product }) {
 
       <ImageModal
         open={modalOpen}
-        src={mainSrc}
+        images={imagesArray}
+        startIndex={mainIndex}
         alt={alt}
+        title={title} // ✅ замість кнопок показуємо назву
         onClose={() => setModalOpen(false)}
-        onPrev={prev}
-        onNext={next}
-        hasMany={hasMany}
-        index={mainIndex}
-        total={imagesArray.length}
+        onApply={(idx) => setMainIndex(idx)}
       />
     </div>
   );

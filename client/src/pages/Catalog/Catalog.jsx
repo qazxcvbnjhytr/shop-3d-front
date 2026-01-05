@@ -4,14 +4,24 @@ import { useTranslation } from "../../hooks/useTranslation";
 import axios from "axios";
 import "./Catalog.css";
 
-// ✅ ПРАВИЛЬНА НАЗВА КАТЕГОРІЇ З MONGODB
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+// Хелпери
+const normalizeLang = (lang) => (lang === "uk" ? "ua" : (lang || "ua"));
+
+const pickText = (val, lang = "ua") => {
+  lang = normalizeLang(lang);
+  if (val == null) return "";
+  if (typeof val === "string" || typeof val === "number") return String(val);
+  if (typeof val === "object") return String(val?.[lang] ?? val?.ua ?? val?.en ?? "");
+  return "";
+};
+
+const getCategoryKey = (category, language) => pickText(category?.category, language).trim();
+
 const getCategoryDisplayName = (category, language) => {
-  return (
-    category?.names?.[language] ||
-    category?.names?.en ||
-    category?.category ||
-    ""
-  );
+  const lang = normalizeLang(language);
+  return pickText(category?.names, lang) || pickText(category?.category, lang) || "";
 };
 
 export default function Catalog() {
@@ -20,84 +30,71 @@ export default function Catalog() {
   const [searchParams] = useSearchParams();
 
   const catalogTexts = t?.catalogPage;
-
-  // ✅ пошук тепер з URL, щоб керувати з Header
+  const lang = normalizeLang(language);
   const q = (searchParams.get("q") || "").trim().toLowerCase();
-
+  
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    (async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/categories", {
-          withCredentials: true,
+        const res = await axios.get(`${API_URL}/api/categories`, { withCredentials: true });
+        const list = Array.isArray(res.data) ? res.data : [];
+        const cleaned = list.filter((c) => {
+          const key = getCategoryKey(c, lang);
+          return key && !key.includes("..");
         });
-
-        setCategories(Array.isArray(res.data) ? res.data : []);
+        setCategories(cleaned);
       } catch (err) {
         console.error("Failed to load categories:", err);
-        setCategories([]);
       }
-    };
+    })();
+  }, [lang]);
 
-    fetchCategories();
-  }, []);
-
-  const filteredCategories = useMemo(() => {
+  const filtered = useMemo(() => {
     if (!q) return categories;
+    return categories.filter((item) => getCategoryDisplayName(item, lang).toLowerCase().includes(q));
+  }, [categories, q, lang]);
 
-    return categories.filter((item) =>
-      getCategoryDisplayName(item, language)
-        .toLowerCase()
-        .includes(q)
-    );
-  }, [categories, q, language]);
-
-  if (loading || !catalogTexts) {
-    return null; // або Loader
-  }
+  if (loading || !catalogTexts) return <div className="catalog-loading">Завантаження...</div>;
 
   const handleCategoryClick = (categoryKey) => {
-    navigate(`/catalog/${categoryKey}`);
+    if (!categoryKey) return;
+    navigate(`/catalog/${encodeURIComponent(categoryKey)}`);
   };
 
   return (
     <div className="catalog-page">
-      <h2 className="catalog-title">{catalogTexts.catalog}</h2>
+      <div className="catalog-header">
+        <h2 className="catalog-title">{pickText(catalogTexts.catalog, lang) || "Каталог"}</h2>
+      </div>
 
       <div className="catalog-grid">
-        {filteredCategories.length > 0 ? (
-          filteredCategories.map((item) => (
-            <div key={item._id} className="catalog-item">
-              <div
-                className="catalog-image-wrapper"
-                onClick={() => handleCategoryClick(item.category)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleCategoryClick(item.category);
-                }}
-              >
-                <img
-                  src={item.image}
-                  alt={getCategoryDisplayName(item, language)}
-                  className="catalog-image"
-                />
+        {filtered.length ? (
+          filtered.map((item, idx) => {
+            const categoryKey = getCategoryKey(item, lang);
+            const title = getCategoryDisplayName(item, lang);
+            const key = `${categoryKey}-${item._id?.$oid || idx}`;
 
-                <div className="category-name">
-                  {getCategoryDisplayName(item, language)}
+            return (
+              <div 
+                key={key} 
+                className="catalog-card"
+                onClick={() => handleCategoryClick(categoryKey)}
+              >
+                <div className="card-image-box">
+                  <img src={item.image} alt={title} className="card-image" />
+                  <div className="card-overlay">
+                    <span className="card-title">{title}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
-          <p>
-            {q
-              ? language === "ua"
-                ? "Нічого не знайдено за запитом."
-                : "Nothing found for your query."
-              : catalogTexts.noProducts}
-          </p>
+          <div className="catalog-empty">
+            {q ? "Нічого не знайдено" : (pickText(catalogTexts.noProducts, lang) || "Категорії відсутні")}
+          </div>
         )}
       </div>
     </div>

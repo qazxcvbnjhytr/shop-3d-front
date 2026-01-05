@@ -1,318 +1,294 @@
-// client/src/pages/ProductPage/ProductPage.jsx
-import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { FaArrowLeft, FaCube, FaTruck, FaShieldAlt, FaCheckCircle } from "react-icons/fa";
 
+// Contexts
 import { LanguageContext } from "@context/LanguageContext";
 import { AuthContext } from "@context/AuthContext";
 
-import { FaArrowLeft, FaCube } from "react-icons/fa";
+// ✅ Hook translations
+import { useTranslation } from "../../hooks/useTranslation";
 
-// Blocks
-import DescriptionTab from "./DescriptionTab/DescriptionTab.jsx";
-import DeliveryTab from "./DeliveryTab/DeliveryTab.jsx";
-import MiniGallery from "./MiniGallery/MiniGallery.jsx";
-import ProductReviews from "./ProductReviews/ProductReviews.jsx";
+// ✅ Hook configs (spec templates/fields/dicts)
+import { useSpecConfig } from "../../hooks/useSpecConfig";
+
+// Helpers
+import { pickText, toNumberOrNull, joinUrl } from "./productHelpers";
 
 // Components
-import ModelViewer from "../../components/ModelViewer.jsx";
+import BuyButton from "../DinamicProduct/BuyButton/BuyButton.jsx";
+import RatingStars from "../DinamicProduct/RatingStars/RatingStars.jsx";
+import Articule from "../DinamicProduct/Articule/Articule.jsx";
+import MiniGallery from "./MiniGallery/MiniGallery.jsx";
+import ProductReviews from "./ProductReviews/ProductReviews.jsx";
+import Specifications from "./Specifications/Specifications.jsx";
+import SpecificationsMini from "./SpecificationsMini/SpecificationsMini.jsx";
+import DeliveryTab from "./DeliveryTab/DeliveryTab.jsx";
+import Description from "./description/description.jsx";
+import ModelViewer from "./ModelViewer/ModelViewer.jsx";
 import LikesComponent from "../../components/Likes/LikesComponent.jsx";
 
-// Styles
 import "./ProductPage.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-const pickText = (value, language) => {
-  // language може бути: "ua" | "uk" | "en"
-  const lang = language === "uk" ? "ua" : language;
-  if (typeof value === "string" || typeof value === "number") return String(value);
-  if (value && typeof value === "object") return value?.[lang] || value?.ua || value?.uk || value?.en || "";
-  return "";
-};
-
-const toNumberOrNull = (v) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-};
-
-const joinUrl = (base, raw) => {
-  if (!raw || typeof raw !== "string") return "";
-  if (raw.startsWith("http")) return raw;
-  if (raw.startsWith("/")) return `${base}${raw}`;
-  return `${base}/${raw}`.replace(/\/{2,}/g, "/").replace(":/", "://");
-};
-
-const isModelFile = (url) => {
-  const clean = String(url || "").split("?")[0];
-  return /\.(glb|gltf|usdz)$/i.test(clean);
-};
 
 export default function ProductPage() {
   const navigate = useNavigate();
   const params = useParams();
 
-  // підтримка різних назв param в роуті
-  const productId = params.id || params.productId || params._id;
+  const { language } = useContext(LanguageContext);
+  const { user } = useContext(AuthContext) || {}; // поки не використовуємо, але хай буде
+  const { t } = useTranslation();
 
-  const { language, translations, loading: langLoading } = useContext(LanguageContext);
-  const { user } = useContext(AuthContext);
-
-  // ✅ так само, як у HeaderTop
-  const texts = translations?.productPage || {};
-
-  const tr = useCallback(
-    (key, fallback) => {
-      const v = texts?.[key];
-      return typeof v === "string" && v.trim() ? v : fallback;
-    },
-    [texts]
-  );
-
-  const token = localStorage.getItem("token") || "";
+  const productId = params.id || params.productId || params._id || "";
+  const categoryParam = params.category || "";
+  const subCategoryParam = params.subCategory || "";
+  const slugParam = params.slug || "";
 
   const [product, setProduct] = useState(null);
-  const [activeTab, setActiveTab] = useState("description"); // description | reviews | delivery
+  const [activeTab, setActiveTab] = useState("reviews");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  // ✅ 3D модалка відкривається тільки по кнопці
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [ratingState, setRatingState] = useState({ avgRating: 0, count: 0 });
 
-  const onBack = useCallback(() => navigate(-1), [navigate]);
+  const txt = (key, fallback) => t?.productPage?.[key] || fallback;
 
-  // --- Fetch product ---
-// --- Fetch product ---
-useEffect(() => {
-  let alive = true;
+  const onBack = () => navigate(-1);
 
-  const load = async () => {
-    if (!productId) {
-      if (!alive) return;
-      setError("Product id is missing.");
-      setLoading(false);
-      return;
-    }
+  useEffect(() => {
+    let alive = true;
 
-    if (!alive) return;
-    setLoading(true);
-    setError("");
+    const fetchProduct = async () => {
+      setLoading(true);
+      setError("");
 
-    try {
-      const res = await axios.get(`${API_URL}/api/products/${productId}`);
-      if (!alive) return;
-      setProduct(res.data);
-    } catch (e) {
-      if (!alive) return;
-      setProduct(null);
-      setError(e?.response?.data?.message || e?.message || "Failed to load product.");
-    } finally {
-      // ✅ без return у finally
-      if (alive) setLoading(false);
-    }
-  };
+      try {
+        let res;
+        if (slugParam && categoryParam) {
+          res = await axios.get(
+            `${API_URL}/api/products/by-slug/${categoryParam}/${subCategoryParam}/${slugParam}`
+          );
+        } else {
+          res = await axios.get(`${API_URL}/api/products/${productId}`);
+        }
 
-  load();
+        if (!alive) return;
 
-  return () => {
-    alive = false;
-  };
-}, [productId]);
+        setProduct(res.data);
+        setRatingState({
+          avgRating: toNumberOrNull(res.data?.ratingAvg) ?? 0,
+          count: toNumberOrNull(res.data?.ratingCount) ?? 0,
+        });
+      } catch (e) {
+        if (alive) setError(txt("notFound", "Товар не знайдено"));
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
 
-  // ✅ name може бути {ua,en}
-  const name = useMemo(() => {
-    if (!product) return "";
-    return (
-      pickText(product?.name, language) ||
-      String(product?.name_ua || "") ||
-      String(product?.name_en || "") ||
-      String(product?.title || "") ||
-      "—"
-    );
-  }, [product, language]);
+    fetchProduct();
+    return () => {
+      alive = false;
+    };
+  }, [productId, slugParam, categoryParam, subCategoryParam, t]);
 
-  // ✅ price/discount можуть бути в root або в specifications
-  const price = useMemo(() => {
-    if (!product) return null;
-    return toNumberOrNull(product?.price) ?? toNumberOrNull(product?.specifications?.price) ?? null;
-  }, [product]);
+  const name = useMemo(() => pickText(product?.name, language), [product, language]);
+  const sku = useMemo(() => String(product?.sku || "").trim(), [product]);
 
-  const discount = useMemo(() => {
-    if (!product) return 0;
-    const d = toNumberOrNull(product?.discount) ?? toNumberOrNull(product?.specifications?.discount) ?? 0;
-    return Number.isFinite(d) ? d : 0;
-  }, [product]);
-
+  const price = useMemo(() => toNumberOrNull(product?.price), [product]);
+  const discount = useMemo(() => toNumberOrNull(product?.discount) ?? 0, [product]);
   const newPrice = useMemo(() => {
-    if (price === null) return null;
-    if (!discount) return price;
-    return Math.round(price * (1 - discount / 100));
+    if (!price) return null;
+    const d = Math.max(0, Math.min(100, discount));
+    return Math.round(price * (1 - d / 100));
   }, [price, discount]);
 
-  // ✅ 3D URL — тільки якщо це реально модель (glb/gltf/usdz)
   const modelUrl = useMemo(() => {
-    if (!product) return "";
-    const raw = product?.modelUrl || "";
-    const abs = raw ? joinUrl(API_URL, raw) : "";
-    return abs && isModelFile(abs) ? abs : "";
+    return product?.modelUrl ? joinUrl(API_URL, product.modelUrl) : "";
   }, [product]);
 
-  // ✅ Продукт для лайків: LikesComponent очікує prop "product"
-  const likeProduct = useMemo(() => {
-    if (!product) return null;
+  const inStock = product?.inStock !== false;
 
-    const img =
-      product?.image ||
-      product?.imageUrl ||
-      (Array.isArray(product?.images) ? product.images[0] : "") ||
-      product?.productImage ||
-      "";
+  // ✅ Важливо: typeKey з product -> конфіги
+  const typeKey = useMemo(() => {
+    return String(product?.typeKey || "default").trim() || "default";
+  }, [product]);
 
-    return {
-      ...product,
-      image: img,
-      discount,
-      price,
-      category: product?.category,
-    };
-  }, [product, discount, price]);
+  // ✅ Підтягуємо template + fields + dictionaries
+  const {
+    template: specTemplate,
+    fields: specFields,
+    dictionaries,
+    loading: specLoading,
+    error: specError,
+  } = useSpecConfig(typeKey);
 
-  // --- UI states ---
-  if (langLoading) return null;
+  const collectionLabels = useMemo(() => {
+    const keys = Array.isArray(product?.collectionKeys) ? product.collectionKeys : [];
+    return keys.map((k) => t?.collections?.[k] || k);
+  }, [product, t]);
 
-  if (loading) {
-    return (
-      <div className="product-page">
-        <div className="product-page__state">
-          {tr("loading", language === "en" ? "Loading..." : "Завантаження...")}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="product-page">
-        <div className="product-page__state product-page__state--error">{error}</div>
-        <button className="product-page__back" onClick={onBack} type="button">
-          <FaArrowLeft /> {tr("back", language === "en" ? "Back" : "Назад")}
-        </button>
-      </div>
-    );
-  }
-
-  if (!product) {
-    return (
-      <div className="product-page">
-        <div className="product-page__state">
-          {tr("notFound", language === "en" ? "Product not found" : "Товар не знайдено")}
-        </div>
-        <button className="product-page__back" onClick={onBack} type="button">
-          <FaArrowLeft /> {tr("back", language === "en" ? "Back" : "Назад")}
-        </button>
-      </div>
-    );
-  }
+  if (loading) return <div className="pp-loading">{txt("loading", "Завантаження...")}</div>;
+  if (!product) return <div className="pp-error">{error || txt("notFound", "Товар не знайдено")}</div>;
 
   return (
     <div className="product-page">
-      {/* Top bar */}
-      <div className="product-page__top">
-        <button className="product-page__back" onClick={onBack} type="button">
-          <FaArrowLeft /> {tr("back", language === "en" ? "Back" : "Назад")}
+      <nav className="pp-nav">
+        <button className="pp-back-btn" onClick={onBack}>
+          <FaArrowLeft /> <span>{txt("back", "Назад")}</span>
         </button>
 
-        <div className="product-page__like">
-          {likeProduct ? <LikesComponent product={likeProduct} /> : null}
+        <div className="pp-likes-wrapper">
+          <LikesComponent product={product} />
         </div>
-      </div>
+      </nav>
 
-      {/* Two колонki як на прикладі: зліва фото, справа ціна/назва */}
-      <div className="product-page__hero">
-        <div className="product-page__heroLeft">
-          {/* велике фото (всередині MiniGallery ти вже робиш thumbnails) */}
-          <MiniGallery product={product} />
-        </div>
-
-        <div className="product-page__heroRight">
-          <h1 className="product-page__title">{name}</h1>
-
-          <div className="product-page__priceRow">
-            {discount > 0 && price !== null ? (
-              <span className="product-page__oldPrice">{price.toLocaleString("uk-UA")} грн</span>
-            ) : null}
-
-            <span className="product-page__newPrice">
-              {newPrice !== null ? `${newPrice.toLocaleString("uk-UA")} грн` : "—"}
-            </span>
-
-            {discount > 0 ? <span className="product-page__discountBadge">-{discount}%</span> : null}
+      <div className="pp-grid">
+        {/* Gallery */}
+        <div className="pp-gallery-col">
+          <div className="pp-gallery-sticky">
+            <MiniGallery product={product} />
           </div>
+        </div>
 
-          {/* 3D Viewer (кнопка + модалка) */}
-          {modelUrl ? (
-            <div className="product-page__viewer">
-              <div className="product-page__viewerTitle">
-                <FaCube /> {tr("view3D", language === "en" ? "View in 3D" : "Перегляд 3D")}
+        {/* Info & Buy */}
+        <div className="pp-info-col">
+          <header className="pp-header">
+            <div className="pp-status-row">
+              {inStock ? (
+                <span className="status-badge instock">
+                  <FaCheckCircle /> {txt("inStock", "В наявності")}
+                </span>
+              ) : (
+                <span className="status-badge outstock">{txt("outOfStock", "Немає в наявності")}</span>
+              )}
+              <Articule value={sku} />
+            </div>
+
+            <h1 className="pp-title">{name}</h1>
+
+            <div className="pp-rating-row">
+              <RatingStars value={ratingState.avgRating} count={ratingState.count} />
+              <button className="pp-reviews-link" onClick={() => setActiveTab("reviews")}>
+                {ratingState.count} {txt("reviewsCount", "відгуків")}
+              </button>
+            </div>
+
+            {collectionLabels.length > 0 && (
+              <div className="pp-collection-row">
+                <strong>{txt("collection", "Колекція")}:</strong> {collectionLabels.join(", ")}
+              </div>
+            )}
+          </header>
+
+          <div className="pp-action-card">
+            <div className="pp-price-block">
+              {discount > 0 && price != null && <span className="pp-old-price">{price.toLocaleString()} ₴</span>}
+
+              <div className="pp-current-price">
+                {newPrice != null ? newPrice.toLocaleString() : "—"} <span className="currency">₴</span>
               </div>
 
-              <button
-                type="button"
-                className="product-page__open3d"
-                onClick={() => setViewerOpen(true)}
-              >
-                {tr("view3D", language === "en" ? "View in 3D" : "Перегляд 3D")}
-              </button>
-
-              {viewerOpen && <ModelViewer modelUrl={modelUrl} onClose={() => setViewerOpen(false)} />}
+              {discount > 0 && <span className="pp-discount-tag">{txt("discount", "Знижка")} -{discount}%</span>}
             </div>
-          ) : null}
+
+            <div className="pp-buttons-stack">
+              <BuyButton item={product} className="pp-main-cta" />
+
+              {modelUrl && (
+                <button className="pp-3d-btn" onClick={() => setViewerOpen(true)}>
+                  <FaCube className="icon-3d" />
+                  <span>{txt("view3D", "Подивитись у 3D")}</span>
+                </button>
+              )}
+            </div>
+
+            <div className="pp-trust-badges">
+              <div className="trust-item">
+                <FaTruck /> <span>{txt("fastDelivery", "Швидка доставка")}</span>
+              </div>
+              <div className="trust-item">
+                <FaShieldAlt /> <span>{txt("warranty", "Гарантія якості")}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pp-specs-preview">
+            <SpecificationsMini product={product} language={language} t={t} />
+
+            {product.colorKeys?.length > 0 && (
+              <div className="pp-color-picker">
+                <span className="label">{txt("color", "Колір")}:</span>
+                <div className="color-dots">
+                  {product.colorKeys.map((c) => (
+                    <div
+                      key={c}
+                      className="color-dot active"
+                      title={t?.colors?.[c] || c}
+                      style={{
+                        background:
+                          c === "red" ? "#e74c3c" : c === "dark_gray" ? "#444" : "#555",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="pp-desc-short">
+            <Description product={product} language={language} isPreview={true} />
+          </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="product-page__tabs">
-        <button
-          className={`product-page__tab ${activeTab === "description" ? "is-active" : ""}`}
-          onClick={() => setActiveTab("description")}
-          type="button"
-        >
-          {tr("descriptionTab", language === "en" ? "Description" : "Опис")}
-        </button>
+      <div className="pp-tabs-section">
+        <div className="pp-tabs-header">
+          {["reviews", "delivery", "specs"].map((tab) => (
+            <button
+              key={tab}
+              className={`pp-tab-btn ${activeTab === tab ? "active" : ""}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {txt(`${tab}Tab`, tab)}
+            </button>
+          ))}
+        </div>
 
-        <button
-          className={`product-page__tab ${activeTab === "reviews" ? "is-active" : ""}`}
-          onClick={() => setActiveTab("reviews")}
-          type="button"
-        >
-          {tr("reviewsTab", language === "en" ? "Reviews" : "Відгуки")}
-        </button>
+        <div className="pp-tab-content">
+          {activeTab === "reviews" && (
+            <ProductReviews productId={product._id} language={language} onStatsChange={setRatingState} />
+          )}
 
-        <button
-          className={`product-page__tab ${activeTab === "delivery" ? "is-active" : ""}`}
-          onClick={() => setActiveTab("delivery")}
-          type="button"
-        >
-          {tr("deliveryTab", language === "en" ? "Delivery" : "Доставка")}
-        </button>
+          {activeTab === "delivery" && <DeliveryTab product={product} language={language} />}
+
+          {activeTab === "specs" && (
+            <>
+              {!!specError && (
+                <div className="specs-empty">
+                  {language === "en"
+                    ? `Config load error: ${specError}`
+                    : `Помилка завантаження конфігу: ${specError}`}
+                </div>
+              )}
+
+              <Specifications
+                product={product}
+                language={language}
+                t={t}
+                specTemplate={specTemplate}
+                specFields={specFields}
+                dictionaries={dictionaries}
+                loading={specLoading}
+              />
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="tab-content">
-        {activeTab === "description" && <DescriptionTab product={product} language={language} />}
-
-        {activeTab === "reviews" && (
-          <ProductReviews
-            productId={product?._id}
-            token={token}
-            userId={user?._id}
-            userName={user?.name || user?.email || ""}
-            language={language}
-          />
-        )}
-
-        {activeTab === "delivery" && <DeliveryTab product={product} language={language} />}
-      </div>
+      {viewerOpen && <ModelViewer modelUrl={modelUrl} onClose={() => setViewerOpen(false)} />}
     </div>
   );
 }

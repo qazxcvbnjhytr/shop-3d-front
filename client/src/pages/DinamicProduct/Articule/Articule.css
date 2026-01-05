@@ -1,0 +1,20 @@
+.articule{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin: 6px 12px 0;
+  font-size: 12px;
+  opacity: .75;
+  white-space: nowrap;
+}
+
+.articule__label{
+  font-weight: 700;
+}
+
+.articule__code{
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

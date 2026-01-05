@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import axios from "axios";
@@ -13,23 +14,82 @@ export const LikesContext = createContext({
   likedProductIds: [],
   toggleLike: async () => {},
   isLiked: () => false,
+  getLikeById: () => null,
   isLoading: false,
+  reloadLikes: async () => {},
 });
+
+const RAW_API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+const normalizeBase = (raw) => {
+  const s = String(raw || "").replace(/\/+$/, "");
+  return s.replace(/\/api\/?$/, "");
+};
+
+const BASE = normalizeBase(RAW_API);
+const LIKES_URL = `${BASE}/api/likes`;
+
+// Универсальный extractId (НЕ используем его для лайков напрямую)
+const extractId = (v) => {
+  if (!v) return "";
+  if (typeof v === "string" || typeof v === "number") return String(v);
+
+  if (typeof v === "object") {
+    if (v.$oid) return String(v.$oid);
+    if (v._id) return extractId(v._id);
+    if (v.id) return extractId(v.id);
+    if (v.productId) return extractId(v.productId);
+    if (v.product) return extractId(v.product);
+  }
+  return "";
+};
+
+// ✅ ВАЖНО: productId вытаскиваем СТРОГО (НЕ возвращаем like._id)
+const extractProductId = (like) => {
+  if (!like) return "";
+  if (typeof like === "string" || typeof like === "number") return String(like);
+  if (typeof like === "object") {
+    if (like.productId) return String(like.productId);
+    if (like.product?._id) return extractId(like.product._id);
+    if (like.product?.id) return extractId(like.product.id);
+  }
+  return "";
+};
+
+const pickName = (p) => {
+  if (!p) return "";
+  if (typeof p?.productName === "string") return p.productName;
+  if (typeof p?.name === "string") return p.name;
+  return p?.name_ua || p?.name_en || p?.title || "";
+};
+
+const normalizeLikesFromResponse = (data) => {
+  const user = data?.user || data;
+  if (Array.isArray(user?.likes)) return user.likes;
+  if (Array.isArray(data?.likes)) return data.likes;
+  if (Array.isArray(data)) return data;
+  return [];
+};
 
 export const LikesProvider = ({ children }) => {
   const { user } = useAuth();
-  const token = user?.token || localStorage.getItem("token");
+  const token = user?.token || localStorage.getItem("token") || "";
 
   const [likedProducts, setLikedProducts] = useState([]);
   const [likedProductIds, setLikedProductIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const API_URL = "http://localhost:5000/api/likes";
+  const headers = useMemo(() => {
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }, [token]);
 
-  const syncState = useCallback((products) => {
-    const arr = Array.isArray(products) ? products : [];
+  const syncState = useCallback((likes) => {
+    const arr = Array.isArray(likes) ? likes : [];
     setLikedProducts(arr);
-    setLikedProductIds(arr.map((p) => String(p.productId)));
+
+    // ✅ ids только из productId
+    const ids = arr.map(extractProductId).filter(Boolean);
+    setLikedProductIds(ids);
   }, []);
 
   const loadLikes = useCallback(async () => {
@@ -40,17 +100,15 @@ export const LikesProvider = ({ children }) => {
 
     setIsLoading(true);
     try {
-      const res = await axios.get(API_URL, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      syncState(res.data?.likes || res.data);
+      const res = await axios.get(LIKES_URL, { headers });
+      syncState(normalizeLikesFromResponse(res.data));
     } catch (err) {
       console.error("[LikesContext] GET Error:", err.response?.data || err.message);
       syncState([]);
     } finally {
       setIsLoading(false);
     }
-  }, [token, syncState]);
+  }, [token, headers, syncState]);
 
   useEffect(() => {
     loadLikes();
@@ -61,6 +119,15 @@ export const LikesProvider = ({ children }) => {
     [likedProductIds]
   );
 
+  const getLikeById = useCallback(
+    (id) => {
+      const pid = String(id || "");
+      if (!pid) return null;
+      return (likedProducts || []).find((x) => extractProductId(x) === pid) || null;
+    },
+    [likedProducts]
+  );
+
   const toggleLike = useCallback(
     async (product) => {
       if (!token) {
@@ -68,34 +135,27 @@ export const LikesProvider = ({ children }) => {
         return;
       }
 
-      const productId = String(product?.id || product?._id || product?.productId || "");
+      const productId = extractId(product);
       if (!productId) return;
 
       setIsLoading(true);
-
       try {
         const productData = {
           productId,
-          productName:
-            product?.name ||
-            product?.name_ua ||
-            product?.name_en ||
-            product?.title ||
-            "",
-          productCategory: product?.category || "",
+          productName: pickName(product),
+          productCategory: String(product?.category || product?.productCategory || ""),
           productImage:
+            product?.productImage ||
             product?.image ||
             product?.imageUrl ||
-            product?.images?.[0] ||
+            (Array.isArray(product?.images) ? product.images[0] : "") ||
             "",
           discount: Number(product?.discount || 0),
+          price: Number(product?.price || 0),
         };
 
-        const res = await axios.post(API_URL, productData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        syncState(res.data?.likes || res.data);
+        const res = await axios.post(LIKES_URL, productData, { headers });
+        syncState(normalizeLikesFromResponse(res.data));
       } catch (err) {
         console.error("[LikesContext] TOGGLE Error:", err.response?.data || err.message);
         alert("Помилка оновлення лайків. Дивись консоль.");
@@ -103,12 +163,20 @@ export const LikesProvider = ({ children }) => {
         setIsLoading(false);
       }
     },
-    [token, syncState]
+    [token, headers, syncState]
   );
 
   return (
     <LikesContext.Provider
-      value={{ likedProducts, likedProductIds, toggleLike, isLiked, isLoading }}
+      value={{
+        likedProducts,
+        likedProductIds,
+        toggleLike,
+        isLiked,
+        getLikeById,
+        isLoading,
+        reloadLikes: loadLikes,
+      }}
     >
       {children}
     </LikesContext.Provider>

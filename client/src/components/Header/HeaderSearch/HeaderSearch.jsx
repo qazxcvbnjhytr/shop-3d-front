@@ -29,12 +29,20 @@ const toNumber = (v) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+// discount = % (0..100)
 const calcPrices = (price, discount) => {
   const p = toNumber(price);
-  const d = toNumber(discount);
+  const d = Math.min(100, Math.max(0, toNumber(discount)));
   const hasDiscount = d > 0;
-  const finalPrice = hasDiscount ? Math.round(p - (p * d) / 100) : p;
+  const finalPrice = hasDiscount ? Math.round((p * (100 - d)) / 100) : p;
   return { price: p, discount: d, hasDiscount, finalPrice };
+};
+
+const buildImg = (raw) => {
+  if (!raw || typeof raw !== "string") return "/placeholder.png";
+  if (/^(https?:\/\/|data:|blob:)/i.test(raw)) return raw;
+  if (raw.startsWith("/")) return `${API_URL}${raw}`;
+  return `${API_URL}/${raw}`.replace(/\/{2,}/g, "/").replace(":/", "://");
 };
 
 export default function HeaderSearch() {
@@ -49,8 +57,8 @@ export default function HeaderSearch() {
   const [debouncedQ, setDebouncedQ] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // індекс товарів (під пошук)
-  const [index, setIndex] = useState([]); // [{id, category, img, nameUa, nameEn, price, discount, blob}]
+  // [{ id, category, subCategory, img, nameUa, nameEn, price, discount, blob }]
+  const [index, setIndex] = useState([]);
 
   // debounce введення
   useEffect(() => {
@@ -64,55 +72,56 @@ export default function HeaderSearch() {
 
     try {
       setLoading(true);
+
       const res = await axios.get(`${API_URL}/api/products`);
       const arr = Array.isArray(res.data) ? res.data : [];
 
       const mapped = arr.map((p, idx) => {
-        const id = p._id || p.id || `p-${idx}`;
+        const id = String(p?._id || p?.id || `p-${idx}`);
 
-        const category = p.category || p.productCategory || p.categoryKey || "";
-        const nameUa = pickText(p.name, "ua") || pickText(p.productName, "ua");
-        const nameEn = pickText(p.name, "en") || pickText(p.productName, "en");
+        const category = String(p?.category || p?.productCategory || p?.categoryKey || "all");
+        const subCategory = String(p?.subCategory || p?.subcategory || p?.subCategoryKey || "product");
+
+        const nameUa = pickText(p?.name, "ua") || pickText(p?.productName, "ua");
+        const nameEn = pickText(p?.name, "en") || pickText(p?.productName, "en");
 
         const imgRaw =
-          p.image ||
-          (Array.isArray(p.images) ? p.images[0] : null) ||
-          p.productImage ||
+          p?.image ||
+          (Array.isArray(p?.images) ? p.images[0] : null) ||
+          p?.productImage ||
           null;
 
-        const img = imgRaw ? `${API_URL}${imgRaw}` : "/placeholder.png";
+        const img = buildImg(imgRaw);
 
-        const { price, discount } = calcPrices(p.price, p.discount);
+        // ✅ зберігаємо сирі значення з БД (price + discount%)
+        const price = toNumber(p?.price);
+        const discount = toNumber(p?.discount);
 
-        // В blob кладемо все, що корисно для “інтуїтивного” пошуку
-        // (назва UA+EN, категорія, тип, матеріал тощо).
-        const type = p.typeKey || p.type || "";
-        const material =
-          p?.specifications?.materialKey ||
-          p?.materialKey ||
-          p?.material ||
-          "";
+        // blob для пошуку
+        const type = p?.typeKey || p?.type || "";
+        const material = p?.specifications?.materialKey || p?.materialKey || p?.material || "";
         const color = p?.colorKey || p?.color || "";
-        const room = p?.roomKey || p?.room || ""; // якщо додаси “для кухні/дитячої” — це сюди
+        const room = p?.roomKey || p?.room || "";
+        const sku = p?.sku || "";
 
         const blob = normalize(
-          `${nameUa} ${nameEn} ${category} ${type} ${material} ${color} ${room}`
+          `${nameUa} ${nameEn} ${sku} ${category} ${subCategory} ${type} ${material} ${color} ${room}`
         );
 
-        return { id, category, img, nameUa, nameEn, price, discount, blob, raw: p };
+        return { id, category, subCategory, img, nameUa, nameEn, price, discount, blob };
       });
 
       setIndex(mapped);
     } catch (e) {
       console.error("[HeaderSearch] products load error:", e);
       setIndex([]);
-      loadedRef.current = false; // щоб можна було повторити
+      loadedRef.current = false; // дозволяємо повторити
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // відкриття/закриття по кліку поза компонентом
+  // клік поза компонентом
   useEffect(() => {
     const onDown = (e) => {
       if (!wrapRef.current) return;
@@ -128,19 +137,23 @@ export default function HeaderSearch() {
     if (!queryNorm || queryNorm.length < MIN_LEN) return [];
     if (!index.length) return [];
 
-    // простий includes; якщо захочеш “розумніший” — можна зробити токени і score.
     const out = index.filter((it) => it.blob.includes(queryNorm)).slice(0, MAX_RESULTS);
 
     return out.map((it) => {
-      const displayName = language === "ua" ? (it.nameUa || it.nameEn) : (it.nameEn || it.nameUa);
+      const displayName =
+        language === "ua" ? (it.nameUa || it.nameEn) : (it.nameEn || it.nameUa);
+
       const { hasDiscount, finalPrice } = calcPrices(it.price, it.discount);
+
+      // ✅ правильний роут: /catalog/:category/:subCategory/:id
+      const to = `/catalog/${it.category}/${it.subCategory}/${it.id}`;
 
       return {
         ...it,
         displayName: displayName || (language === "ua" ? "Товар" : "Product"),
         hasDiscount,
         finalPrice,
-        to: it.category ? `/catalog/${it.category}/${it.id}` : `/catalog`,
+        to,
       };
     });
   }, [index, queryNorm, language]);
@@ -158,14 +171,11 @@ export default function HeaderSearch() {
   const onSubmit = (e) => {
     e.preventDefault();
 
-    // Enter: якщо є результати — відкриваємо перший.
     if (results.length) {
       goTo(results[0].to);
       return;
     }
 
-    // fallback (за бажанням): вести на каталог
-    // (пізніше можна зробити /search?q=... сторінку).
     navigate("/catalog");
     setOpen(false);
   };
@@ -180,7 +190,11 @@ export default function HeaderSearch() {
           onKeyDown={(e) => {
             if (e.key === "Escape") setOpen(false);
           }}
-          placeholder={language === "ua" ? "Пошук меблів (назва, тип, матеріал...)" : "Search furniture (name, type, material...)"}
+          placeholder={
+            language === "ua"
+              ? "Пошук меблів (назва, тип, матеріал...)"
+              : "Search furniture (name, type, material...)"
+          }
           aria-label="Search"
           autoComplete="off"
         />
@@ -190,7 +204,7 @@ export default function HeaderSearch() {
         </button>
       </form>
 
-      {open && (q.trim().length >= MIN_LEN) && (
+      {open && q.trim().length >= MIN_LEN && (
         <div className="hs-dd" role="listbox">
           <div className="hs-dd__head">
             <div className="hs-dd__title">
@@ -199,7 +213,12 @@ export default function HeaderSearch() {
                 : (language === "ua" ? "Результати" : "Results")}
             </div>
 
-            <button className="hs-dd__close" type="button" onClick={() => setOpen(false)} aria-label="Close">
+            <button
+              className="hs-dd__close"
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close"
+            >
               ✕
             </button>
           </div>
@@ -221,7 +240,9 @@ export default function HeaderSearch() {
                         src={it.img}
                         alt={it.displayName}
                         loading="lazy"
-                        onError={(e) => { e.currentTarget.src = "/placeholder.png"; }}
+                        onError={(e) => {
+                          e.currentTarget.src = "/placeholder.png";
+                        }}
                       />
 
                       <div className="hs-dd__meta">
@@ -231,16 +252,16 @@ export default function HeaderSearch() {
 
                         <div className="hs-dd__price">
                           {it.price > 0 && it.hasDiscount && (
-                            <span className="hs-dd__old">{it.price} грн</span>
+                            <span className="hs-dd__old">{Math.round(it.price)} грн</span>
                           )}
                           {it.price > 0 && (
-                            <span className="hs-dd__now">{it.finalPrice} грн</span>
+                            <span className="hs-dd__now">{Math.round(it.finalPrice)} грн</span>
                           )}
                         </div>
                       </div>
 
                       {it.hasDiscount && (
-                        <span className="hs-dd__badge">-{it.discount}%</span>
+                        <span className="hs-dd__badge">-{Math.round(it.discount)}%</span>
                       )}
                     </button>
                   </li>
@@ -251,7 +272,9 @@ export default function HeaderSearch() {
 
           {!loading && results.length > 0 && (
             <div className="hs-dd__foot">
-              {language === "ua" ? "Enter — відкрити перший результат" : "Enter — open first result"}
+              {language === "ua"
+                ? "Enter — відкрити перший результат"
+                : "Enter — open first result"}
             </div>
           )}
         </div>

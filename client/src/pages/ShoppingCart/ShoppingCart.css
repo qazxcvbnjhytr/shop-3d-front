@@ -1,426 +1,132 @@
-/* =========================================
-   ⚙️ CORE VARIABLES
-   ========================================= */
-:root{
-  /* Кольори та тіні, що відповідають стилю хедера */
-  --cart-primary: var(--color-primary, #00bfae);
-  --cart-primary-dark: var(--color-primary-dark, #009e8e);
+.cart-page { padding: 40px 16px 80px; background: #fcfcfd; }
+.cart-shell { max-width: 1240px; margin: 0 auto; }
 
-  --sc-text: var(--color-text, #0f172a);
-  --sc-muted: rgba(15, 23, 42, 0.65);
-  --sc-border: rgba(0, 0, 0, 0.10);
-
-  --sc-card: rgba(255, 255, 255, 0.88);
-  --sc-head: rgba(15, 23, 42, 0.05);
-
-  --sc-radius: 18px;
-  --sc-shadow: 0 18px 50px rgba(0, 0, 0, 0.12);
-  
-  --color-danger: #b91c1c; /* Червоний для видалення */
+.cart-head { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 24px; 
 }
 
-/* =========================
-   PAGE LAYOUT & TOP BAR
-   ========================= */
+.cart-title { font-size: 32px; font-weight: 900; color: #1e293b; margin: 0; }
+.cart-count { font-size: 16px; color: #94a3b8; margin-left: 10px; }
 
-.sc-page{
-  max-width: 1200px;
-  margin: 22px auto 60px;
-  padding: 0 16px;
-  color: var(--sc-text);
-  /* Якщо потрібно, додати background: #f1f5f9; тут або на обгортці */
+/* ТАБЛИЦЯ */
+.cart-tableWrap {
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  margin-bottom: 30px;
 }
 
-.sc-title{
-  margin: 0;
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: 0.2px;
+.cart-table { width: 100%; border-collapse: collapse; }
+.cart-table th { 
+  background: #f8fafc; 
+  padding: 16px 20px; 
+  text-align: left; 
+  font-size: 11px; 
+  text-transform: uppercase; 
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.sc-top{
+.cart-table td { padding: 20px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+
+/* КОЛОНКИ */
+.td-product { display: flex; gap: 16px; align-items: center; min-width: 300px; }
+.p-img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 1px solid #f1f5f9; }
+.p-title { font-size: 16px; font-weight: 800; color: #1e293b; text-decoration: none; margin-bottom: 4px; display: block; }
+
+.td-price { min-width: 130px; }
+.td-discount, .td-saving { min-width: 100px; text-align: center; }
+.td-qty { min-width: 130px; }
+.td-sum { min-width: 120px; text-align: right; }
+
+/* ЦІНИ */
+.price-stack { display: flex; flex-direction: column; gap: 2px; }
+.price-old-label { font-size: 12px; color: #94a3b8; text-decoration: line-through; font-weight: 600; }
+.price-new-label { font-size: 16px; color: #0f172a; font-weight: 900; }
+.price-normal { font-size: 16px; color: #0f172a; font-weight: 800; }
+.savingVal { font-size: 15px; color: #10b981; font-weight: 800; }
+.sum-val { font-size: 17px; font-weight: 900; }
+.dash { color: #cbd5e1; font-weight: 400; }
+
+/* УПРАВЛІННЯ */
+.qty-ui { display: inline-flex; align-items: center; background: #f1f5f9; padding: 4px; border-radius: 10px; }
+.qty-btn { width: 30px; height: 30px; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; font-weight: 800; }
+.qty-val { padding: 0 12px; font-weight: 900; font-size: 14px; }
+.xbtn { background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; transition: 0.2s; }
+.xbtn:hover { color: #ef4444; }
+
+/* НИЖНЯ ЧАСТИНА */
+.cart-bottom {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 14px;
+  align-items: flex-start;
+  gap: 40px;
 }
 
-.sc-top-actions{
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.sc-pill{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-weight: 800;
-  font-size: 13px;
-
-  border: 1px solid var(--sc-border);
-  background: rgba(255, 255, 255, 0.70);
-}
-
-.sc-linkDanger{
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-weight: 800;
-  font-size: 13px;
-  color: var(--color-danger);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-/* =========================
-   TABLE CARD (MAIN CONTENT)
-   ========================= */
-
-.sc-tableCard{
-  border-radius: var(--sc-radius);
-  background: var(--sc-card);
-  border: 1px solid var(--sc-border);
-  box-shadow: var(--sc-shadow);
-  overflow: hidden;
-}
-
-/* GRID ROWS */
-.sc-row{
-  display: grid;
-  /* Колонка: Зображення | Назва | Кількість | Ціна за шт. | Усього */
-  grid-template-columns: 120px 1fr 190px 160px 160px;
-  align-items: center;
-}
-
-.sc-head{
-  background: var(--sc-head);
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-}
-
-.sc-cell{
-  padding: 14px 14px;
-  font-size: 13px;
-}
-
-.sc-head .sc-cell{
-  font-weight: 900;
-  font-size: 12px;
-  color: rgba(15,23,42,0.75);
-}
-
-.sc-item{
-  border-top: 1px solid rgba(0,0,0,0.06);
-  background: rgba(255,255,255,0.55);
-}
-
-.sc-item:hover{
-  background: rgba(255,255,255,0.72);
-}
-
-/* IMAGE */
-.sc-imgLink{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 92px;
-  height: 72px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.85);
-  border: 1px solid rgba(0,0,0,0.08);
-  overflow: hidden;
-}
-
-.sc-imgEl{
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* NAME */
-.sc-nameLink{
-  font-weight: 900;
-  font-size: 14px;
-  color: var(--sc-text);
-  text-decoration: none;
-}
-
-.sc-nameLink:hover{
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.sc-nameActions{
-  margin-top: 6px;
-}
-
-.sc-removeLink{
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  font-weight: 800;
-  font-size: 12px;
-  color: rgba(15,23,42,0.70);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.sc-removeLink:hover{
-  color: var(--color-danger);
-}
-
-/* QTY */
-.sc-qtyCtrl{
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-
-  padding: 8px 10px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.75);
-  border: 1px solid rgba(0,0,0,0.08);
-}
-
-.sc-qtyBtn{
-  width: 34px;
-  height: 34px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
+.btn-continue {
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  color: #64748b;
+  padding: 14px 28px;
   border-radius: 12px;
-  border: 1px solid rgba(0,0,0,0.10);
-  background: rgba(255,255,255,0.90);
-
-  font-weight: 900;
-  cursor: pointer;
-  transition: transform 0.12s ease, background 0.12s ease;
-}
-
-.sc-qtyBtn:hover{
-  background: rgba(255,255,255,1);
-}
-
-.sc-qtyBtn:active{
-  transform: scale(0.98);
-}
-
-.sc-qtyBtn:disabled{
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.sc-qtyNum{
-  min-width: 22px;
-  text-align: center;
-  font-weight: 900;
-}
-
-/* PRICES */
-.sc-unit{
-  text-align: right;
+  font-size: 15px;
   font-weight: 800;
-  color: rgba(15,23,42,0.85);
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-continue:hover { border-color: #1e293b; color: #1e293b; background: #f8fafc; }
+
+/* ЧЕК СПРАВА */
+.cart-summary {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
 }
 
-.sc-total{
-  text-align: right;
+.sumRow { display: flex; justify-content: space-between; padding: 10px 0; font-weight: 700; color: #64748b; }
+.sumRow-save { color: #ef4444; border-top: 1px dashed #e2e8f0; border-bottom: 1px dashed #e2e8f0; margin: 8px 0; }
+.sumRow-total { padding-top: 15px; color: #0f172a; font-size: 22px; font-weight: 900; }
+.val-dark { color: #1e293b; }
+
+.btn-checkout {
+  width: 100%;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 18px;
+  border-radius: 14px;
+  font-size: 16px;
   font-weight: 900;
+  text-transform: uppercase;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
+.btn-checkout:hover { background: #1d4ed8; transform: translateY(-2px); }
 
-/* =========================
-   BOTTOM AREA (FOOTER)
-   ========================= */
-
-.sc-bottom{
-    margin-top: 18px;
-    display: flex;
-    /* 🔥 ЗМІНЕНО: align-items: flex-start; для вирівнювання по верхньому краю */
-    align-items: flex-start; 
-    justify-content: space-between;
-    gap: 14px;
+/* КНОПКА ОЧИСТИТИ (ВЕРХНЯ) */
+.btn-linkDanger {
+  background: #fff;
+  color: #ef4444;
+  border: 1px solid #fee2e2;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.2s;
 }
+.btn-linkDanger:hover { background: #ef4444; color: #fff; }
 
-.sc-bottom-right{
-    /* 🔥 КЛЮЧОВІ СТИЛІ: Вертикальний стек, вирівняний по правому краю */
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end; 
-    gap: 14px; 
-    
-    flex-wrap: nowrap; 
-    width: auto; 
-}
-
-.sc-totals{
-    width: 280px;
-    border-radius: 14px;
-    border: 1px solid rgba(0,0,0,0.10);
-    background: rgba(255,255,255,0.85);
-    padding: 10px 12px;
-}
-
-.sc-totRow{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    font-size: 13px;
-}
-
-.sc-totRow + .sc-totRow{
-    border-top: 1px solid rgba(0,0,0,0.06);
-}
-
-.sc-totRow b {
-    font-size: 14px;
-}
-
-.sc-btn{
-    border-radius: 14px;
-    padding: 12px 14px;
-    font-weight: 900;
-    cursor: pointer;
-    border: 1px solid rgba(0,0,0,0.10);
-    background: rgba(255,255,255,0.82);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
-}
-
-.sc-btn:hover{
-  background: linear-gradient(135deg, #259268, #00bfaf);
-    box-shadow: 0 10px 22px rgba(0,0,0,0.08);
-}
-
-.sc-btn:active{
-    transform: scale(0.99);
-}
-
-.sc-btn--primary{
-    color: #ffffff;
-    border: 1px solid color-mix(in srgb, var(--cart-primary) 55%, #000 45%);
-    background: linear-gradient(180deg, var(--cart-primary), var(--cart-primary-dark));
-}
-
-.sc-checkout{
-    /* 🔥 Зроблено вертикально під totals */
-    width: 100%; 
-    max-width: 280px; 
-    padding: 12px 16px;
-    letter-spacing: 0.4px;
-}
-
-/* EMPTY */
-.sc-empty{
-    border-radius: var(--sc-radius);
-    border: 1px solid var(--sc-border);
-    background: var(--sc-card);
-    box-shadow: var(--sc-shadow);
-    padding: 18px;
-}
-
-.sc-empty-text{
-    margin: 10px 0 14px;
-    color: var(--sc-muted);
-    font-weight: 700;
-}
-
-.sc-empty-actions{
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-/* =========================
-   RESPONSIVE
-   ========================= */
-@media (max-width: 980px){
-  .sc-row{
-    grid-template-columns: 110px 1fr 170px 140px 140px;
-  }
-  .sc-totals{
-    width: 260px;
-  }
-}
-
-@media (max-width: 720px){
-  .sc-page{
-    padding: 0 10px;
-  }
-    
-  .sc-top{
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .sc-row{
-    grid-template-columns: 100px 1fr;
-  }
-
-  .sc-head{
-    display: none;
-  }
-
-  .sc-item .sc-img{
-    grid-row: 1 / span 4;
-  }
-
-  .sc-item .sc-name{
-    padding-bottom: 6px;
-  }
-
-  .sc-item .sc-qty{
-    padding-top: 6px;
-    padding-bottom: 6px;
-  }
-
-  .sc-unit,
-  .sc-total{
-    /* Виводимо елементи вертикально (один під одним) */
-    text-align: left;
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    font-weight: 900;
-  }
-
-  .sc-unit::before,
-  .sc-total::before{
-    /* Лейбли для мобільного вигляду */
-    content: attr(data-label);
-    font-weight: 800;
-    color: rgba(15,23,42,0.60);
-    font-size: 12px;
-  }
-
-  .sc-bottom{
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .sc-bottom-right{
-    width: 100%;
-    align-items: stretch; /* Розтягуємо totals і кнопку на всю ширину */
-  }
-
-  .sc-totals{
-    width: 100%;
-  }
-
-  .sc-checkout{
-    width: 100%;
-    max-width: none;
-  }
-  
-  .sc-empty-actions{
-      flex-direction: column;
-  }
+@media (max-width: 900px) {
+  .cart-bottom { flex-direction: column-reverse; align-items: center; }
+  .cart-summary { max-width: 100%; }
 }

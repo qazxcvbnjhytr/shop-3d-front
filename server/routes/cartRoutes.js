@@ -1,13 +1,22 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
-import { getCart, addToCart, setQty, removeItem, clearCart } from "../controllers/cartController.js";
+import {
+  getCart,
+  addToCart,
+  setQty,
+  removeItem,
+  clearCart,
+} from "../controllers/cartController.js";
 
 const router = express.Router();
 
-router.get("/", protect, getCart);
-router.post("/add", protect, addToCart);
-router.put("/qty", protect, setQty);
-router.delete("/item/:productId", protect, removeItem);
-router.delete("/clear", protect, clearCart);
+// ✅ захищаємо все одразу (щоб не було дірок)
+router.use(protect);
+
+router.get("/", getCart);
+router.post("/add", addToCart);
+router.put("/qty", setQty);
+router.delete("/item/:productId", removeItem);
+router.delete("/clear", clearCart);
 
 export default router;

@@ -75,8 +75,7 @@
   display: flex;
   align-items: center;
   /* 🔥 ФІКС: Адаптивний відступ між пунктами */
-  gap: clamp(10px, 1.5vw, 25px); 
-  list-style: none;
+gap: 30px; /* Було велике значення */  list-style: none;
   margin: 0;
   padding: 0;
   position: relative;

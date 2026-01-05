@@ -1,307 +1,234 @@
-/* ===============================
-   0. THEME VARIABLES (Local Scope)
-   ================================ */
+/* --- Variables --- */
 .product-page {
-  /* Main Colors */
-  --pp-primary: rgb(0, 191, 175);
-  --pp-primary-hover: #00998c;
-  --pp-primary-light: rgba(0, 191, 175, 0.12);
-  --pp-primary-glow: rgba(0, 191, 175, 0.35);
-
-  /* Text Colors */
-  --pp-text-main: #101114;
-  --pp-text-sec: rgba(16, 17, 20, 0.6);
-  --pp-text-muted: rgba(16, 17, 20, 0.4);
-
-  /* UI Elements */
-  --pp-bg-glass: rgba(255, 255, 255, 0.85);
-  --pp-border: rgba(0, 0, 0, 0.08);
-  --pp-radius: 18px;
+  --c-accent: #2ecc71;       /* Колір кнопки купити (зелений стимулює) */
+  --c-accent-hover: #27ae60;
+  --c-dark: #1e272e;
+  --c-gray: #808e9b;
+  --c-light: #f1f2f6;
+  --c-3d: #3498db;           /* Колір кнопки 3D */
   
-  width: 100%;
+  --shadow-card: 0 8px 24px rgba(0,0,0,0.06);
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+
   max-width: 1280px;
   margin: 0 auto;
-  padding: 20px 16px 60px;
-  box-sizing: border-box;
-  color: var(--pp-text-main);
+  padding: 20px 24px 60px;
+  color: var(--c-dark);
 }
 
-/* ===============================
-   1. UTILITY STATES
-   ================================ */
-.product-page__state {
-  padding: 60px 0;
-  text-align: center;
-  font-size: 1.1rem;
-  color: var(--pp-text-sec);
-}
-
-.product-page__state--error {
-  color: #e11d48; /* Error Red */
-  font-weight: 600;
-  background: rgba(225, 29, 72, 0.05);
-  border-radius: 12px;
-  padding: 20px;
-}
-
-/* ===============================
-   2. TOP BAR (Back & Like)
-   ================================ */
-.product-page__top {
+/* --- Navigation --- */
+.pp-nav {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 32px;
 }
 
-.product-page__back {
-  display: inline-flex;
+.pp-back-btn {
+  background: transparent;
+  border: none;
+  display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid var(--pp-border);
-  background: #fff;
-  color: var(--pp-text-main);
-  border-radius: 999px;
-  padding: 10px 18px;
-  cursor: pointer;
   font-weight: 600;
-  font-size: 0.95rem;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  color: var(--c-gray);
+  transition: 0.2s;
 }
+.pp-back-btn:hover { color: var(--c-dark); }
 
-.product-page__back:hover {
-  transform: translateX(-4px); /* Анімація руху назад */
-  border-color: var(--pp-primary);
-  color: var(--pp-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.product-page__like {
-  display: flex;
-  align-items: center;
-}
-
-/* ===============================
-   3. HERO GRID LAYOUT
-   ================================ */
-.product-page__hero {
+/* --- Main Grid --- */
+.pp-grid {
   display: grid;
-  grid-template-columns: minmax(320px, 50%) 1fr;
-  gap: 40px;
-  align-items: start;
-  
-  padding: 24px;
-  border-radius: var(--pp-radius);
-  background: var(--pp-bg-glass);
-  backdrop-filter: blur(12px); /* Glassmorphism */
-  border: 1px solid var(--pp-border);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+  grid-template-columns: 1.2fr 0.8fr; /* Галерея ширша */
+  gap: 60px;
 }
 
-/* Left Column (Gallery Wrapper) */
-.product-page__heroLeft {
-  position: relative;
-  width: 100%;
-}
-
-/* Right Column (Info) */
-.product-page__heroRight {
+/* Gallery Sticky */
+.pp-gallery-sticky {
   position: sticky;
-  top: 90px; /* Липне при скролі, враховуючи висоту хедера */
+  top: 20px; /* Тримає галерею при скролі */
+}
+
+/* --- Info Column --- */
+.pp-status-row {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
 }
 
-.product-page__title {
-  font-size: clamp(1.8rem, 2.5vw, 2.5rem);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  margin: 0;
-  font-weight: 800;
-  color: var(--pp-text-main);
-}
-
-/* ===============================
-   4. PRICE & DISCOUNT
-   ================================ */
-.product-page__priceRow {
+.status-badge {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 4px;
+  gap: 6px;
+  font-weight: 600;
 }
+.status-badge.instock { color: var(--c-accent); }
+.status-badge.outstock { color: #e74c3c; }
 
-.product-page__oldPrice {
-  font-size: 1.2rem;
-  color: var(--pp-text-muted);
-  text-decoration: line-through;
-  font-weight: 500;
-}
-
-.product-page__newPrice {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--pp-text-main);
+.pp-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0 0 16px;
   letter-spacing: -0.02em;
 }
 
-/* Discount Badge - Teal Theme */
-.product-page__discountBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 12px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  border-radius: 6px;
-  
-  background: var(--pp-primary-light);
-  color: var(--pp-primary-hover);
-  border: 1px solid rgba(0, 191, 175, 0.2);
+.pp-reviews-link {
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  color: var(--c-gray);
+  font-size: 0.95rem;
+  margin-left: 8px;
 }
 
-/* ===============================
-   5. 3D VIEWER BLOCK
-   ================================ */
-.product-page__viewer {
-  margin-top: 24px;
-  padding: 20px;
-  border-radius: 16px;
+/* --- Action Card (Buy Box) --- */
+.pp-action-card {
   background: #fff;
-  border: 1px solid var(--pp-border);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-}
-
-.product-page__viewerTitle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  margin-bottom: 14px;
-  color: var(--pp-text-main);
-}
-
-/* 3D Button - Main Action */
-.product-page__open3d {
-  width: 100%;
-  border: none;
-  border-radius: 12px;
-  padding: 14px 20px;
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  
-  /* Teal Gradient / Solid */
-  background: var(--pp-primary);
-  color: #fff;
-  
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 15px rgba(0, 191, 175, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.product-page__open3d:hover {
-  background: var(--pp-primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 191, 175, 0.35);
-}
-
-.product-page__open3d:active {
-  transform: translateY(0);
-}
-
-/* ===============================
-   6. TABS NAVIGATION
-   ================================ */
-.product-page__tabs {
-  margin-top: 40px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--pp-border);
-  padding-bottom: 1px;
-}
-
-.product-page__tab {
-  border: none;
-  background: transparent;
-  padding: 12px 24px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 1rem;
-  color: var(--pp-text-sec);
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s ease;
-  border-radius: 6px 6px 0 0; /* Закруглені тільки зверху */
-}
-
-.product-page__tab:hover {
-  color: var(--pp-primary);
-  background: rgba(0, 191, 175, 0.04);
-}
-
-.product-page__tab.is-active {
-  color: var(--pp-primary);
-  border-bottom-color: var(--pp-primary);
-  background: transparent;
-}
-
-/* Content Container */
-.tab-content {
-  margin-top: 24px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: var(--radius-lg);
   padding: 24px;
-  border-radius: 16px;
-  background: #fff;
-  border: 1px solid var(--pp-border);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-  min-height: 200px;
+  box-shadow: var(--shadow-card);
+  margin: 24px 0;
 }
 
-/* ===============================
-   7. RESPONSIVE DESIGN
-   ================================ */
-@media (max-width: 900px) {
-  .product-page__hero {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-
-  .product-page__heroRight {
-    position: static;
-  }
+.pp-price-block {
+  margin-bottom: 20px;
 }
 
-@media (max-width: 600px) {
-  .product-page {
-    padding: 16px 12px 40px;
-  }
+.pp-current-price {
+  font-size: 2.2rem;
+  font-weight: 800;
+}
 
-  .product-page__title {
-    font-size: 1.8rem;
-  }
+.pp-old-price {
+  text-decoration: line-through;
+  color: var(--c-gray);
+  font-size: 1.1rem;
+  display: block;
+}
 
-  .product-page__priceRow {
-    gap: 12px;
-  }
-  
-  .product-page__newPrice {
-    font-size: 1.6rem;
-  }
-  
-  .product-page__tabs {
-    gap: 5px;
-  }
-  
-  .product-page__tab {
-    padding: 10px 16px;
-    font-size: 0.9rem;
-    flex: 1 1 auto;
-    text-align: center;
-  }
+.pp-discount-tag {
+  background: #ff7675;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  vertical-align: middle;
+  margin-left: 10px;
+}
+
+.pp-buttons-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 3D Button Style */
+.pp-3d-btn {
+  width: 100%;
+  padding: 14px;
+  border: 2px dashed var(--c-3d); /* Пунктир підкреслює "віртуальність" */
+  border-radius: var(--radius-sm);
+  background: rgba(52, 152, 219, 0.05);
+  color: var(--c-3d);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: 0.2s;
+}
+.pp-3d-btn:hover { background: rgba(52, 152, 219, 0.1); }
+.icon-3d { font-size: 1.2rem; animation: spin 10s linear infinite; }
+
+/* Trust Badges */
+.pp-trust-badges {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 20px;
+}
+
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--c-gray);
+  font-weight: 500;
+}
+
+/* --- Colors & Specs --- */
+.pp-color-picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 0 1px #ddd;
+  cursor: pointer;
+}
+.color-dot.active { box-shadow: 0 0 0 2px var(--c-dark); }
+
+/* --- Tabs --- */
+.pp-tabs-section {
+  margin-top: 80px;
+}
+
+.pp-tabs-header {
+  display: flex;
+  gap: 40px;
+  border-bottom: 2px solid #eee;
+}
+
+.pp-tab-btn {
+  background: none;
+  border: none;
+  padding: 16px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--c-gray);
+  cursor: pointer;
+  position: relative;
+}
+
+.pp-tab-btn.active {
+  color: var(--c-dark);
+}
+.pp-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--c-dark);
+}
+
+.pp-tab-content {
+  padding: 40px 0;
+}
+
+/* Animations */
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* Mobile */
+@media (max-width: 960px) {
+  .pp-grid { grid-template-columns: 1fr; gap: 32px; }
+  .pp-gallery-sticky { position: static; }
+  .pp-title { font-size: 1.8rem; }
 }

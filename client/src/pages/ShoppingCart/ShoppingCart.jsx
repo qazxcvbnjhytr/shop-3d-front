@@ -1,207 +1,165 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext.jsx";
 import "./ShoppingCart.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-const formatUAH = (n) => {
-  const num = Number(n);
-  if (!Number.isFinite(num)) return "0 грн";
-  return `${num.toLocaleString("uk-UA")} грн`;
-};
-
-const joinUrl = (base, raw) => {
-  if (!raw || typeof raw !== "string") return "";
-  if (/^(https?:\/\/|data:|blob:)/i.test(raw)) return raw;
-
-  const b = String(base || "").replace(/\/+$/, "");
-  if (raw.startsWith("/")) return `${b}${raw}`;
-  return `${b}/${raw}`.replace(/\/{2,}/g, "/").replace(":/", "://");
-};
+import Price from "../DinamicProduct/Price/Price.jsx";
+import Articule from "../DinamicProduct/Articule/Articule.jsx";
+import DiscountBadge from "../../components/DiscountBadge/DiscountBadge.jsx";
 
 export default function ShoppingCart() {
   const navigate = useNavigate();
+  const {
+    loading,
+    items,
+    isEmpty,
+    totalItems,
+    subtotal,
+    totalSavings,
+    cartTotal,
+    updateItemQuantity,
+    removeItem,
+    emptyCart,
+  } = useCart();
 
-  const { items, isEmpty, totalItems, cartTotal, updateItemQuantity, removeItem, emptyCart } =
-    useCart();
-
-  const summary = useMemo(() => {
-    const subtotal = Number(cartTotal) || 0;
-    const shipping = 0;
-    const total = subtotal + shipping;
-    return { subtotal, shipping, total };
-  }, [cartTotal]);
+  if (loading) return <div className="cart-loader">Завантаження...</div>;
 
   if (isEmpty) {
     return (
-      <div className="sc-page">
-        <div className="sc-empty">
-          <h1 className="sc-title">Кошик замовлень</h1>
-          <p className="sc-empty-text">Ваш кошик порожній.</p>
-
-          <div className="sc-empty-actions">
-            <button className="sc-btn sc-btn--primary" onClick={() => navigate("/catalog")}>
-              Перейти в каталог
-            </button>
-            <button className="sc-btn sc-btn--ghost" onClick={() => navigate(-1)}>
-              Назад
-            </button>
-          </div>
+      <div className="cart-page">
+        <div className="cart-shell empty-center">
+          <h1 className="cart-title">Кошик порожній</h1>
+          <button className="btn-primary" onClick={() => navigate("/catalog")}>На головну</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="sc-page">
-      {/* TOP BAR */}
-      <div className="sc-top">
-        <h1 className="sc-title">Кошик замовлень</h1>
+    <div className="cart-page">
+      <div className="cart-shell">
+        {/* Шапка кошика */}
+        <div className="cart-head">
+          <h1 className="cart-title">
+            Кошик замовлень <span className="cart-count">({totalItems})</span>
+          </h1>
+          <button className="btn-linkDanger" onClick={emptyCart}>Очистити все</button>
+        </div>
 
-        <div className="sc-top-actions">
-          <span className="sc-pill">{totalItems} товар(ів)</span>
+        {/* Таблиця товарів */}
+        <div className="cart-tableWrap">
+          <table className="cart-table">
+            <thead>
+              <tr>
+                <th className="th-product">Товар</th>
+                <th className="th-price">Ціна</th>
+                <th className="th-discount">Знижка</th>
+                <th className="th-saving">Економія</th>
+                <th className="th-qty">Кількість</th>
+                <th className="th-sum">Сума</th>
+                <th className="th-x"></th>
+              </tr>
+            </thead>
 
-          <button className="sc-linkDanger" type="button" onClick={emptyCart}>
-            Очистити кошик
+            <tbody>
+              {items.map((it) => {
+                const hasDiscount = it.discountPct > 0;
+                return (
+                  <tr key={it.productId}>
+                    <td className="td-product">
+                      <img
+                        className="p-img"
+                        src={it.imageSrc}
+                        alt={it.name}
+                        onError={(e) => (e.currentTarget.src = "/placeholder.png")}
+                      />
+                      <div className="p-info">
+                        <Link to={it.href} className="p-title">{it.name}</Link>
+                        <Articule skuFull={it.sku} tailParts={6} label="SKU" />
+                      </div>
+                    </td>
+
+                    <td className="td-price">
+                      <div className="price-stack">
+                        {hasDiscount ? (
+                          <>
+                            <span className="price-old-label">{Math.round(it.oldPrice)} грн</span>
+                            <span className="price-new-label">{Math.round(it.finalPrice)} грн</span>
+                          </>
+                        ) : (
+                          <span className="price-normal">{Math.round(it.finalPrice)} грн</span>
+                        )}
+                      </div>
+                    </td>
+
+                    <td className="td-discount">
+                      {hasDiscount ? (
+                        <DiscountBadge discount={it.discountPct} mode="percent" variant="inline" />
+                      ) : (
+                        <span className="dash">—</span>
+                      )}
+                    </td>
+
+                    <td className="td-saving">
+                      {it.lineSavings > 0 ? (
+                        <span className="savingVal">{Math.round(it.lineSavings)} грн</span>
+                      ) : (
+                        <span className="dash">—</span>
+                      )}
+                    </td>
+
+                    <td className="td-qty">
+                      <div className="qty-ui">
+                        <button className="qty-btn" onClick={() => updateItemQuantity(it.productId, it.qty - 1)} disabled={it.qty <= 1}>–</button>
+                        <span className="qty-val">{it.qty}</span>
+                        <button className="qty-btn" onClick={() => updateItemQuantity(it.productId, it.qty + 1)}>+</button>
+                      </div>
+                    </td>
+
+                    <td className="td-sum">
+                      <span className="sum-val">{Math.round(it.lineTotal)} грн</span>
+                    </td>
+
+                    <td className="td-x">
+                      <button className="xbtn" onClick={() => removeItem(it.productId)}>×</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Нижня частина: Кнопка та Чек */}
+        <div className="cart-bottom">
+          <button className="btn-continue" onClick={() => navigate("/catalog")}>
+            Продовжити покупки
           </button>
-        </div>
-      </div>
 
-      {/* TABLE CARD */}
-      <section className="sc-tableCard" aria-label="Cart table">
-        <div className="sc-row sc-head">
-          <div className="sc-cell sc-img">Зображення</div>
-          <div className="sc-cell sc-name">Найменування товару</div>
-          <div className="sc-cell sc-qty">Кількість</div>
-          <div className="sc-cell sc-unit">Ціна за шт.</div>
-          <div className="sc-cell sc-total">Усього</div>
-        </div>
-
-        {items.map((it) => {
-          const qty = Math.max(1, Number(it.quantity) || 1);
-          const canDec = qty > 1;
-
-          const productHref = it.category
-            ? `/catalog/${it.category}/${it.id}`
-            : `/catalog/${it.id}`;
-
-          const rawImg =
-            it.image ||
-            it.imageUrl ||
-            it.productImage ||
-            it?.product?.image ||
-            it?.product?.imageUrl ||
-            "";
-
-          const imgSrc = rawImg ? joinUrl(API_URL, rawImg) : "/placeholder.png";
-
-          const unitPrice = Number(it.price) || 0;
-          const lineTotal = unitPrice * qty;
-
-          return (
-            <div className="sc-row sc-item" key={it.id}>
-              <div className="sc-cell sc-img">
-                <Link to={productHref} className="sc-imgLink" title="Відкрити товар">
-                  <img
-                    className="sc-imgEl"
-                    src={imgSrc}
-                    alt={it.name || "Product"}
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.src = "/placeholder.png";
-                    }}
-                  />
-                </Link>
+          <div className="cart-summary">
+            <div className="summary-content">
+              <div className="sumRow">
+                <span>Сума за товари:</span>
+                <span className="val-dark">{Math.round(subtotal).toLocaleString()} грн</span>
               </div>
-
-              <div className="sc-cell sc-name">
-                <Link to={productHref} className="sc-nameLink" title={it.name || "Товар"}>
-                  {it.name || "Товар"}
-                </Link>
-
-                <div className="sc-nameActions">
-                  <button
-                    type="button"
-                    className="sc-removeLink"
-                    onClick={() => removeItem(it.id)}
-                  >
-                 
-                  </button>
+              
+              {totalSavings > 0 && (
+                <div className="sumRow sumRow-save">
+                  <span>Ваша економія:</span>
+                  <span className="sumSave">- {Math.round(totalSavings).toLocaleString()} грн</span>
                 </div>
-              </div>
-
-              <div className="sc-cell sc-qty">
-                <div className="sc-qtyCtrl" aria-label="Quantity controls">
-                  <button
-                    type="button"
-                    className="sc-qtyBtn"
-                    disabled={!canDec}
-                    onClick={() => updateItemQuantity(it.id, qty - 1)}
-                    aria-label="Зменшити кількість"
-                  >
-                    –
-                  </button>
-
-                  <span className="sc-qtyNum" aria-label={`Кількість: ${qty}`}>
-                    {qty}
-                  </span>
-
-                  <button
-                    type="button"
-                    className="sc-qtyBtn"
-                    onClick={() => updateItemQuantity(it.id, qty + 1)}
-                    aria-label="Збільшити кількість"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <div className="sc-cell sc-unit" data-label="Ціна за шт.">
-                {formatUAH(unitPrice)}
-              </div>
-
-              <div className="sc-cell sc-total" data-label="Усього">
-                {formatUAH(lineTotal)}
+              )}
+              
+              <div className="sumRow sumRow-total">
+                <span>Разом до сплати:</span>
+                <span className="grand-total">{Math.round(cartTotal).toLocaleString()} грн</span>
               </div>
             </div>
-          );
-        })}
-      </section>
-
-      {/* FOOTER (continue + totals + checkout) */}
-      <div className="sc-bottom">
-        <button
-          type="button"
-          className="sc-btn sc-btn--ghost"
-          onClick={() => navigate("/catalog")}
-        >
-          Продовжити покупки
-        </button>
-
-        <div className="sc-bottom-right">
-          <div className="sc-totals">
-            <div className="sc-totRow">
-              <span>Разом:</span>
-              <b>{formatUAH(summary.subtotal)}</b>
-            </div>
-
-            <div className="sc-totRow">
-              <span>Всього:</span>
-              <b>{formatUAH(summary.total)}</b>
-            </div>
+            
+            <button className="btn-checkout">
+              ОФОРМИТИ ЗАМОВЛЕННЯ
+            </button>
           </div>
-
-          <button
-            type="button"
-            className="sc-btn sc-btn--primary sc-checkout"
-            onClick={() => {
-              alert("Оформлення замовлення буде на наступному кроці (checkout).");
-            }}
-          >
-            ОФОРМЛЕННЯ ЗАМОВЛЕННЯ
-          </button>
         </div>
       </div>
     </div>

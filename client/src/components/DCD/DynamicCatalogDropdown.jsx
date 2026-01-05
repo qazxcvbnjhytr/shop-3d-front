@@ -1,133 +1,187 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useTranslation } from "../../hooks/useTranslation";
-import { fetchCategoriesAPI } from "../../api/categoryService";
-import { FaSpinner, FaExclamationTriangle } from "react-icons/fa";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { FaSpinner, FaExclamationTriangle, FaBars, FaChevronRight } from "react-icons/fa";
+
+import { useTranslation } from "../../hooks/useTranslation"; 
+import { fetchCategoriesAPI } from "../../api/categoryService"; 
+
 import "./DynamicCatalogDropdown.css";
-// ✅ ПРАВИЛЬНЕ ОТРИМАННЯ НАЗВИ КАТЕГОРІЇ (DB-DRIVEN)
-const getCategoryDisplayName = (category, language) => {
-  return (
-    category?.names?.[language] ||
-    category?.names?.en ||
-    category?.category ||
-    "Невідома категорія"
-  );
+
+// Helper для отримання повної перекладеної назви
+const getDisplayName = (item, language) => {
+  if (!item) return "Item";
+  if (item.names && typeof item.names === 'object') {
+    return item.names[language] || item.names.en || item.names.ua || item.key || "Unnamed";
+  }
+  return item.name || item.category || item.key || "Unnamed";
 };
 
-export default function DynamicCatalogDropdown({
-  catalogLabel,
-  moveNavBg,
-  navBgRef,
-  setMenuActive
-}) {
-  const { t, language, loading: langLoading } = useTranslation();
+export default function DynamicCatalogDropdown({ setMenuActive }) {
+  const { language, loading: langLoading, translations } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const dropdownRef = useRef(null);
 
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [isOpen, setIsOpen] = useState(false);
+  const [hoveredCategory, setHoveredCategory] = useState(null);
 
-  const catalogTexts = t?.catalogPage;
-  const fetchErrorText =
-    catalogTexts?.fetchError || "Помилка завантаження категорій";
+  const isHomePage = location.pathname === "/";
+
+  const t = translations?.catalogDropdown || {};
+  const tAuth = translations?.auth || {}; 
 
   useEffect(() => {
     let isMounted = true;
-
     const loadCategories = async () => {
       setIsLoading(true);
       setError(null);
-
       try {
         const data = await fetchCategoriesAPI(language);
-
-        if (!Array.isArray(data)) {
-          throw new Error("Invalid categories format");
-        }
-
         if (isMounted) {
-          setCategories(data);
+          const cats = Array.isArray(data) ? data : (data?.data || []);
+          setCategories(cats);
         }
       } catch (err) {
         console.error("Failed to load categories:", err);
-        if (isMounted) {
-          setError(fetchErrorText);
-        }
+        if (isMounted) setError(t.error || "Error loading");
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     };
 
-    if (!langLoading) {
-      loadCategories();
+    if (!langLoading) loadCategories();
+    return () => { isMounted = false; };
+  }, [language, langLoading, t.error]); 
+
+  useEffect(() => {
+    if (isHomePage) {
+      setIsOpen(true); 
+    } else {
+      setIsOpen(false);
     }
+  }, [isHomePage]);
 
-    return () => {
-      isMounted = false;
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        if (!isHomePage) setIsOpen(false);
+      }
     };
-  }, [language, langLoading, fetchErrorText]);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isHomePage]);
 
-  const handleMouseEnter = (e) => {
-    const link = e.currentTarget.querySelector(".catalog-link");
-    moveNavBg(link);
-  };
+  const handleCategoryClick = useCallback((categoryKey, subKey = null) => {
+    if (setMenuActive) setMenuActive(false);
+    if (!isHomePage) setIsOpen(false);
+    
+    const url = subKey 
+      ? `/catalog/${categoryKey}/${subKey}` 
+      : `/catalog/${categoryKey}`;
+      
+    navigate(url);
+  }, [isHomePage, navigate, setMenuActive]);
 
-  const handleMouseLeave = () => {
-    navBgRef.current && (navBgRef.current.style.width = "0");
-  };
+  const toggleDropdown = () => setIsOpen(prev => !prev);
+  const shouldShowList = isOpen; 
 
-  const handleLinkClick = (e, categoryKey) => {
-    e.stopPropagation();
-    setMenuActive(false);
-    navigate(`/catalog/${categoryKey}`);
+  // 🔥 ЛОГІКА СКОРОЧЕННЯ:
+  // Якщо назва містить "&" (наприклад "Sofas & Armchairs"), беремо тільки "Sofas".
+  // Можна додати й інші розділювачі, якщо потрібно (наприклад "/").
+  const getShortLabel = (text) => {
+      if (!text) return "";
+      if (text.includes("&")) return text.split("&")[0].trim();
+      return text;
   };
 
   return (
-    <li
-      className="nav-item catalog-dropdown"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <div 
+      className={`catalog-sidebar-wrapper ${isHomePage ? "mode-home" : "mode-overlay"}`} 
+      ref={dropdownRef}
     >
-      <Link to="/catalog" className="catalog-link">
-        <span>{catalogLabel}</span>
-      </Link>
+      <div className="catalog-header" onClick={toggleDropdown}>
+        <div className="header-content">
+          <FaBars className="burger-icon" />
+          <span className="header-title">
+             {t.title || (language === 'en' ? "PRODUCT CATALOG" : "КАТАЛОГ ТОВАРІВ")}
+          </span>
+        </div>
+      </div>
 
-      <ul className="dropdown-menu">
-        {isLoading ? (
-          <li className="dropdown-status loading-item">
-            <FaSpinner className="spinner" />
-            {catalogTexts?.loading || "Завантаження..."}
-          </li>
-        ) : error ? (
-          <li className="dropdown-status error-item">
-            <FaExclamationTriangle />
-            {error}
-          </li>
-        ) : categories.length > 0 ? (
-          categories.map((cat) => (
-            <li
-              key={cat._id || cat.category}
-              className="dropdown-item"
-            >
-              <Link
-                to={`/catalog/${cat.category}`}
-                onClick={(e) =>
-                  handleLinkClick(e, cat.category)
-                }
-              >
-                {getCategoryDisplayName(cat, language)}
-              </Link>
+      {shouldShowList && (
+        <ul className="catalog-list">
+          {isLoading ? (
+            <li className="status-item"><FaSpinner className="spinner" /> 
+               {t.loading || tAuth.loading || (language === 'en' ? "Loading..." : "Завантаження...")}
             </li>
-          ))
-        ) : (
-          <li className="dropdown-status no-data">
-            {catalogTexts?.noProducts ||
-              "Немає доступних категорій"}
-          </li>
-        )}
-      </ul>
-    </li>
+          ) : error ? (
+            <li className="status-item error"><FaExclamationTriangle /> {error}</li>
+          ) : categories.length > 0 ? (
+            categories.map((cat) => {
+               const key = cat._id || cat.category; 
+               const hasChildren = cat.children && cat.children.length > 0;
+               
+               // 1. Отримуємо повну назву
+               const fullName = getDisplayName(cat, language);
+               // 2. Скорочуємо її для меню
+               const shortName = getShortLabel(fullName);
+               
+               return (
+                <li 
+                  key={key} 
+                  className="catalog-item"
+                  onMouseEnter={() => setHoveredCategory(cat.category)}
+                  onMouseLeave={() => setHoveredCategory(null)}
+                >
+                  <Link
+                    to={`/catalog/${cat.category}`}
+                    className="catalog-link"
+                  >
+                    {/* Виводимо скорочену назву */}
+                    <span className="cat-name">{shortName}</span>
+                    {hasChildren && <FaChevronRight className="arrow-icon" />}
+                  </Link>
+
+                  {hasChildren && hoveredCategory === cat.category && (
+                    <div className="subcategory-popup">
+                      <ul className="subcategory-list">
+                        {cat.children.map((child, idx) => {
+                          // Те саме для підкатегорій
+                          const childFullName = getDisplayName(child, language);
+                          const childShortName = getShortLabel(childFullName);
+
+                          return (
+                            <li key={child.key || idx} className="subcategory-item">
+                              <Link 
+                                to={`/catalog/${cat.category}/${child.key}`}
+                                className="subcategory-link"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCategoryClick(cat.category, child.key);
+                                }}
+                              >
+                                <span className="sub-name">{childShortName}</span>
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                </li>
+              );
+            })
+          ) : (
+            <li className="status-item">
+               {t.empty || (language === 'en' ? "No categories found" : "Категорії відсутні")}
+            </li>
+          )}
+        </ul>
+      )}
+    </div>
   );
 }

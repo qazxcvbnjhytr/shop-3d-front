@@ -1,0 +1,32 @@
+/* SpecificationsMini.css */
+
+.spec-mini-container {
+  display: flex;
+  flex-direction: column; /* Розташовує характеристики (Розмір, Колір) одну під одною */
+  gap: 6px;
+  margin: 15px 0;
+  padding: 10px 0;
+  border-top: 1px solid rgba(0,0,0,0.05);
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.spec-mini-item {
+  display: flex;           /* Це головне: ставить Label та Value в один рядок */
+  flex-direction: row;     /* Примусово в рядок */
+  align-items: baseline;   /* Вирівнює текст по базовій лінії */
+  gap: 8px;
+  font-size: 14px;
+}
+
+.spec-mini-label {
+  font-weight: 600;
+  color: #666;
+  min-width: 80px;         /* Фіксована ширина для назви характеристики */
+  flex-shrink: 0;          /* ВАЖЛИВО: не дає назві сплющуватися, якщо текст праворуч довгий */
+}
+
+.spec-mini-value {
+  color: #222;
+  /* Якщо кольорів буде багато, вони перенесуться на новий рядок, 
+     але залишаться праворуч від назви */
+}

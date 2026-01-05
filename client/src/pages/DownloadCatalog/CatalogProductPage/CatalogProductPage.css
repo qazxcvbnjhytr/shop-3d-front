@@ -1,0 +1,117 @@
+.cpp-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.cpp-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9pt;
+  color: #aaa;
+  margin-bottom: 5mm;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 2mm;
+}
+
+.cpp-title {
+  font-size: 24pt;
+  font-weight: 800;
+  color: #111;
+  margin: 0 0 5mm 0;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.cpp-image-wrapper {
+  width: 100%;
+  height: 100mm;
+  background: #fcfcfc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #f5f5f5;
+  margin-bottom: 8mm;
+  border-radius: 4px;
+}
+
+.cpp-main-img {
+  max-width: 95%;
+  max-height: 95%;
+  object-fit: contain;
+}
+
+.cpp-section-title {
+  font-size: 11pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 3mm;
+  color: #d32f2f; /* Твій фірмовий червоний */
+  border-left: 3px solid #d32f2f;
+  padding-left: 10px;
+}
+
+.cpp-description {
+  margin-bottom: 8mm;
+  font-size: 11pt;
+  color: #444;
+  line-height: 1.5;
+}
+
+.cpp-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 70mm;
+  gap: 10mm;
+  align-items: start;
+}
+
+.cpp-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cpp-table td {
+  padding: 4px 0;
+  font-size: 10pt;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cpp-table td:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+.cpp-price-block {
+  background: #fdf2f2;
+  padding: 6mm;
+  border-radius: 8px;
+  text-align: right;
+  border: 1px solid #fae1e1;
+}
+
+.cpp-price-old {
+  font-size: 12pt;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.cpp-price-current {
+  font-size: 26pt;
+  font-weight: 900;
+  color: #d32f2f;
+}
+
+.cpp-price-current .currency {
+  font-size: 14pt;
+}
+
+.cpp-discount-badge {
+  display: inline-block;
+  background: #d32f2f;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 10pt;
+  margin-top: 2mm;
+}

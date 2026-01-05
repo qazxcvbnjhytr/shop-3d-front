@@ -1,0 +1,43 @@
+/* базовий вигляд */
+.price{
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1;
+  white-space: nowrap;
+    font-variant-numeric: tabular-nums; /* рівні цифри */
+}
+
+.price__value{
+  font: inherit;
+  letter-spacing: .2px;
+}
+
+.price__suffix{
+  font-size: .85em;
+  font-weight: 700;
+  opacity: .75;
+}
+
+/* якщо ціни немає */
+.price--empty{
+  opacity: .6;
+}
+
+/* ===== модифікатори (використовуй className) ===== */
+
+/* стара ціна (закреслена) */
+.price--old{
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.45);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(15, 23, 42, 0.35);
+}
+
+/* нова ціна (жирна) */
+.price--new{
+  font-size: 22px;
+  font-weight: 900;
+  color: rgba(15, 23, 42, 0.95);
+}

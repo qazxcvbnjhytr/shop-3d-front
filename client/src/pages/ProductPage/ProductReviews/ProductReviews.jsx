@@ -1,10 +1,10 @@
+// client/src/pages/ProductPage/ProductReviews/ProductReviews.jsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import axios from "axios";
 import "./ProductReviews.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-/* ---------- helpers ---------- */
 const toNum = (v) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
@@ -14,10 +14,9 @@ const calcAvg = (items = []) => {
   const arr = Array.isArray(items) ? items : [];
   if (!arr.length) return 0;
   const sum = arr.reduce((acc, r) => acc + toNum(r?.rating), 0);
-  return Math.round((sum / arr.length) * 10) / 10; // 1 знак після коми
+  return Math.round((sum / arr.length) * 10) / 10;
 };
 
-// Окремий мікро-компонент для зірок
 function Stars({ value = 0 }) {
   const v = Math.round(toNum(value));
   return (
@@ -31,14 +30,8 @@ function Stars({ value = 0 }) {
   );
 }
 
-// ✅ Нормалізація відповіді API (бо бекенд може називати поля по-різному)
 function normalizeReviewsResponse(raw) {
-  const items =
-    raw?.items ||
-    raw?.reviews ||
-    raw?.data || // інколи так називають масив
-    [];
-
+  const items = raw?.items || raw?.reviews || raw?.data || [];
   const safeItems = Array.isArray(items) ? items : [];
 
   const count =
@@ -60,7 +53,7 @@ function normalizeReviewsResponse(raw) {
   return { items: safeItems, avgRating, count, page, pages };
 }
 
-export default function ProductReviews({ productId, token }) {
+export default function ProductReviews({ productId, token, onStatsChange }) {
   const [data, setData] = useState(() =>
     normalizeReviewsResponse({ items: [], avgRating: 0, count: 0, page: 1, pages: 1 })
   );
@@ -82,21 +75,25 @@ export default function ProductReviews({ productId, token }) {
       setLoading(true);
 
       try {
-        const r = await axios.get(
-          `${API_URL}/api/reviews/product/${productId}`,
-          { params: { page, limit: 10 } }
-        );
+        const r = await axios.get(`${API_URL}/api/reviews/product/${productId}`, {
+          params: { page, limit: 10 },
+        });
 
-        // ⬇️ ключова правка
-        setData(normalizeReviewsResponse(r.data));
+        const normalized = normalizeReviewsResponse(r.data);
+        setData(normalized);
+
+        // ✅ віддаємо наверх, якщо треба
+        onStatsChange?.({ avgRating: normalized.avgRating, count: normalized.count });
       } catch (e) {
         setErr(e?.response?.data?.message || e?.message || "Error loading reviews");
-        setData(normalizeReviewsResponse({ items: [] }));
+        const normalized = normalizeReviewsResponse({ items: [] });
+        setData(normalized);
+        onStatsChange?.({ avgRating: 0, count: 0 });
       } finally {
         setLoading(false);
       }
     },
-    [productId]
+    [productId, onStatsChange]
   );
 
   useEffect(() => {
@@ -108,11 +105,7 @@ export default function ProductReviews({ productId, token }) {
     setErr("");
 
     try {
-      await axios.post(
-        `${API_URL}/api/reviews`,
-        { productId, ...form },
-        { headers }
-      );
+      await axios.post(`${API_URL}/api/reviews`, { productId, ...form }, { headers });
 
       setForm({ rating: 5, title: "", text: "" });
       await load(1);
@@ -123,7 +116,6 @@ export default function ProductReviews({ productId, token }) {
 
   return (
     <div className="product-reviews">
-      {/* Header Section */}
       <div className="product-reviews__header">
         <h2 className="product-reviews__title">Відгуки</h2>
 
@@ -133,14 +125,12 @@ export default function ProductReviews({ productId, token }) {
         </div>
       </div>
 
-      {/* Error Alert */}
       {err && (
         <div className="product-reviews__alert product-reviews__alert--error">
           {err}
         </div>
       )}
 
-      {/* Reviews List */}
       <div>
         {loading && <div className="product-reviews__loading">Завантаження...</div>}
 
@@ -168,13 +158,13 @@ export default function ProductReviews({ productId, token }) {
           </div>
         ))}
 
-        {/* Pagination */}
         {data.pages > 1 && (
           <div className="product-reviews__pagination">
             <button
               className="pagination-btn"
               disabled={data.page <= 1}
               onClick={() => load(data.page - 1)}
+              type="button"
             >
               Prev
             </button>
@@ -183,6 +173,7 @@ export default function ProductReviews({ productId, token }) {
               className="pagination-btn"
               disabled={data.page >= data.pages}
               onClick={() => load(data.page + 1)}
+              type="button"
             >
               Next
             </button>
@@ -190,7 +181,6 @@ export default function ProductReviews({ productId, token }) {
         )}
       </div>
 
-      {/* Form Section */}
       <div className="product-reviews__form-section">
         <h3 className="form-title">Залишити відгук</h3>
 
@@ -208,7 +198,9 @@ export default function ProductReviews({ productId, token }) {
                 onChange={(e) => setForm((p) => ({ ...p, rating: Number(e.target.value) }))}
               >
                 {[5, 4, 3, 2, 1].map((x) => (
-                  <option key={x} value={x}>{x}</option>
+                  <option key={x} value={x}>
+                    {x}
+                  </option>
                 ))}
               </select>
             </label>

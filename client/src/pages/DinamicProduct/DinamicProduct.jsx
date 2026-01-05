@@ -1,121 +1,135 @@
-// client/src/pages/DinamicProduct/DinamicProduct.jsx
 import React, { useContext, useState, useEffect, useMemo } from "react";
-import { useParams, Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import { useCart } from "../../context/CartContext.jsx";
+
+import ProductFiltersBar from "./ProductFilters/ProductFiltersBar/ProductFiltersBar";
+import ProductsGrid from "./ProductsGrid/ProductsGrid";
+import ActiveChipsRow from "./ActiveChipsRow/ActiveChipsRow";
 
 import { LanguageContext } from "../../context/LanguageContext";
 import { useBreadcrumbs } from "../../hooks/useBreadcrumbs";
 import { useCategories } from "../../hooks/useCategories";
+import { useTranslation } from "../../hooks/useTranslation";
 
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import LikesComponent from "../../components/Likes/LikesComponent";
-import DiscountBadge from "../../components/DiscountBadge/DiscountBadge";
-
-import { matchesProductQuery } from "../../utils/productSearch";
+// Імпорт винесених хелперів
+import {
+  DEFAULT_FILTERS,
+  normalizeLang,
+  pickText,
+  readFiltersFromSearchParams,
+  buildApiParams,
+  filtersToSearchParamsObject
+} from "./productHelpers";
 
 import "./DinamicProduct.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const ITEMS_PER_PAGE = 9;
 
-/* ---------- rating helpers ---------- */
-const toNum = (v) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-};
+export default function DinamicProduct() {
+  const { category, sub } = useParams();
+  const subKey = sub || "all";
 
-// ✅ тільки summary (НЕ рахуємо avg з items, бо limit=1)
-function normalizeReviewSummary(raw) {
-  const count =
-    toNum(raw?.count) ||
-    toNum(raw?.total) ||
-    toNum(raw?.totalCount) ||
-    toNum(raw?.totalReviews) ||
-    0;
-
-  const avgRating =
-    toNum(raw?.avgRating) ||
-    toNum(raw?.averageRating) ||
-    toNum(raw?.avg) ||
-    0;
-
-  return { count, avgRating };
-}
-
-/* ⭐ stars mini-component */
-function Stars({ value = 0 }) {
-  const v = Math.round(toNum(value));
-  return (
-    <span className="dp-stars" aria-label={`Rating: ${v} / 5`}>
-      {"★★★★★".split("").map((s, i) => (
-        <span
-          key={i}
-          className={i < v ? "dp-star dp-star--filled" : "dp-star dp-star--empty"}
-        >
-          {s}
-        </span>
-      ))}
-    </span>
-  );
-}
-
-export default function CatalogCategory() {
-  const { category } = useParams();
-  const [searchParams] = useSearchParams();
-  const q = searchParams.get("q") || "";
-
-  const navigate = useNavigate();
-  const { addItem } = useCart();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeFilters = useMemo(() => readFiltersFromSearchParams(searchParams), [searchParams]);
+  const q = activeFilters.q || "";
 
   const { language, loading: langLoading } = useContext(LanguageContext);
+  const lang = normalizeLang(language);
+
   const { categoriesMap, loading: categoriesLoading } = useCategories();
   const { setData } = useBreadcrumbs();
+  const { t, loading: trLoading } = useTranslation();
+
+  const [draftFilters, setDraftFilters] = useState(() => ({
+    ...DEFAULT_FILTERS,
+    ...activeFilters,
+  }));
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  /**
-   * ratingsCache:
-   * {
-   *   [productId]: { avgRating: number, count: number }
-   * }
-   */
-  const [ratingsCache, setRatingsCache] = useState({});
+  const [categoryChildren, setCategoryChildren] = useState([]);
+  const [categoryParent, setCategoryParent] = useState(null);
 
-  /* =========================
-     CATEGORY NAME (FROM DB)
-  ========================= */
-  const categoryName = useMemo(() => {
+  // Синхронізація локальних фільтрів з URL
+  useEffect(() => {
+    setDraftFilters((prev) => ({ ...prev, ...activeFilters }));
+  }, [activeFilters]);
+
+  // Завантаження інформації про категорії (батьківська + дочірні)
+  useEffect(() => {
+    if (!category) return;
+
+    const fetchCategoryInfo = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/categories/${category}/children`, {
+          params: { _ts: Date.now() },
+          headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+        });
+
+        setCategoryParent(res.data?.parent || null);
+        setCategoryChildren(Array.isArray(res.data?.children) ? res.data.children : []);
+      } catch {
+        setCategoryParent(null);
+        setCategoryChildren([]);
+      }
+    };
+
+    fetchCategoryInfo();
+  }, [category]);
+
+  const parentName = useMemo(() => {
+    const fromApi = pickText(categoryParent?.names, lang);
+    if (fromApi) return fromApi;
+
     const item = categoriesMap?.[category];
-    return item?.[language] || item?.ua || category;
-  }, [category, language, categoriesMap]);
+    return pickText(item, lang) || pickText(item?.names, lang) || category || "";
+  }, [category, categoriesMap, categoryParent, lang]);
 
-  /* =========================
-     BREADCRUMBS
-  ========================= */
+  const subName = useMemo(() => {
+    if (!subKey || subKey === "all") return lang === "ua" ? "Усі товари" : "All products";
+
+    const fromChildren = categoryChildren.find((c) => c?.key === subKey);
+    const childName = pickText(fromChildren?.names, lang);
+    if (childName) return childName;
+
+    const item = categoriesMap?.[subKey];
+    const fromMap = pickText(item, lang) || pickText(item?.names, lang);
+    if (fromMap) return fromMap;
+
+    return subKey;
+  }, [subKey, categoryChildren, categoriesMap, lang]);
+
+  // Оновлення хлібних крихт
   useEffect(() => {
     setData?.((prev) => ({
       ...(prev || {}),
       categoryCode: category,
+      subCategoryCode: subKey,
       productName: null,
     }));
-  }, [category, setData]);
+  }, [category, subKey, setData]);
 
-  /* =========================
-     FETCH PRODUCTS
-  ========================= */
+  // Основний запит на завантаження товарів
   useEffect(() => {
     if (!category) return;
 
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${API_URL}/api/products`, { params: { category } });
+        const base = subKey && subKey !== "all" ? { category, subCategory: subKey } : { category };
+        const params = buildApiParams(activeFilters, base);
+
+        const res = await axios.get(`${API_URL}/api/products/filter`, {
+          params: { ...params, _ts: Date.now() },
+          headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+        });
+
         setProducts(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        console.error("Products load error:", err);
+        console.error("Помилка завантаження товарів:", err);
         setProducts([]);
       } finally {
         setLoading(false);
@@ -124,237 +138,135 @@ export default function CatalogCategory() {
 
     fetchProducts();
     setCurrentPage(1);
-  }, [category]);
+  }, [category, subKey, activeFilters]);
 
-  /* =========================
-     FILTER (q from URL)
-  ========================= */
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => matchesProductQuery(p, q, language));
-  }, [products, q, language]);
+  const onApplyFilters = () => {
+    const obj = filtersToSearchParamsObject(draftFilters);
+    setSearchParams(obj, { replace: false });
+    setCurrentPage(1);
+  };
 
-  useEffect(() => setCurrentPage(1), [q]);
+  const onResetFilters = () => {
+    setDraftFilters({ ...DEFAULT_FILTERS });
+    setSearchParams({}, { replace: false });
+    setCurrentPage(1);
+  };
 
-  /* =========================
-     PAGINATION (filtered)
-  ========================= */
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const removeTag = (field, valueToRemove) => {
+    const current = draftFilters[field];
+    let next;
 
-  const currentItems = filteredProducts.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const paginate = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    if (Array.isArray(current)) {
+      next = current.filter((v) => v !== valueToRemove);
+    } else {
+      next = DEFAULT_FILTERS[field];
     }
+
+    const updated = { ...draftFilters, [field]: next };
+    setDraftFilters(updated);
+    setSearchParams(filtersToSearchParamsObject(updated), { replace: false });
+    setCurrentPage(1);
   };
 
-  /* =========================
-     BUY HANDLER (add to cart + go to /cart)
-  ========================= */
-  const handleBuy = (item, productName, currentPrice, oldPrice) => {
-    const id = String(item?._id || item?.id || "");
-    if (!id) return;
+  const activeChips = useMemo(() => {
+    const list = [];
+    const f = activeFilters;
 
-    const imageAbs = item?.image ? `${API_URL}${item.image}` : "/placeholder.png";
+    if (f.hasDiscount) list.push({ field: "hasDiscount", val: "1", label: lang === "ua" ? "Зі знижкою" : "With discount" });
+    if (f.hasModel) list.push({ field: "hasModel", val: "1", label: lang === "ua" ? "Є 3D" : "Has 3D" });
+    if (f.inStock) list.push({ field: "inStock", val: "1", label: lang === "ua" ? "В наявності" : "In stock" });
+    if (String(f.q || "").trim()) list.push({ field: "q", val: f.q, label: `q: ${f.q}` });
 
-    addItem(
-      {
-        id,
-        name: productName || "Товар",
-        price: Number(currentPrice) || 0, // ✅ ціна в кошику (вже з урахуванням знижки)
-        oldPrice: Number(oldPrice) || 0,  // ✅ щоб у кошику показати перекреслену ціну
-        discount: Number(item?.discount) || 0,
-        image: imageAbs,
-        category: String(item?.category || category || ""),
-      },
-      1
-    );
-
-    navigate("/shopping-cart");
-  };
-
-  /* =========================
-     LOAD RATINGS FOR CURRENT PAGE (cached)
-     ✅ Тягнемо ТІЛЬКИ summary (avgRating + count) з бекенда
-  ========================= */
-  useEffect(() => {
-    let alive = true;
-
-    const ids = currentItems.map((p) => p?._id).filter(Boolean);
-    const missing = ids.filter((id) => ratingsCache[id] == null);
-    if (!missing.length) return;
-
-    const fetchOne = async (id) => {
-      try {
-        const r = await axios.get(`${API_URL}/api/reviews/product/${id}`, {
-          params: { page: 1, limit: 1, _ts: Date.now() }, // ✅ ламає 304
-          headers: {
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-          },
-        });
-
-        const s = normalizeReviewSummary(r.data);
-        return { id, avgRating: s.avgRating, count: s.count };
-      } catch {
-        return { id, avgRating: 0, count: 0 };
-      }
+    const mkRange = (minKey, maxKey, title, suffix = "") => {
+      const a = String(f[minKey] || "").trim();
+      const b = String(f[maxKey] || "").trim();
+      if (!a && !b) return;
+      const text = a && b ? `${a}–${b}${suffix}` : a ? `від ${a}${suffix}` : `до ${b}${suffix}`;
+      list.push({ field: minKey, val: `${a}|${b}`, label: `${title}: ${text}` });
     };
 
-    (async () => {
-      const results = await Promise.all(missing.map(fetchOne));
-      if (!alive) return;
+    mkRange("priceMin", "priceMax", lang === "ua" ? "Ціна" : "Price", " грн");
+    mkRange("discountMin", "discountMax", lang === "ua" ? "Знижка" : "Discount", "%");
+    mkRange("widthMin", "widthMax", lang === "ua" ? "Ширина" : "Width", " см");
+    mkRange("heightMin", "heightMax", lang === "ua" ? "Висота" : "Height", " см");
+    mkRange("depthMin", "depthMax", lang === "ua" ? "Глибина" : "Depth", " см");
+    mkRange("weightMin", "weightMax", lang === "ua" ? "Вага" : "Weight", " кг");
+    mkRange("warrantyMin", "warrantyMax", lang === "ua" ? "Гарантія" : "Warranty", " міс");
 
-      setRatingsCache((prev) => {
-        const next = { ...prev };
-        results.forEach((x) => {
-          next[x.id] = { avgRating: x.avgRating, count: x.count };
-        });
-        return next;
+    if (f.materialKey) list.push({ field: "materialKey", val: f.materialKey, label: t?.materials?.[f.materialKey] || f.materialKey });
+    if (f.manufacturerKey) list.push({ field: "manufacturerKey", val: f.manufacturerKey, label: t?.manufacturers?.[f.manufacturerKey] || f.manufacturerKey });
+    if (f.bedSize) list.push({ field: "bedSize", val: f.bedSize, label: (lang === "ua" ? "Розмір" : "Size") + `: ${f.bedSize}` });
+
+    const addArrayChips = (field, dictPath) => {
+      const arr = f[field] || [];
+      arr.forEach((k) => {
+        const dict = dictPath ? t?.[dictPath] : null;
+        list.push({ field, val: k, label: dict?.[k] || k });
       });
-    })();
-
-    return () => {
-      alive = false;
     };
-  }, [currentItems, ratingsCache]);
 
-  /* =========================
-     LOADERS
-  ========================= */
-  if (loading || langLoading || categoriesLoading) {
-    return (
-      <div className="loader-container">
-        <div className="loader" />
-      </div>
-    );
+    addArrayChips("colorKeys", "colors");
+    addArrayChips("styleKeys", "styles");
+    addArrayChips("roomKeys", "rooms");
+    addArrayChips("collectionKeys", "collections");
+
+    return list;
+  }, [activeFilters, t, lang]);
+
+  const hasAnyActiveFilter = useMemo(() => {
+    return Object.entries(activeFilters).some(([k, v]) => {
+      if (k === "sort") return v && v !== "newest";
+      if (typeof v === "boolean") return v;
+      if (Array.isArray(v)) return v.length > 0;
+      return String(v || "").trim() !== "";
+    });
+  }, [activeFilters]);
+
+  if (loading || langLoading || categoriesLoading || trLoading) {
+    return <div className="loader-container"><div className="loader" /></div>;
   }
 
-  /* =========================
-     RENDER
-  ========================= */
   return (
     <div className="category-page-container">
       <header className="category-header">
         <h1 className="category-title">
-          <span className="title-accent">/ </span>
-          {categoryName}
+          <span className="title-accent"></span>
+          {subName}
         </h1>
+        <div style={{ marginTop: 10 }}>
+          <Link to={`/catalog/${encodeURIComponent(category)}`} className="dp-back-link">
+            ← {lang === "ua" ? "Назад до підкатегорій" : "Back to subcategories"}
+          </Link>
+        </div>
       </header>
 
-      <div className="catalog-grid">
-        {currentItems.length ? (
-          currentItems.map((item) => {
-            const hasDiscount = toNum(item.discount) > 0;
-            const oldPrice = toNum(item.price);
-            const currentPrice = hasDiscount
-              ? Math.round(oldPrice - (oldPrice * toNum(item.discount)) / 100)
-              : oldPrice;
+      <ProductFiltersBar
+        value={draftFilters}
+        onChange={setDraftFilters}
+        onApply={onApplyFilters}
+        onReset={onResetFilters}
+        loading={loading}
+      />
 
-            const productName =
-              item.name?.[language] || item.name?.ua || item.name?.en || "Назва товару";
+      <ActiveChipsRow
+        chips={activeChips}
+        onReset={onResetFilters}
+        onRemove={removeTag}
+        resetText={lang === "ua" ? "Скинути всі" : "Reset all"}
+      />
 
-            const cached = ratingsCache?.[item._id];
-            const count = toNum(cached?.count);
-            const rating = toNum(cached?.avgRating);
-
-            return (
-              <div key={item._id} className="catalog-card">
-                <div className="card-actions-top">
-                  <LikesComponent product={item} />
-                </div>
-
-                {hasDiscount && (
-                  <div className="card-badge-wrapper">
-                    <DiscountBadge discount={item.discount} />
-                  </div>
-                )}
-
-                <Link to={`/catalog/${category}/${item._id}`} className="card-image-link">
-                  <div className="image-wrapper">
-                    <img
-                      src={item.image ? `${API_URL}${item.image}` : "/placeholder.png"}
-                      alt={productName}
-                      className="card-image"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.src = "/placeholder.png";
-                      }}
-                    />
-                  </div>
-                </Link>
-
-                <div className="card-content">
-                  <h3 className="card-title">{productName}</h3>
-
-                  {/* ⭐ Rating row */}
-                  <div
-                    className="dp-rating"
-                    title={count ? `Rating ${rating.toFixed(1)} (${count})` : "No reviews"}
-                  >
-                    <Stars value={count ? rating : 0} />
-
-                    {count > 0 ? (
-                      <span className="dp-rating__meta">
-                        <span className="dp-rating__num">{rating.toFixed(1)}</span>
-                        <span className="dp-rating__count">({count})</span>
-                      </span>
-                    ) : (
-                      <span className="dp-rating__empty">(0)</span>
-                    )}
-                  </div>
-
-                  <div className="price-block">
-                    {hasDiscount && <span className="price-old">{oldPrice} грн</span>}
-                    <span className="price-current">{currentPrice} грн</span>
-                  </div>
-
-                  {/* ✅ BUY BUTTON */}
-                  <button
-                    type="button"
-                    className="dp-buy-btn"
-                    onClick={() => handleBuy(item, productName, currentPrice, oldPrice)}
-                  >
-                    Купити
-                  </button>
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          <div className="empty-state">
-            <p>
-              {q
-                ? language === "ua"
-                  ? "Нічого не знайдено за запитом."
-                  : "Nothing found for your query."
-                : language === "ua"
-                ? "В цій категорії поки немає товарів."
-                : "No products in this category yet."}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button disabled={currentPage === 1} onClick={() => paginate(currentPage - 1)}>
-            <FaChevronLeft />
-          </button>
-
-          <span>
-            {currentPage} / {totalPages}
-          </span>
-
-          <button disabled={currentPage === totalPages} onClick={() => paginate(currentPage + 1)}>
-            <FaChevronRight />
-          </button>
-        </div>
-      )}
+      <ProductsGrid
+        products={products}
+        itemsPerPage={ITEMS_PER_PAGE}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        apiUrl={API_URL}
+        category={category}
+        subKey={subKey}
+        lang={lang}
+        hasAnyActiveFilter={hasAnyActiveFilter}
+        q={q}
+      />
     </div>
   );
 }

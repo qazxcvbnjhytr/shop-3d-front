@@ -1,79 +1,237 @@
+/* --- ОСНОВНИЙ КОНТЕЙНЕР --- */
+.catalog-sidebar-wrapper {
+    border-radius: 12px;
 
-/* =========================================
-   4. DROPDOWNS (CATALOG & USER)
-   ========================================= */
-.dropdown-menu,
-.user-dropdown {
+  width: 280px; /* Стандартна ширина сайдбару */
+  position: relative;
+  z-index: 20; /* Щоб було вище звичайного контенту, але нижче модалок */
+}
+
+/* --- ШАПКА (Як на фото: Бежева) --- */
+.catalog-header {
+  background: rgba(96, 221, 211, 0.95);
+  color: #333; /* Темний текст */
+  padding: 15px 20px;
+  cursor: pointer;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  transition: background 0.3s;
+  user-select: none;
+}
+/* Основний контейнер для елемента списку має бути relative, 
+   щоб підменю позиціонувалося відносно нього */
+.catalog-item {
+  position: relative; 
+  display: block;
+}
+
+.catalog-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  color: #333;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+  cursor: pointer;
+}
+
+.catalog-link:hover {
+  background-color: #f8f9fa; /* Світло-сірий фон при наведенні */
+  color: #00bfaf; /* Ваш акцентний колір */
+}
+
+.arrow-icon {
+  font-size: 0.8em;
+  color: #999;
+}
+
+/* --- СТИЛІ ДЛЯ ВИПАДАЮЧОГО МЕНЮ (SUBCATEGORIES) --- */
+
+.subcategory-popup {
+  position: absolute;
+  top: 0;
+  left: 100%; /* Зсуваємо повністю вправо від батьківського li */
+  width: 250px; /* Ширина підменю */
+  min-height: 100%; /* Висота мінімум як у батьківського елемента */
+  background-color: #fff;
+  box-shadow: 4px 0 15px rgba(0,0,0,0.1); /* Тінь праворуч */
+  border: 1px solid #eee;
+  z-index: 1000;
+  
+  /* Анімація появи */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-10px);
+  animation: slideInSub 0.2s forwards;
+}
+
+@keyframes slideInSub {
+  to {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+  }
+}
+
+/* Список всередині підменю */
+.subcategory-list {
+  list-style: none;
+  padding: 10px 0;
+  margin: 0;
+}
+
+.subcategory-item {
+  display: block;
+}
+
+.subcategory-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  text-decoration: none;
+  color: #555;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.subcategory-link:hover {
+  background-color: #f0fdfc; /* Дуже світлий акцент */
+  color: #00bfaf;
+  padding-left: 25px; /* Легкий зсув вправо при наведенні */
+}
+
+.sub-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+/* --- АДАПТИВНІСТЬ --- */
+/* На мобільних телефонах ховер не працює коректно, 
+   тому зазвичай підкатегорії роблять акордеоном вниз. 
+   Цей код приховає "вилітання" на малих екранах */
+
+@media (max-width: 768px) {
+  .subcategory-popup {
+    position: static; /* Стає частиною потоку */
+    width: 100%;
+    box-shadow: none;
+    border: none;
+    background: #f9f9f9;
+    padding-left: 20px;
+    animation: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  .catalog-link {
+    font-weight: 600;
+  }
+  
+  /* На мобільному потрібно змінювати логіку з hover на click у JS,
+     або залишити як є, якщо меню використовується тільки як Sidebar */
+}
+/* Якщо це режим "Overlay" (не головна), робимо кнопку трохи темнішою при наведенні */
+.mode-overlay .catalog-header:hover {
+  filter: brightness(0.95);
+  border-radius: 4px; /* На інших сторінках заокруглюємо все */
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Відступ між іконкою і текстом */
+}
+
+.burger-icon {
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.header-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+/* --- СПИСОК (Білий) --- */
+.catalog-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-top: none; /* Прибираємо подвійну лінію зверху */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* Логіка відображення на різних сторінках */
+.mode-home .catalog-list {
+  display: block; /* Завжди видно на головній */
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.mode-overlay .catalog-list {
   position: absolute;
   top: 100%;
   left: 0;
-  min-width: 220px;
-  background: #ffffff;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-deep);
-  padding: 10px 0;
-  list-style: none;
-  
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(15px);
-  transition: all 0.3s var(--ease-premium);
-  z-index: 1100;
-  margin-top: 10px;
-}
-
-/* Arrows */
-.dropdown-menu::before,
-.user-dropdown::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  width: 12px;
-  height: 12px;
-  background: #fff;
-  transform: rotate(45deg);
-  border-radius: 2px;
-}
-.dropdown-menu::before { left: 20px; }
-.user-dropdown::before { right: 20px; }
-
-/* Show State */
-.catalog-dropdown:hover .dropdown-menu,
-.user-menu:hover .user-dropdown {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-/* Items */
-.dropdown-item a,
-.user-dropdown li a,
-.user-dropdown li button {
-  display: flex;
-  align-items: center;
   width: 100%;
-  padding: 10px 20px;
-  color: #333;
-  font-size: 0.9rem;
-  font-weight: 500;
+  z-index: 1000;
+  border-radius: 0 0 4px 4px;
+}
+
+/* --- ПУНКТИ МЕНЮ --- */
+.catalog-item {
+  border-bottom: 1px solid #f0f0f0; /* Тонка лінія між пунктами */
+}
+
+.catalog-item:last-child {
+  border-bottom: none;
+}
+
+.catalog-link {
+  display: left;
+  justify-content: space-between; /* Текст зліва, стрілка справа */
+  align-items: center;
+  padding: 12px 20px;
   text-decoration: none;
-  border: none;
-  background: none;
-  cursor: pointer;
-  transition: background 0.2s;
-  box-sizing: border-box;
-  text-transform: none; /* В меню текст звичайний */
+  color: #555; /* Сірий колір тексту */
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
-.dropdown-item a:hover,
-.user-dropdown li a:hover,
-.user-dropdown li button:hover {
-  background-color: #f0fdfc;
-  color: var(--header-text-hover);
-  padding-left: 25px;
+/* Ефекти при наведенні */
+.catalog-link:hover {
+  background-color: #f9f9f9;
+  color: #c79c3d; /* Золотистий колір тексту при наведенні */
+  padding-left: 25px; /* Ефект зсуву вправо */
 }
 
-.user-dropdown svg {
-  margin-right: 10px;
-  color: var(--header-text-hover);
+.arrow-icon {
+  font-size: 10px;
+  color: #ccc;
+  transition: color 0.2s;
 }
+
+.catalog-link:hover .arrow-icon {
+  color: #c79c3d;
+}
+
+/* --- СТАТУСИ (Завантаження / Помилка) --- */
+.status-item {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.spinner { animation: spin 1s linear infinite; }
+.error { color: #e74c3c; }
+@keyframes spin { 100% { transform: rotate(360deg); } }

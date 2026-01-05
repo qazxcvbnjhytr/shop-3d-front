@@ -1,0 +1,24 @@
+.sc-chips-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin: 10px 0 14px;
+}
+
+.sc-chip{
+  border: 1px solid rgba(0,0,0,.12);
+  background:#fff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sc-chip--reset{
+  border-style: dashed;
+}
+
+.sc-chip-x{
+  margin-left: 8px;
+  opacity: .7;
+}

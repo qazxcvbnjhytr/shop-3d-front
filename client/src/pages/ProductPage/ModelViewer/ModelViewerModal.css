@@ -1,0 +1,302 @@
+/* Важливо: overlay ПОВНІСТЮ покриває viewport */
+.mv-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+
+  width: 100dvw;
+  height: 100dvh;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+
+  margin: 0;
+  padding: 0;
+
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.mv-overlay--fullscreen {
+  padding: 0;
+}
+
+.mv-modal {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.92), rgba(18, 18, 18, 0.92));
+}
+
+.mv-modal--fullscreen {
+  width: 100dvw;
+  height: 100dvh;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Верхня панель */
+.mv-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mv-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.mv-iconBtn {
+  width: 42px;
+  height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.92);
+
+  cursor: pointer;
+}
+
+.mv-iconBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Панель контролів */
+.mv-controls {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mv-leftControls {
+  min-width: 380px;
+  flex: 1;
+}
+
+.mv-rightControls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 22px;
+}
+
+.mv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mv-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.72);
+  text-transform: uppercase;
+}
+
+.mv-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mv-select {
+  height: 40px;
+  padding: 0 12px;
+
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.92);
+
+  outline: none;
+}
+
+.mv-color {
+  width: 44px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mv-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.mv-chip {
+  height: 34px;
+  padding: 0 12px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.9);
+
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.mv-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mv-chip.is-active {
+  border-color: rgba(46, 196, 182, 0.55);
+  background: rgba(46, 196, 182, 0.14);
+}
+
+.mv-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 700;
+  user-select: none;
+}
+
+.mv-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: #2ec4b6;
+}
+
+.mv-hint {
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12.5px;
+}
+
+/* Canvas area */
+.mv-canvasWrap {
+  flex: 1;
+  background: #0f1115;
+  min-height: 0; /* критично для flex */
+}
+
+.mv-canvasWrap--fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
+/* Footer */
+.mv-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mv-footnote {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12.5px;
+}
+
+.mv-closeBtn {
+  height: 40px;
+  padding: 0 16px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mv-closeBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Loader */
+.mv-loader {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.mv-spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.18);
+  border-top-color: rgba(46, 196, 182, 0.9);
+  animation: mvspin 0.9s linear infinite;
+}
+.mv-row--bg {
+  flex-wrap: nowrap;      /* щоб не ламало рядок */
+  gap: 12px;
+}
+
+.mv-label--inline {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.mv-presets--inline {
+  display: flex;
+  flex-wrap: nowrap;      /* ключове: 4 кнопки в один ряд */
+  gap: 10px;
+}
+
+.mv-presets--inline .mv-chip {
+  white-space: nowrap;    /* щоб “Чорний” не переносився */
+}
+
+/* якщо не влазить по ширині — даємо горизонтальний скрол */
+@media (max-width: 900px) {
+  .mv-presets--inline {
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .mv-presets--inline::-webkit-scrollbar {
+    height: 8px;
+  }
+}
+
+@keyframes mvspin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mv-loaderText {
+  font-weight: 800;
+}

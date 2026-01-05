@@ -1,28 +1,34 @@
-import React, { useMemo, useRef, useCallback, useEffect, useContext } from "react";
+import React, { useMemo, useRef, useCallback, useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { LanguageContext } from "@context/LanguageContext";
-import { useLikes } from "../../../context/LikesContext.jsx";
-
+import { useLikes } from "../../../context/LikesProvider.jsx";
+import axios from "axios";
 import "./LikeDropdown.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const RAW_API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const MAX_VISIBLE = 8;
+
+const normalizeBase = (raw) => {
+  const s = String(raw || "").replace(/\/+$/, "");
+  return s.replace(/\/api\/?$/, "");
+};
+const BASE = normalizeBase(RAW_API);
+
+const getApiOrigin = (apiUrl) => {
+  try {
+    return new URL(apiUrl).origin;
+  } catch {
+    return normalizeBase(apiUrl);
+  }
+};
+const API_ORIGIN = getApiOrigin(RAW_API);
 
 const normLang = (language) => String(language || "ua").toLowerCase();
 
 const pickText = (value, language = "ua") => {
   const lang = normLang(language);
-
   if (typeof value === "string" || typeof value === "number") return String(value);
-  if (value && typeof value === "object") {
-    return (
-      value?.[lang] ||
-      value?.ua ||
-      value?.uk ||
-      value?.en ||
-      ""
-    );
-  }
+  if (value && typeof value === "object") return value?.[lang] || value?.ua || value?.uk || value?.en || "";
   return "";
 };
 
@@ -31,17 +37,38 @@ const toNumber = (v) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const buildImg = (raw) => {
+const formatUAH = (n) => {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return "—";
+  return `${Math.round(v).toLocaleString("uk-UA")} грн`;
+};
+
+const joinUrl = (origin, raw) => {
   if (!raw || typeof raw !== "string") return "/placeholder.png";
-  if (raw.startsWith("http")) return raw;
-  if (raw.startsWith("/")) return `${API_URL}${raw}`;
-  return `${API_URL}/${raw}`.replace(/\/{2,}/g, "/").replace(":/", "://");
+  if (/^(https?:\/\/|data:|blob:)/i.test(raw)) return raw;
+  const o = String(origin || "").replace(/\/+$/, "");
+  const p = raw.startsWith("/") ? raw : `/${raw}`;
+  return `${o}${p}`;
+};
+
+const calcFinalPrice = (price, discountPercent) => {
+  const p = toNumber(price);
+  const d = Math.min(100, Math.max(0, toNumber(discountPercent)));
+  return Math.round((p * (100 - d)) / 100);
+};
+
+const getProductIdFromLike = (like) => {
+  if (!like) return "";
+  if (typeof like === "string" || typeof like === "number") return String(like);
+  if (typeof like === "object") return String(like.productId || "");
+  return "";
 };
 
 export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
   const { language } = useContext(LanguageContext);
-  const { likedProducts = [] } = useLikes();
+  const { likedProducts = [], likedProductIds = [] } = useLikes();
 
+  const [productsById, setProductsById] = useState({});
   const closeTimerRef = useRef(null);
 
   const cancelClose = useCallback(() => {
@@ -58,73 +85,107 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
 
   useEffect(() => () => cancelClose(), [cancelClose]);
 
+  const ids = useMemo(() => {
+    const list = Array.isArray(likedProductIds) ? likedProductIds.map(String).filter(Boolean) : [];
+    return Array.from(new Set(list));
+  }, [likedProductIds]);
+
+  // ✅ чистим кеш для удаленных лайков
+  useEffect(() => {
+    setProductsById((prev) => {
+      const next = {};
+      for (const id of ids) {
+        if (prev[id] !== undefined) next[id] = prev[id];
+      }
+      return next;
+    });
+  }, [ids]);
+
+  // ✅ подтягиваем детали для новых лайков
+  useEffect(() => {
+    if (!open) return;
+    if (!ids.length) return;
+
+    const missing = ids.filter((id) => productsById[id] === undefined);
+    if (!missing.length) return;
+
+    let alive = true;
+
+    (async () => {
+      const res = await Promise.allSettled(
+        missing.map((id) => axios.get(`${BASE}/api/products/${id}`))
+      );
+
+      if (!alive) return;
+
+      setProductsById((prev) => {
+        const next = { ...prev };
+        res.forEach((r, idx) => {
+          const id = missing[idx];
+          if (r.status === "fulfilled" && r.value?.data) next[id] = r.value.data;
+          else next[id] = null; // не спамим
+        });
+        return next;
+      });
+    })();
+
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, ids, productsById]);
+
   const items = useMemo(() => {
     const arr = Array.isArray(likedProducts) ? likedProducts : [];
 
-    return arr.map((p, idx) => {
-      // якщо колись будеш робити populate:
-      const productObj = p?.product && typeof p.product === "object" ? p.product : null;
+    return arr
+      .map((like, idx) => {
+        const productId = getProductIdFromLike(like);
+        if (!productId) return null;
 
-      const id = String(
-        p?.productId ||
-          productObj?._id ||
-          p?._id ||
-          p?.id ||
-          `like-${idx}`
-      );
+        const p = productsById[productId]; // object|null|undefined
 
-      const category =
-        p?.productCategory ||
-        p?.category ||
-        productObj?.category ||
-        "unknown";
+        const name =
+          pickText(like?.productName, language) ||
+          pickText(p?.name, language) ||
+          "Товар";
 
-      const to = `/catalog/${category}/${id}`;
+        const imgRaw = like?.productImage || p?.images?.[0] || p?.image || "";
+        const img = joinUrl(API_ORIGIN, imgRaw);
 
-      const imgRaw =
-        p?.productImage ||
-        p?.image ||
-        p?.imageUrl ||
-        productObj?.image ||
-        (Array.isArray(productObj?.images) ? productObj.images[0] : null) ||
-        (Array.isArray(p?.images) ? p.images[0] : null);
+        const price = toNumber(p?.price || like?.price);
+        const discount = toNumber(p?.discount || like?.discount);
+        const hasDiscount = price > 0 && discount > 0;
+        const finalPrice = hasDiscount ? calcFinalPrice(price, discount) : price;
 
-      // ✅ спочатку беремо те, що ти реально зберігаєш у лайках: productName
-      const name =
-        pickText(p?.productName, language) ||
-        pickText(productObj?.name, language) ||
-        pickText(p?.name, language) ||
-        p?.name_ua ||
-        p?.name_en ||
-        "Товар";
+        const category = p?.category || like?.productCategory || "all";
+        const subCategory = p?.subCategory || "product";
 
-      const price = toNumber(productObj?.price ?? p?.price ?? 0);
-      const discount = toNumber(productObj?.discount ?? p?.discount ?? 0);
-      const hasDiscount = discount > 0;
+        const to =
+          p && p !== null
+            ? `/catalog/${category}/${subCategory}/${String(p._id || productId)}`
+            : `/catalog/${category}`;
 
-      const finalPrice = hasDiscount
-        ? Math.round(price - (price * discount) / 100)
-        : price;
+        return {
+          id: productId || `like-${idx}`,
+          to,
+          img,
+          name,
+          price,
+          discount,
+          hasDiscount,
+          finalPrice,
+          missingProduct: p === null,
+        };
+      })
+      .filter(Boolean);
+  }, [likedProducts, productsById, language]);
 
-      return {
-        id,
-        to,
-        img: buildImg(imgRaw),
-        name,
-        price,
-        discount,
-        hasDiscount,
-        finalPrice,
-      };
-    });
-  }, [likedProducts, language]);
-
-  const title = normLang(language) === "ua" || normLang(language) === "uk" ? "Обрані" : "Wishlist";
-  const viewAll = normLang(language) === "ua" || normLang(language) === "uk" ? "Переглянути всі" : "View all";
-  const empty =
-    normLang(language) === "ua" || normLang(language) === "uk"
-      ? "Поки що немає лайкнутих товарів."
-      : "No liked products yet.";
+  const ua = normLang(language) === "ua" || normLang(language) === "uk";
+  const title = ua ? "Обрані" : "Wishlist";
+  const viewAll = ua ? "Переглянути всі" : "View all";
+  const empty = ua ? "Поки що немає лайкнутих товарів." : "No liked products yet.";
+  const removed = ua ? "Товар недоступний" : "Product unavailable";
 
   return (
     <div
@@ -139,7 +200,6 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
     >
       <div className="like-dd__header">
         <div className="like-dd__title">{title}</div>
-
         <Link className="like-dd__all" to="/account" onClick={() => onClose?.()}>
           {viewAll}
         </Link>
@@ -161,19 +221,26 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
 
                   <div className="like-dd__meta">
                     <div className="like-dd__name" title={it.name}>
-                      {it.name}
+                      {it.missingProduct ? removed : it.name}
                     </div>
 
-                    {/* ✅ показуємо ціни тільки якщо вони реально є */}
-                    {it.price > 0 && (
-                      <div className="like-dd__price">
-                        {it.hasDiscount && <span className="like-dd__old">{it.price} грн</span>}
-                        <span className="like-dd__now">{it.finalPrice} грн</span>
-                      </div>
-                    )}
+                    <div className="like-dd__price">
+                      {it.price > 0 ? (
+                        <>
+                          {it.hasDiscount && (
+                            <span className="like-dd__old">{formatUAH(it.price)}</span>
+                          )}
+                          <span className="like-dd__now">{formatUAH(it.finalPrice)}</span>
+                        </>
+                      ) : (
+                        <span className="like-dd__now">—</span>
+                      )}
+                    </div>
                   </div>
 
-                  {it.hasDiscount && <span className="like-dd__badge">-{it.discount}%</span>}
+                  {it.hasDiscount && (
+                    <span className="like-dd__badge">-{Math.round(it.discount)}%</span>
+                  )}
                 </Link>
               </li>
             ))}
@@ -182,14 +249,6 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
           <div className="like-dd__empty">{empty}</div>
         )}
       </div>
-
-      {items.length > MAX_VISIBLE && (
-        <div className="like-dd__footer">
-          {normLang(language) === "ua" || normLang(language) === "uk"
-            ? "Прокрути список, щоб побачити більше."
-            : "Scroll to see more."}
-        </div>
-      )}
     </div>
   );
 }

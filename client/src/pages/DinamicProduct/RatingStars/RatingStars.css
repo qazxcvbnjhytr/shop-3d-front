@@ -1,0 +1,25 @@
+.rs{
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  letter-spacing: 2px; /* відстань між зірками */
+  vertical-align: middle;
+}
+
+/* сірі (порожні) */
+.rs-base{
+  color: #e5e7eb;
+}
+
+/* жовті (заповнені), обрізаються по ширині */
+.rs-fill{
+  position: absolute;
+
+  left: 0;
+  top: 0;
+  width: var(--pct);
+  overflow: hidden;
+  white-space: nowrap;
+  color: #f59e0b;
+  pointer-events: none;
+}

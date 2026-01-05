@@ -1,0 +1,46 @@
+.catalog-page {
+  width: 210mm;
+  height: 296.8mm;
+  padding: 15mm 20mm 10mm 20mm; /* Відступи сторінки */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column; /* Вертикальний стек: контент зверху, футер знизу */
+  background: #ffffff;
+  position: relative;
+  page-break-after: always;
+  overflow: hidden;
+}
+
+/* Зона контенту займає весь вільний простір, але не більше */
+.catalog-body {
+  flex: 1; 
+  overflow: hidden; 
+  display: flex;
+  flex-direction: column;
+}
+
+/* Футер завжди внизу і має фіксовану висоту */
+.catalog-footer {
+  height: 15mm; 
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 5mm;
+  z-index: 10;
+}
+
+.footer-line {
+  height: 1px;
+  background: rgba(0,0,0,0.1);
+  margin-bottom: 3mm;
+  width: 100%;
+}
+
+.footer-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8pt;
+  color: #aaa;
+  letter-spacing: 2px;
+  font-family: 'Inter', sans-serif;
+}
