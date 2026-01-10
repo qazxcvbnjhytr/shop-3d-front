@@ -6,7 +6,6 @@ import Product from "../models/Product.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
-
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 async function recomputeAndUpdateProductRating(productId) {
@@ -44,10 +43,7 @@ router.get("/product/:productId", async (req, res) => {
     res.set("Expires", "0");
 
     const { productId } = req.params;
-
-    if (!isValidId(productId)) {
-      return res.status(400).json({ message: "Invalid productId" });
-    }
+    if (!isValidId(productId)) return res.status(400).json({ message: "Invalid productId" });
 
     const page = Math.max(parseInt(req.query.page || "1", 10), 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit || "10", 10), 1), 50);
@@ -65,13 +61,7 @@ router.get("/product/:productId", async (req, res) => {
       Review.countDocuments(filter),
       Review.aggregate([
         { $match: filter },
-        {
-          $group: {
-            _id: "$product",
-            avgRating: { $avg: "$rating" },
-            count: { $sum: 1 },
-          },
-        },
+        { $group: { _id: "$product", avgRating: { $avg: "$rating" }, count: { $sum: 1 } } },
       ]),
     ]);
 
@@ -82,7 +72,7 @@ router.get("/product/:productId", async (req, res) => {
       items,
       total,
       page,
-      pages: Math.ceil(total / limit),
+      pages: Math.ceil(total / limit) || 1,
       avgRating,
       count: Number(meta.count || total || 0),
     });
@@ -102,10 +92,7 @@ router.post("/", protect, async (req, res) => {
     if (!productId || rating == null) {
       return res.status(400).json({ message: "productId and rating are required" });
     }
-
-    if (!isValidId(productId)) {
-      return res.status(400).json({ message: "Invalid productId" });
-    }
+    if (!isValidId(productId)) return res.status(400).json({ message: "Invalid productId" });
 
     const r = Number(rating);
     if (!Number.isFinite(r) || r < 1 || r > 5) {
@@ -117,48 +104,14 @@ router.post("/", protect, async (req, res) => {
 
     const doc = await Review.findOneAndUpdate(
       { product: productId, user: req.user._id },
-      {
-        rating: r,
-        title: title || "",
-        text: text || "",
-        isApproved: true,
-      },
+      { rating: r, title: title || "", text: text || "", isApproved: true },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
     const { avgRating, count } = await recomputeAndUpdateProductRating(productId);
-
     res.json({ review: doc, avgRating, count });
   } catch (e) {
-    if (e?.code === 11000) {
-      return res.status(409).json({ message: "You already reviewed this product" });
-    }
     console.error("POST /api/reviews error:", e);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-/**
- * DELETE /api/reviews/:id
- */
-router.delete("/:id", protect, async (req, res) => {
-  try {
-    const review = await Review.findById(req.params.id);
-    if (!review) return res.status(404).json({ message: "Review not found" });
-
-    if (String(review.user) !== String(req.user._id)) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-
-    const productId = String(review.product);
-
-    await review.deleteOne();
-
-    const { avgRating, count } = await recomputeAndUpdateProductRating(productId);
-
-    res.json({ ok: true, avgRating, count });
-  } catch (e) {
-    console.error("DELETE /api/reviews/:id error:", e);
     res.status(500).json({ message: "Server error" });
   }
 });

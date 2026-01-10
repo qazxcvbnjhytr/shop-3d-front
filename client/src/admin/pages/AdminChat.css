@@ -1,0 +1,249 @@
+/* ====== BASE ====== */
+.admchat {
+  display: flex;
+  height: 100vh;
+  background: #f6f7f9;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: #1f2937;
+}
+
+/* ====== LEFT (INBOX) ====== */
+.admchat-left {
+  width: 320px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+}
+
+.admchat-left-head {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admchat-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.admchat-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.7;
+}
+.admchat-btn:hover {
+  opacity: 1;
+}
+
+.admchat-conn {
+  padding: 0 16px 12px;
+  font-size: 12px;
+}
+.admchat-conn.online {
+  color: #16a34a;
+}
+.admchat-conn.offline {
+  color: #9ca3af;
+}
+
+/* ====== SCROLLABLE INBOX ====== */
+.admchat-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+/* inbox item */
+.admchat-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.admchat-item:hover {
+  background: #f3f4f6;
+}
+
+.admchat-item.active {
+  background: #eef2ff;
+}
+
+.admchat-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admchat-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.admchat-badge {
+  background: #4f46e5;
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.admchat-last {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admchat-date {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* ====== RIGHT (CHAT) ====== */
+.admchat-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+}
+
+.admchat-right-head {
+  padding: 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admchat-peer {
+  font-weight: 600;
+}
+
+/* ====== SCROLLABLE MESSAGES ====== */
+.admchat-msgs {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* message rows */
+.admchat-row {
+  display: flex;
+}
+
+.admchat-row.mine {
+  justify-content: flex-end;
+}
+
+.admchat-row.theirs {
+  justify-content: flex-start;
+}
+
+/* bubbles */
+.admchat-bubble {
+  max-width: 65%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.admchat-row.mine .admchat-bubble {
+  background: #4f46e5;
+  color: #ffffff;
+}
+
+.admchat-text {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.admchat-time {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* ====== INPUT ====== */
+.admchat-input {
+  padding: 12px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 10px;
+}
+
+.admchat-input input {
+  flex: 1;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.admchat-input input:focus {
+  outline: none;
+  border-color: #4f46e5;
+}
+
+.admchat-send {
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 0 18px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.admchat-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ====== PLACEHOLDER ====== */
+.admchat-placeholder {
+  margin: auto;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.admchat-placeholder-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* ====== ELEGANT SCROLLBAR ====== */
+.admchat-list::-webkit-scrollbar,
+.admchat-msgs::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admchat-list::-webkit-scrollbar-thumb,
+.admchat-msgs::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 6px;
+}
+
+.admchat-list::-webkit-scrollbar-track,
+.admchat-msgs::-webkit-scrollbar-track {
+  background: transparent;
+}

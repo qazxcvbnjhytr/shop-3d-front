@@ -155,10 +155,10 @@ export default function ShoppingCart() {
                 <span className="grand-total">{Math.round(cartTotal).toLocaleString()} грн</span>
               </div>
             </div>
-            
-            <button className="btn-checkout">
-              ОФОРМИТИ ЗАМОВЛЕННЯ
-            </button>
+<button className="btn-checkout" type="button" onClick={() => navigate("/checkout")}>
+  ОФОРМИТИ ЗАМОВЛЕННЯ
+</button>
+
           </div>
         </div>
       </div>

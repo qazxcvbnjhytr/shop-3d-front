@@ -258,9 +258,13 @@ export default function ProductPage() {
         </div>
 
         <div className="pp-tab-content">
-          {activeTab === "reviews" && (
-            <ProductReviews productId={product._id} language={language} onStatsChange={setRatingState} />
-          )}
+        {activeTab === "reviews" && (
+  <ProductReviews
+    productId={product._id}
+    token={localStorage.getItem("token") || ""}
+    onStatsChange={setRatingState}
+  />
+)}
 
           {activeTab === "delivery" && <DeliveryTab product={product} language={language} />}
 

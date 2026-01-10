@@ -11,6 +11,7 @@ export default function AdminLayout() {
     const p = location.pathname;
     if (p.includes("/admin/products")) return "Products";
     if (p.includes("/admin/categories")) return "Categories";
+    if (p.includes("/admin/users")) return "Users";
     if (p.includes("/admin/orders")) return "Orders";
     if (p.includes("/admin/chat")) return "Chat";
     if (p.includes("/admin/translations")) return "Translations";
@@ -32,18 +33,27 @@ export default function AdminLayout() {
           <NavLink to="/admin/dashboard" end className={({ isActive }) => (isActive ? "active" : "")}>
             Dashboard
           </NavLink>
+
           <NavLink to="/admin/products" className={({ isActive }) => (isActive ? "active" : "")}>
             Products
           </NavLink>
+
           <NavLink to="/admin/categories" className={({ isActive }) => (isActive ? "active" : "")}>
             Categories
           </NavLink>
+
+          <NavLink to="/admin/users" className={({ isActive }) => (isActive ? "active" : "")}>
+            Users
+          </NavLink>
+
           <NavLink to="/admin/orders" className={({ isActive }) => (isActive ? "active" : "")}>
             Orders
           </NavLink>
+
           <NavLink to="/admin/chat" className={({ isActive }) => (isActive ? "active" : "")}>
             Chat
           </NavLink>
+
           <NavLink to="/admin/translations" className={({ isActive }) => (isActive ? "active" : "")}>
             Translations
           </NavLink>

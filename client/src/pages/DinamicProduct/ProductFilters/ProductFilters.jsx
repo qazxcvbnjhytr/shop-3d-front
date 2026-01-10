@@ -66,7 +66,7 @@ export default function ProductFilters({
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [focusSection]);
 
-  // ✅ Facet-driven keys (тільки з БД). Якщо facets ще нема — fallback до перекладів.
+
   const facetColorKeys = useMemo(() => {
     const fromFacets = Array.isArray(facets?.colorKeys) ? facets.colorKeys : null;
     const base = fromFacets ?? Object.keys(tColors);

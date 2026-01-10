@@ -1,234 +1,388 @@
-/* =========================================
-   AdminProducts – LIGHT STYLE
-   File: AdminProducts.css
-========================================= */
+/* client/src/admin/pages/AdminProducts.css */
 
-.admin-products {
+:root {
+  --ap-bg: #f3f4f6;
+  --ap-surface: #ffffff;
+  --ap-border: #e5e7eb;
+  --ap-text-primary: #111827;
+  --ap-text-secondary: #6b7280;
+  --ap-primary: #3b82f6;
+  --ap-primary-hover: #2563eb;
+  --ap-danger: #ef4444;
+  --ap-success: #10b981;
+  --ap-warning: #f59e0b;
+  --ap-radius: 8px;
+  --ap-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.ap-container {
+  padding: 2rem;
+  background-color: var(--ap-bg);
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Header & Toolbar --- */
+.ap-headerWrapper {
+  margin-bottom: 2rem;
+}
+
+.ap-toolbar {
   display: flex;
-  flex-direction: column;
-  gap: 18px;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  background: var(--ap-surface);
+  padding: 1rem;
+  border-radius: var(--ap-radius);
+  box-shadow: var(--ap-shadow);
 }
 
-/* =========================
-   TABLE (as separate cards)
-========================= */
+.ap-searchBox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--ap-bg);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  width: 300px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
 
-.admin-products-table {
+.ap-searchBox:focus-within {
+  border-color: var(--ap-primary);
+  background: var(--ap-surface);
+}
+
+.ap-searchIcon {
+  color: var(--ap-text-secondary);
+}
+
+.ap-searchBox input {
+  border: none;
+  background: transparent;
+  outline: none;
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 14px;
+  font-size: 0.9rem;
 }
 
-.admin-products-table thead th {
-  font-size: 12px;
-  font-weight: 800;
+.ap-stats {
+  font-size: 0.85rem;
+  color: var(--ap-text-secondary);
+  font-weight: 500;
+}
+
+/* --- Buttons --- */
+.ap-btnPrimary {
+  background-color: var(--ap-primary);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--ap-radius);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.2s;
+}
+
+.ap-btnPrimary:hover {
+  background-color: var(--ap-primary-hover);
+}
+
+.ap-btnText {
+  background: none;
+  border: none;
+  color: var(--ap-text-secondary);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+}
+
+.ap-btnText:hover {
+  color: var(--ap-text-primary);
+}
+
+/* --- Table Styles --- */
+.ap-tableCard {
+  background: var(--ap-surface);
+  border-radius: var(--ap-radius);
+  box-shadow: var(--ap-shadow);
+  overflow: hidden; /* For rounded corners */
+}
+
+/* Overriding typical DataTable generic styles if needed */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  background-color: #f9fafb;
+  color: var(--ap-text-secondary);
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: .04em;
-  color: #64748b;
-  padding: 10px 14px;
+  letter-spacing: 0.05em;
+  padding: 1rem;
   text-align: left;
+  border-bottom: 1px solid var(--ap-border);
 }
 
-.admin-products-table tbody tr {
-  background: #ffffff;
-  border: 1px solid rgba(15,23,42,0.10);
-  box-shadow: 0 10px 26px rgba(15,23,42,0.10);
-  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+tbody tr {
+  border-bottom: 1px solid var(--ap-border);
+  transition: background 0.1s;
 }
 
-.admin-products-table tbody tr:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 46px rgba(15,23,42,0.16);
-  border-color: rgba(37,99,235,0.25);
+tbody tr:hover {
+  background-color: #f9fafb;
 }
 
-.admin-products-table tbody td {
-  padding: 14px 14px;
+td {
+  padding: 1rem;
   vertical-align: middle;
 }
 
-.admin-products-table tbody tr td:first-child {
-  border-radius: 16px 0 0 16px;
+/* --- Product Cell --- */
+.ap-productCell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.admin-products-table tbody tr td:last-child {
-  border-radius: 0 16px 16px 0;
+.ap-thumbWrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ap-border);
 }
 
-/* =========================
-   IMAGE CELL
-========================= */
-
-.admin-products-table img {
-  width: 68px;
-  height: 52px;
+.ap-thumb {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 12px;
-  border: 1px solid rgba(15,23,42,0.12);
 }
 
-/* =========================
-   BADGES (status / stock / discount)
-========================= */
+.ap-thumbPlaceholder {
+  color: var(--ap-text-secondary);
+  font-size: 1.5rem;
+}
 
-.ap-badge {
-  display: inline-flex;
+.ap-prodTitle {
+  font-weight: 600;
+  color: var(--ap-text-primary);
+  font-size: 0.95rem;
+}
+
+.ap-catBadge {
+  display: inline-block;
+  font-size: 0.75rem;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.ap-subCat {
+  font-size: 0.75rem;
+  color: var(--ap-text-secondary);
+}
+
+/* --- Pricing --- */
+.ap-priceCell {
+  display: flex;
+  flex-direction: column;
+}
+
+.ap-currentPrice {
+  font-weight: 600;
+  color: var(--ap-text-primary);
+}
+
+.ap-oldPriceWrap {
+  display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
-  border: 1px solid transparent;
-  white-space: nowrap;
+  font-size: 0.8rem;
 }
 
-/* status */
-.ap-badge.ok {
-  background: rgba(22,163,74,0.12);
-  border-color: rgba(22,163,74,0.30);
+.ap-oldPrice {
+  text-decoration: line-through;
+  color: var(--ap-text-secondary);
+}
+
+.ap-discountBadge {
+  color: var(--ap-danger);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* --- Stock --- */
+.ap-stockStatus {
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ap-stockStatus::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.ap-stockStatus.ok { color: var(--ap-success); }
+.ap-stockStatus.ok::before { background-color: var(--ap-success); }
+
+.ap-stockStatus.low { color: var(--ap-warning); }
+.ap-stockStatus.low::before { background-color: var(--ap-warning); }
+
+.ap-stockStatus.out { color: var(--ap-text-secondary); }
+.ap-stockStatus.out::before { background-color: var(--ap-text-secondary); }
+
+.ap-stockQty {
+  font-size: 0.8rem;
+  color: var(--ap-text-secondary);
+  margin-top: 2px;
+}
+
+/* --- Status Badge --- */
+.ap-statusBadge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.ap-statusBadge.active {
+  background-color: #dcfce7;
   color: #166534;
 }
 
-.ap-badge.danger {
-  background: rgba(220,38,38,0.12);
-  border-color: rgba(220,38,38,0.30);
-  color: #7f1d1d;
+.ap-statusBadge.archived {
+  background-color: #f3f4f6;
+  color: #374151;
 }
 
-.ap-badge.warn {
-  background: rgba(245,158,11,0.14);
-  border-color: rgba(245,158,11,0.30);
-  color: #7c2d12;
-}
-
-.ap-badge.neutral {
-  background: rgba(15,23,42,0.05);
-  border-color: rgba(15,23,42,0.14);
-  color: #334155;
-}
-
-/* =========================
-   PRICE BLOCK
-========================= */
-
-.ap-price {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.ap-price strong {
-  font-size: 15px;
-  font-weight: 900;
-  color: #0f172a;
-}
-
-/* =========================
-   ACTIONS
-========================= */
-
+/* --- Actions --- */
 .ap-actions {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
+  justify-content: flex-end;
 }
 
-/* =========================
-   MODAL FORM LAYOUT
-========================= */
-
-.ap-form {
+.ap-iconBtn {
+  background: white;
+  border: 1px solid var(--ap-border);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--ap-text-secondary);
+  transition: all 0.2s;
 }
 
-.ap-form-section {
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(15,23,42,0.10);
-  background: #f8fafc;
+.ap-iconBtn:hover {
+  background: #f9fafb;
+  color: var(--ap-primary);
+  border-color: var(--ap-primary);
 }
 
-.ap-form-title {
-  font-size: 13px;
-  font-weight: 900;
-  color: #0f172a;
-  margin-bottom: 8px;
+.ap-iconBtn.delete:hover {
+  color: var(--ap-danger);
+  border-color: var(--ap-danger);
 }
 
-/* =========================
-   IMAGE PICKER (existing)
-========================= */
-
-.ap-images {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+/* --- Form / Modal --- */
+.ap-formSection {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--ap-border);
 }
 
-.ap-image {
-  position: relative;
+.ap-formSection h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    color: var(--ap-text-primary);
+    border-bottom: 1px solid var(--ap-border);
+    padding-bottom: 0.5rem;
 }
 
-.ap-image img {
-  width: 110px;
-  height: 86px;
-  object-fit: cover;
-  border-radius: 14px;
-  border: 1px solid rgba(15,23,42,0.12);
+.ap-formGrid {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
 }
 
-.ap-image button {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  border-radius: 999px;
-  padding: 4px 8px;
-  font-size: 12px;
-}
-
-/* =========================
-   INFO BLOCK
-========================= */
-
-.ap-info {
-  margin-top: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: rgba(37,99,235,0.08);
-  border: 1px solid rgba(37,99,235,0.25);
-  color: #0b1b44;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-
-@media (max-width: 900px) {
-  .admin-products-table thead {
-    display: none;
-  }
-
-  .admin-products-table tbody tr {
+.ap-imgGrid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: 10px;
-    padding: 14px;
-  }
+    margin-bottom: 10px;
+}
 
-  .admin-products-table tbody td {
-    padding: 0;
-  }
+.ap-imgItem {
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border: 1px solid var(--ap-border);
+}
 
-  .admin-products-table tbody tr td:first-child,
-  .admin-products-table tbody tr td:last-child {
-    border-radius: 0;
-  }
+.ap-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
-  .ap-actions {
-    justify-content: flex-start;
-  }
+.ap-imgRemove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ap-imgRemove:hover {
+    background: var(--ap-danger);
+}
+
+/* Utilities for rows */
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.ap-mt { margin-top: 1rem; }
+
+/* Custom Scrollbar for form */
+.ap-formGrid::-webkit-scrollbar {
+    width: 6px;
+}
+.ap-formGrid::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
 }

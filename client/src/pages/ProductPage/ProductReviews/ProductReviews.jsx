@@ -53,7 +53,13 @@ function normalizeReviewsResponse(raw) {
   return { items: safeItems, avgRating, count, page, pages };
 }
 
-export default function ProductReviews({ productId, token, onStatsChange }) {
+const isOfflineLike = (e) => {
+  const msg = String(e?.message || "");
+  // Axios network errors often have no response
+  return !e?.response && (msg.includes("Network Error") || msg.includes("ECONNREFUSED") || msg.includes("Failed to fetch"));
+};
+
+export default function ProductReviews({ productId, token: tokenProp, onStatsChange }) {
   const [data, setData] = useState(() =>
     normalizeReviewsResponse({ items: [], avgRating: 0, count: 0, page: 1, pages: 1 })
   );
@@ -61,6 +67,9 @@ export default function ProductReviews({ productId, token, onStatsChange }) {
   const [err, setErr] = useState("");
 
   const [form, setForm] = useState({ rating: 5, title: "", text: "" });
+
+  const token = useMemo(() => tokenProp || localStorage.getItem("token") || "", [tokenProp]);
+  const canPost = !!token;
 
   const headers = useMemo(() => {
     if (!token) return {};
@@ -71,20 +80,37 @@ export default function ProductReviews({ productId, token, onStatsChange }) {
     async (page = 1) => {
       if (!productId) return;
 
-      setErr("");
       setLoading(true);
+      setErr("");
 
       try {
         const r = await axios.get(`${API_URL}/api/reviews/product/${productId}`, {
           params: { page, limit: 10 },
+          headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
         });
 
         const normalized = normalizeReviewsResponse(r.data);
         setData(normalized);
-
-        // ✅ віддаємо наверх, якщо треба
         onStatsChange?.({ avgRating: normalized.avgRating, count: normalized.count });
       } catch (e) {
+        // ✅ 404 = endpoint exists? Actually means route not found OR product invalid on backend
+        // For UI: treat it as "no reviews yet" to avoid ugly error.
+        if (e?.response?.status === 404) {
+          const normalized = normalizeReviewsResponse({ items: [] });
+          setData(normalized);
+          onStatsChange?.({ avgRating: 0, count: 0 });
+          setErr("");
+          return;
+        }
+
+        if (isOfflineLike(e)) {
+          const normalized = normalizeReviewsResponse({ items: [] });
+          setData(normalized);
+          onStatsChange?.({ avgRating: 0, count: 0 });
+          setErr("Немає з’єднання з сервером. Перевірте, чи запущено бекенд (порт 5000).");
+          return;
+        }
+
         setErr(e?.response?.data?.message || e?.message || "Error loading reviews");
         const normalized = normalizeReviewsResponse({ items: [] });
         setData(normalized);
@@ -104,12 +130,20 @@ export default function ProductReviews({ productId, token, onStatsChange }) {
     e.preventDefault();
     setErr("");
 
+    if (!canPost) {
+      setErr("Увійдіть, щоб залишити відгук.");
+      return;
+    }
+
     try {
       await axios.post(`${API_URL}/api/reviews`, { productId, ...form }, { headers });
-
       setForm({ rating: 5, title: "", text: "" });
       await load(1);
     } catch (e2) {
+      if (isOfflineLike(e2)) {
+        setErr("Немає з’єднання з сервером. Перевірте, чи запущено бекенд.");
+        return;
+      }
       setErr(e2?.response?.data?.message || e2?.message || "Error saving review");
     }
   };
@@ -125,36 +159,26 @@ export default function ProductReviews({ productId, token, onStatsChange }) {
         </div>
       </div>
 
-      {err && (
-        <div className="product-reviews__alert product-reviews__alert--error">
-          {err}
-        </div>
-      )}
+      {err && <div className="product-reviews__alert product-reviews__alert--error">{err}</div>}
 
       <div>
         {loading && <div className="product-reviews__loading">Завантаження...</div>}
 
         {!loading && data.items.length === 0 && (
-          <div className="product-reviews__empty">
-            Поки немає відгуків. Будь першим!
-          </div>
+          <div className="product-reviews__empty">Поки немає відгуків. Будь першим!</div>
         )}
 
         {data.items.map((r) => (
           <div key={r._id} className="review-card">
             <div className="review-card__header">
-              <div className="review-card__user">
-                {r.user?.name || r.user?.email || "User"}
-              </div>
+              <div className="review-card__user">{r.user?.name || r.user?.email || "User"}</div>
               <Stars value={r.rating} />
             </div>
 
             {r.title && <div className="review-card__title">{r.title}</div>}
             {r.text && <div className="review-card__text">{r.text}</div>}
 
-            <div className="review-card__date">
-              {new Date(r.createdAt).toLocaleString("uk-UA")}
-            </div>
+            <div className="review-card__date">{new Date(r.createdAt).toLocaleString("uk-UA")}</div>
           </div>
         ))}
 
@@ -184,7 +208,7 @@ export default function ProductReviews({ productId, token, onStatsChange }) {
       <div className="product-reviews__form-section">
         <h3 className="form-title">Залишити відгук</h3>
 
-        {!token ? (
+        {!canPost ? (
           <div className="product-reviews__empty" style={{ textAlign: "left", padding: 0 }}>
             Увійдіть, щоб залишити відгук.
           </div>

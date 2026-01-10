@@ -1,0 +1,252 @@
+/* Основний контейнер та кольори */
+:root {
+    --au-bg: #f3f4f6;
+    --au-surface: #ffffff;
+    --au-text-primary: #111827;
+    --au-text-secondary: #6b7280;
+    --au-border: #e5e7eb;
+    --au-primary: #3b82f6;
+    --au-primary-hover: #2563eb;
+    --au-danger: #ef4444;
+    --au-success: #10b981;
+    --au-online: #22c55e;
+    --au-offline: #9ca3af;
+}
+
+.au-container {
+    padding: 2rem;
+    background-color: var(--au-bg);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Статистика */
+.au-stats-row {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.au-stat-card {
+    background: var(--au-surface);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-left: 4px solid var(--au-primary);
+}
+
+.au-stat-card.online { border-left-color: var(--au-online); }
+.au-stat-card.banned { border-left-color: var(--au-danger); }
+
+.au-stat-card .label {
+    font-size: 0.85rem;
+    color: var(--au-text-secondary);
+    font-weight: 500;
+}
+
+.au-stat-card .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--au-text-primary);
+    margin-top: 0.25rem;
+}
+
+/* Toolbar & Search */
+.au-toolbar {
+    margin-top: 1.5rem;
+    background: var(--au-surface);
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.au-search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--au-bg);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    width: 300px;
+}
+
+.au-search-box .icon { color: var(--au-text-secondary); }
+.au-search-box input {
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    color: var(--au-text-primary);
+}
+
+/* Таблиця */
+.au-table-card {
+    background: var(--au-surface);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+/* Комірка користувача */
+.au-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.au-avatar-wrapper {
+    position: relative;
+    width: 42px;
+    height: 42px;
+}
+
+.au-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.au-status-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+
+.au-status-dot.online { background-color: var(--au-online); }
+.au-status-dot.offline { background-color: var(--au-offline); }
+
+.au-user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.au-name {
+    font-weight: 600;
+    color: var(--au-text-primary);
+    font-size: 0.95rem;
+}
+
+.au-email {
+    font-size: 0.8rem;
+    color: var(--au-text-secondary);
+}
+
+/* Badges */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.role-badge.admin { background: #fee2e2; color: #991b1b; } /* Reddish for admin */
+.role-badge.manager { background: #e0f2fe; color: #075985; } /* Blueish for manager */
+.role-badge.user { background: #f3f4f6; color: #374151; } /* Grey for user */
+
+.au-presence-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.au-presence-tag.online { color: var(--au-online); }
+.au-presence-tag.offline { color: var(--au-text-secondary); }
+
+.au-account-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.au-account-badge.active { background: #dcfce7; color: #166534; }
+.au-account-badge.banned { background: #fee2e2; color: #991b1b; }
+
+/* Actions */
+.au-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.au-icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--au-border);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--au-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.au-icon-btn:hover { border-color: var(--au-primary); color: var(--au-primary); }
+.au-icon-btn.delete:hover { border-color: var(--au-danger); color: var(--au-danger); }
+
+/* Buttons & Modal */
+.au-btn-primary {
+    background: var(--au-primary);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.au-btn-primary:hover { background: var(--au-primary-hover); }
+
+.au-btn-text {
+    background: transparent;
+    border: none;
+    color: var(--au-text-secondary);
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+}
+
+.au-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.au-form-section {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--au-border);
+}
+
+.au-form-section h3 {
+    margin-top: 0;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--au-border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    color: var(--au-text-primary);
+}
+
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.mt-2 { margin-top: 1rem; }

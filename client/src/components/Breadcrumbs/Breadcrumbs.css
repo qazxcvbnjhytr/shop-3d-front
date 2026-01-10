@@ -14,7 +14,7 @@
 .breadcrumbs-bg {
     width: 100%;
     /* Оптимальна висота для хедера */
-    height: 40px; 
+    height: 80px; 
     
     /* Фонові налаштування */
     background-image: url("/Breadcrumbs/bg.jpg");

@@ -1,140 +1,84 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
-import { useTranslation } from "../../../hooks/useTranslation";
 import "./collection.css";
 
 const RAW_API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const BASE = String(RAW_API).replace(/\/+$/, "").replace(/\/api\/?$/, "");
 
-const normalizeBase = (raw) => {
-  const s = String(raw || "").replace(/\/+$/, "");
-  return s.replace(/\/api\/?$/, "");
-};
-const BASE = normalizeBase(RAW_API);
-
-const normalizeProducts = (data) => {
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.products)) return data.products;
-  if (Array.isArray(data?.items)) return data.items;
-  if (Array.isArray(data?.data)) return data.data;
-  return [];
-};
-
-const toKey = (v) => String(v || "").trim().toLowerCase();
-
-const productHasCollectionKey = (product, key) => {
-  const k = toKey(key);
-  if (!k) return false;
-
-  const arr = Array.isArray(product?.collectionKeys) ? product.collectionKeys : [];
-  return arr.some((x) => toKey(x) === k);
+// Допоміжна функція для отримання тексту
+const getText = (val) => {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  // Якщо це об'єкт {ua, en}, повертаємо ua або en
+  if (typeof val === "object") {
+    return val.ua || val.en || "";
+  }
+  return String(val);
 };
 
 export default function CollectionPage() {
-  const { t } = useTranslation();
-  const { key } = useParams(); // /collections/:key
-
+  const { key } = useParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState("");
 
   useEffect(() => {
     let alive = true;
-
-    (async () => {
-      setLoading(true);
-      setErr("");
-
-      try {
-        // ✅ Гарантовано: беремо всі товари і фільтруємо по collectionKeys
-        const res = await axios.get(`${BASE}/api/products`);
-        if (!alive) return;
-        setProducts(normalizeProducts(res.data));
-      } catch  {
-        if (!alive) return;
-        setErr("Не вдалося завантажити товари. Перевір /api/products");
-        setProducts([]);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [key]);
+    axios.get(`${BASE}/api/products`)
+      .then(res => {
+        const data = Array.isArray(res.data) ? res.data : (res.data?.products || []);
+        if (alive) setProducts(data);
+      })
+      .catch(() => alive && setProducts([]))
+      .finally(() => alive && setLoading(false));
+    return () => { alive = false; };
+  }, []);
 
   const filtered = useMemo(() => {
-    return (products || []).filter((p) => productHasCollectionKey(p, key));
+    const k = (key || "").toLowerCase();
+    return products.filter(p => {
+      const keys = Array.isArray(p.collectionKeys) ? p.collectionKeys : [];
+      return keys.some(x => String(x).toLowerCase() === k);
+    });
   }, [products, key]);
 
-  const title = t?.collections?.[key] || key || "Колекція";
-  const subtitle =
-    t?.collectionsPage?.subtitleOne ||
-    `Товари з колекції "${title}"`;
-
   return (
-    <div className="collection-page">
-      <div className="collection-head">
-        <div className="collection-breadcrumbs">
-          <Link className="collection-back" to="/collections">← Колекції</Link>
-          <Link className="collection-back" to="/catalog">Каталог</Link>
+    <div className="col-page">
+      <div className="col-header">
+        <div className="col-crumbs">
+          <Link to="/collections">Колекції</Link> / <span>{key}</span>
         </div>
-
-        <h1 className="collection-title">{title}</h1>
-        <div className="collection-key">key: {key}</div>
-        <p className="collection-subtitle">{subtitle}</p>
+        <h1 className="col-title">{key}</h1>
+        <div className="col-meta">{filtered.length} об'єктів</div>
       </div>
 
-      {loading ? (
-        <div className="collection-state">Loading…</div>
-      ) : err ? (
-        <div className="collection-state error">{err}</div>
-      ) : filtered.length === 0 ? (
-        <div className="collection-state">
-          Немає товарів з ключем <b>{key}</b> у <code>collectionKeys</code>.
-        </div>
-      ) : (
-        <>
-          <div className="collection-meta">
-            Знайдено: <b>{filtered.length}</b>
-          </div>
-
-          <div className="collection-grid">
-            {filtered.map((p) => {
-              const id = String(p?._id?.$oid || p?._id || "");
-              const name = p?.name?.ua || p?.name?.en || p?.name || "Товар";
-              const img = Array.isArray(p?.images) ? p.images[0] : p?.image;
-
-              // твій роут на товар: /catalog/:category/:sub/:id
-              const to =
-                p?.category && p?.subCategory && id
-                  ? `/catalog/${p.category}/${p.subCategory}/${id}`
-                  : "/catalog";
-
-              return (
-                <Link key={id || name} to={to} className="collection-card-item">
-                  <div className="collection-card-imgWrap">
-                    <img
-                      src={img || "/placeholder.png"}
-                      alt={name}
-                      loading="lazy"
-                      onError={(e) => (e.currentTarget.src = "/placeholder.png")}
-                    />
+      <div className="col-grid">
+        {loading ? (
+          <div>Завантаження...</div>
+        ) : filtered.length === 0 ? (
+          <div>В цій колекції поки немає товарів.</div>
+        ) : (
+          filtered.map(p => {
+            // Використовуємо getText, щоб уникнути помилки Objects are not valid
+            const name = getText(p.name || "Товар");
+            const image = p.image || (Array.isArray(p.images) ? p.images[0] : null) || "/placeholder.png";
+            
+            return (
+              <Link key={p._id} to={`/catalog/${p.category}/${p.subCategory}/${p._id}`} className="col-item">
+                <div className="col-item__img">
+                  <img src={image} alt={name} loading="lazy" />
+                </div>
+                <div className="col-item__info">
+                  <div className="col-item__name">{name}</div>
+                  <div className="col-item__price">
+                    {p.finalPrice ? p.finalPrice.toLocaleString() : (p.price || 0).toLocaleString()} грн
                   </div>
-
-                  <div className="collection-card-body">
-                    <div className="collection-card-name">{name}</div>
-                    <div className="collection-card-sub">
-                      {p?.category} / {p?.subCategory}
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </>
-      )}
+                </div>
+              </Link>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

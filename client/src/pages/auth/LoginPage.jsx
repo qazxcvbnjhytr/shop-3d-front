@@ -2,14 +2,14 @@ import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LanguageContext } from "../../context/LanguageContext";
 import { Eye, EyeOff } from "lucide-react";
-import { useAuth } from "../../context/AuthContext.jsx"; // Використовуємо контекст Auth
+import { useAuth } from "../../context/AuthContext.jsx";
 import "../../components/styles/LoginPage.css";
 
 export default function LoginPage() {
   const { language, translations } = useContext(LanguageContext);
   const t = translations?.[language]?.auth || {};
   const navigate = useNavigate();
-  const { login } = useAuth(); // отримуємо login з AuthContext
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,15 +28,25 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const data = await login(email, password); // через AuthContext
-      // Перевірка ролі
+      const data = await login(email, password);
+      
+      // Якщо успішно зайшли - перевіряємо роль
       if (data.user.role === "admin") {
-        navigate("/admin/dashboard"); // редірект для адміна
+        navigate("/admin/dashboard");
       } else {
-        navigate("/account"); // редірект для звичайного користувача
+        navigate("/account");
       }
     } catch (err) {
-      setError(err.response?.data?.message || t.loginFailed || "Login failed");
+      console.error("Login Error:", err);
+      
+      // 🔥🔥🔥 ОСЬ ТУТ МАГІЯ 🔥🔥🔥
+      // Якщо сервер повернув 403 (Forbidden) - значить юзер у бані
+      if (err.response && err.response.status === 403) {
+        navigate("/banned"); // Кидаємо його на сторінку ганьби
+      } else {
+        // Інакше показуємо звичайну помилку (невірний пароль і т.д.)
+        setError(err.response?.data?.message || t.loginFailed || "Login failed");
+      }
     } finally {
       setLoading(false);
     }

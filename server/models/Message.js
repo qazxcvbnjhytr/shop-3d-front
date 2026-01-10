@@ -1,14 +1,22 @@
 import mongoose from "mongoose";
 
-const MessageSchema = new mongoose.Schema(
+const messageSchema = new mongoose.Schema(
   {
-    sender: { type: String, required: true },
-    receiver: { type: String, required: true },
-    text: { type: String, required: true },
+    // ВАЖЛИВО: зберігаємо як STRING, бо у тебе sender/receiver приходять як строки
+    sender: { type: String, required: true, index: true },
+    receiver: { type: String, required: true, index: true },
+
+    text: { type: String, required: true, trim: true },
+
+    // Якщо пише “гість” (без акаунта) — true
     isGuest: { type: Boolean, default: false },
-    isRead: { type: Boolean, default: false } // 🔥 Статус прочитання
+
+    // Для адміна: непрочитані повідомлення від партнера
+    isRead: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Message", MessageSchema);
+messageSchema.index({ sender: 1, receiver: 1, createdAt: 1 });
+
+export default mongoose.models.Message || mongoose.model("Message", messageSchema);

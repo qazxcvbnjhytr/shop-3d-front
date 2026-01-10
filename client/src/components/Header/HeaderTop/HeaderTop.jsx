@@ -21,7 +21,6 @@ export default function HeaderTop({ title = "MebliHub" }) {
     const { language, toggleLanguage, translations, loading } =
         useContext(LanguageContext);
     
-    // 1. ВИКОРИСТАННЯ КОНТЕКСТІВ ЛІЧИЛЬНИКІВ
     const { likedProducts = [] } = useLikes(); 
     const { totalItems: cartTotalItems = 0 } = useCart(); 
 
@@ -31,7 +30,6 @@ export default function HeaderTop({ title = "MebliHub" }) {
     const [cartOpen, setCartOpen] = useState(false); 
     const [isMobile, setIsMobile] = useState(false);
 
-    // ✅ коректно визначаємо mobile (припустимо, що мобільний <= 720px)
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth <= 720);
         check();
@@ -41,9 +39,9 @@ export default function HeaderTop({ title = "MebliHub" }) {
 
     if (loading) return null;
 
-    // 2. ОТРИМУЄМО КІЛЬКІСТЬ ТОВАРІВ
+
     const likeCount = likedProducts.length;
-    const cartCount = cartTotalItems; // Використовуємо загальну кількість одиниць товару з useCart
+    const cartCount = cartTotalItems; 
 
     return (
         <div className="header-top">

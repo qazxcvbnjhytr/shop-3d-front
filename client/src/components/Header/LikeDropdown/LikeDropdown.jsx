@@ -1,12 +1,17 @@
 import React, { useMemo, useRef, useCallback, useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
-import { LanguageContext } from "@context/LanguageContext";
-import { useLikes } from "../../../context/LikesProvider.jsx";
 import axios from "axios";
 import "./LikeDropdown.css";
 
+import { LanguageContext } from "@context/LanguageContext";
+// ✅ ВАЖЛИВО: імпорт тільки з одного місця (де Provider)
+import { useLikes } from "../../../context/LikesContext.jsx";
+
 const RAW_API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const MAX_VISIBLE = 8;
+
+// ✅ якщо сторінка лайків у тебе інша — поміняй тут
+const FAVS_ROUTE = "/favorites";
 
 const normalizeBase = (raw) => {
   const s = String(raw || "").replace(/\/+$/, "");
@@ -60,13 +65,17 @@ const calcFinalPrice = (price, discountPercent) => {
 const getProductIdFromLike = (like) => {
   if (!like) return "";
   if (typeof like === "string" || typeof like === "number") return String(like);
-  if (typeof like === "object") return String(like.productId || "");
+  if (typeof like === "object") return String(like.productId || like.product?._id || "");
   return "";
 };
 
 export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
   const { language } = useContext(LanguageContext);
-  const { likedProducts = [], likedProductIds = [] } = useLikes();
+
+  // ✅ тепер useLikes точно не null, бо імпорт з правильного файла
+  const likesCtx = useLikes();
+  const likedProducts = likesCtx?.likedProducts || [];
+  const likedProductIds = likesCtx?.likedProductIds || [];
 
   const [productsById, setProductsById] = useState({});
   const closeTimerRef = useRef(null);
@@ -90,7 +99,7 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
     return Array.from(new Set(list));
   }, [likedProductIds]);
 
-  // ✅ чистим кеш для удаленных лайков
+  // ✅ чистимо кеш для видалених лайків
   useEffect(() => {
     setProductsById((prev) => {
       const next = {};
@@ -101,7 +110,7 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
     });
   }, [ids]);
 
-  // ✅ подтягиваем детали для новых лайков
+  // ✅ підвантажуємо деталі продуктів (для name/price/discount/route)
   useEffect(() => {
     if (!open) return;
     if (!ids.length) return;
@@ -112,9 +121,7 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
     let alive = true;
 
     (async () => {
-      const res = await Promise.allSettled(
-        missing.map((id) => axios.get(`${BASE}/api/products/${id}`))
-      );
+      const res = await Promise.allSettled(missing.map((id) => axios.get(`${BASE}/api/products/${id}`)));
 
       if (!alive) return;
 
@@ -123,7 +130,7 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
         res.forEach((r, idx) => {
           const id = missing[idx];
           if (r.status === "fulfilled" && r.value?.data) next[id] = r.value.data;
-          else next[id] = null; // не спамим
+          else next[id] = null;
         });
         return next;
       });
@@ -132,7 +139,6 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, ids, productsById]);
 
   const items = useMemo(() => {
@@ -153,8 +159,8 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
         const imgRaw = like?.productImage || p?.images?.[0] || p?.image || "";
         const img = joinUrl(API_ORIGIN, imgRaw);
 
-        const price = toNumber(p?.price || like?.price);
-        const discount = toNumber(p?.discount || like?.discount);
+        const price = toNumber(p?.price ?? like?.price);
+        const discount = toNumber(p?.discount ?? like?.discount);
         const hasDiscount = price > 0 && discount > 0;
         const finalPrice = hasDiscount ? calcFinalPrice(price, discount) : price;
 
@@ -199,8 +205,13 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
       tabIndex={-1}
     >
       <div className="like-dd__header">
-        <div className="like-dd__title">{title}</div>
-        <Link className="like-dd__all" to="/account" onClick={() => onClose?.()}>
+        <div className="like-dd__title">
+          {title}
+          <span className="like-dd__count">{ids.length}</span>
+        </div>
+
+        {/* ✅ клік на сторінку лайків */}
+        <Link className="like-dd__all" to={FAVS_ROUTE} onClick={() => onClose?.()}>
           {viewAll}
         </Link>
       </div>
@@ -248,6 +259,13 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
         ) : (
           <div className="like-dd__empty">{empty}</div>
         )}
+      </div>
+
+      {/* ✅ низ: кнопка перейти на всі лайки (клікати легко) */}
+      <div className="like-dd__footer">
+        <Link className="like-dd__button" to={FAVS_ROUTE} onClick={() => onClose?.()}>
+          {viewAll}
+        </Link>
       </div>
     </div>
   );

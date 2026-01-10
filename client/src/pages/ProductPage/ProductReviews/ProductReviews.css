@@ -1,297 +1,267 @@
-/* =========================================
-   1. MODULE VARIABLES (Scoped)
-   ========================================= */
+/* client/src/pages/ProductPage/ProductReviews/ProductReviews.css */
+
 .product-reviews {
-  /* Inherited from Global/Header theme or Fallback */
-  --theme-primary: var(--header-bg, rgb(0, 191, 175));
-  --theme-primary-hover: var(--header-text-hover, #00998c);
-  
-  /* Local Module Colors */
-  --text-main: #1a1a1a;
-  --text-secondary: #666666;
-  --text-muted: #999999;
-  --bg-card: #ffffff;
-  --bg-input: #f8f9fa;
-  --border-light: rgba(0, 0, 0, 0.08);
-  --border-focus: rgba(0, 191, 175, 0.5);
-  
-  /* Spacing & Radius */
-  --gap-md: 1.5rem;   /* ~24px */
-  --gap-sm: 0.75rem;  /* ~12px */
-  --radius-card: 12px;
-  --radius-input: 8px;
-  
-  color: var(--text-main);
-  margin-top: 2rem;
-  max-width: 800px; /* Оптимальна ширина для читання */
-  width: 100%;
+  margin-top: 22px;
+  padding: 18px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.04);
 }
 
-/* =========================================
-   2. HEADER & STATS
-   ========================================= */
-/* Wrapper for: <div style={{ display: "flex"... }}> */
 .product-reviews__header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--gap-sm);
-  margin-bottom: var(--gap-md);
-  padding-bottom: var(--gap-sm);
-  border-bottom: 2px solid var(--border-light);
+  gap: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  margin-bottom: 14px;
 }
 
 .product-reviews__title {
-  font-size: 1.75rem;
-  font-weight: 700;
   margin: 0;
-  color: var(--text-main);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
 }
 
 .product-reviews__summary {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 1.1rem;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.035);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .product-reviews__count {
-  color: var(--text-secondary);
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.72;
 }
 
-/* =========================================
-   3. ALERTS & STATES
-   ========================================= */
 .product-reviews__alert {
-  padding: 1rem;
-  border-radius: var(--radius-input);
-  margin-bottom: 1rem;
-  font-weight: 500;
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.3;
 }
 
 .product-reviews__alert--error {
-  background-color: rgba(220, 20, 60, 0.1);
-  color: crimson;
-  border: 1px solid rgba(220, 20, 60, 0.2);
+  background: rgba(255, 0, 0, 0.06);
+  border: 1px solid rgba(255, 0, 0, 0.18);
+  color: #9f1d1d;
+}
+
+.product-reviews__loading {
+  padding: 10px 0;
+  font-size: 14px;
+  opacity: 0.75;
 }
 
 .product-reviews__empty {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-muted);
-  font-style: italic;
+  padding: 12px 0;
+  font-size: 14px;
+  opacity: 0.75;
 }
 
-/* =========================================
-   4. REVIEW CARD (LIST ITEM)
-   ========================================= */
-/* Replace: <div key={r._id} style={{ padding... }}> */
+/* ---------- Stars ---------- */
+
+.stars-rating {
+  display: inline-flex;
+  gap: 2px;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+}
+
+.star-filled {
+  color: #f5a524;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+}
+
+.star-empty {
+  color: rgba(0, 0, 0, 0.18);
+}
+
+/* ---------- Review cards ---------- */
+
 .review-card {
-  background-color: var(--bg-card);
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border-light);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 14px 14px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  background: #fff;
+  margin-bottom: 10px;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
 }
 
 .review-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 191, 175, 0.3);
+  transform: translateY(-1px);
+  border-color: rgba(0, 0, 0, 0.14);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.05);
 }
 
 .review-card__header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .review-card__user {
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: var(--text-main);
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.1px;
 }
 
 .review-card__title {
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  color: var(--theme-primary);
+  font-weight: 800;
+  margin: 6px 0 6px;
+  font-size: 14px;
 }
 
 .review-card__text {
-  line-height: 1.6;
-  color: var(--text-secondary);
-  margin-bottom: 0.75rem;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  opacity: 0.92;
+  white-space: pre-wrap;
 }
 
 .review-card__date {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  text-align: right;
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.6;
 }
 
-/* =========================================
-   5. PAGINATION
-   ========================================= */
+/* ---------- Pagination ---------- */
+
 .product-reviews__pagination {
   display: flex;
-  justify-content: center;
   gap: 10px;
-  margin-top: 2rem;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 
 .pagination-btn {
-  background: transparent;
-  border: 1px solid var(--border-light);
-  padding: 8px 16px;
-  border-radius: var(--radius-input);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 800;
+  font-size: 13px;
   cursor: pointer;
-  font-weight: 600;
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
 }
 
-.pagination-btn:hover:not(:disabled) {
-  border-color: var(--theme-primary);
-  color: var(--theme-primary);
+.pagination-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);
 }
 
 .pagination-btn:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
-  background: var(--bg-input);
+  opacity: 0.45;
+  box-shadow: none;
+  transform: none;
 }
 
-/* =========================================
-   6. SUBMIT FORM
-   ========================================= */
+/* ---------- Form ---------- */
+
 .product-reviews__form-section {
-  margin-top: 3rem;
-  background: #fdfdfd;
-  padding: 2rem;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--border-light);
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .form-title {
-  margin: 0 0 1.5rem;
-  font-size: 1.5rem;
-  color: var(--text-main);
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 900;
 }
 
-/* Replace: <form ... style={{ display: "grid"... }}> */
 .review-form {
   display: grid;
-  gap: 1.25rem;
-  max-width: 100%;
+  gap: 10px;
 }
 
 .review-form__label {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 6px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 800;
+  opacity: 0.85;
 }
 
-/* Input, Select, Textarea Shared Styles */
 .review-form__select,
 .review-form__input,
 .review-form__textarea {
   width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: var(--radius-input);
-  background-color: #fff;
-  font-family: inherit;
-  font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  box-sizing: border-box; /* Важливо для grid */
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+  background: #fff;
+}
+
+.review-form__textarea {
+  resize: vertical;
+  min-height: 110px;
 }
 
 .review-form__select:focus,
 .review-form__input:focus,
 .review-form__textarea:focus {
-  outline: none;
-  border-color: var(--theme-primary);
-  box-shadow: 0 0 0 3px var(--border-focus);
+  border-color: rgba(0, 0, 0, 0.28);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.06);
 }
 
-.review-form__textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-/* Submit Button */
 .review-form__submit {
-  justify-self: start;
-  background-color: var(--theme-primary);
-  color: #fff;
   border: none;
-  padding: 12px 32px;
-  font-size: 1rem;
-  font-weight: 700;
-  border-radius: var(--radius-input);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-weight: 900;
+  font-size: 14px;
   cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: background-color 0.2s, transform 0.1s;
+  color: #fff;
+  background: linear-gradient(135deg, #111827, #374151);
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
 }
 
 .review-form__submit:hover {
-  background-color: var(--theme-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.18);
+  filter: brightness(1.03);
 }
 
 .review-form__submit:active {
-  transform: scale(0.98);
-}
-.stars-rating {
-  display: inline-flex;
-  gap: 2px;
-  line-height: 1;
+  transform: translateY(0px);
+  box-shadow: none;
 }
 
-.star-filled {
-  color: #0f172a; /* або твій акцент */
-}
+/* ---------- Responsive ---------- */
 
-.star-empty {
-  color: rgba(15, 23, 42, 0.22); /* світло-сірі */
-}
-
-/* =========================================
-   7. MOBILE ADAPTATION
-   ========================================= */
-@media (max-width: 600px) {
+@media (max-width: 560px) {
   .product-reviews {
-    padding: 0 16px;
-    margin-top: 1.5rem;
+    padding: 14px 12px;
   }
 
   .product-reviews__header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    align-items: stretch;
   }
 
-  .review-card {
-    padding: 1rem;
+  .product-reviews__summary {
+    align-self: flex-start;
   }
-  
-  .review-card__header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .review-form__submit {
-    width: 100%; /* Кнопка на всю ширину на мобільному */
-    justify-self: stretch;
+
+  .product-reviews__pagination {
+    justify-content: space-between;
   }
 }

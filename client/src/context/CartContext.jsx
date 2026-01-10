@@ -46,7 +46,6 @@ const joinUrl = (origin, raw) => {
 };
 
 // ✅ discount = %
-// finalPrice = price * (1 - discount/100)
 const calcFinalPrice = (price, discountPct) => {
   const p = Math.round(toNum(price, 0));
   const d = clampPct(discountPct);
@@ -54,7 +53,6 @@ const calcFinalPrice = (price, discountPct) => {
   if (!d) return p;
 
   const final = p * (1 - d / 100);
-  // щоб 14999 з 99% давало 150 грн
   return Math.max(0, Math.round(final));
 };
 

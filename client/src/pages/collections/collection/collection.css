@@ -1,121 +1,82 @@
-.collection-page{
+/* client/src/pages/collections/collection/collection.css */
+.col-page {
+  background: #fff;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+  color: #111;
+  padding-bottom: 100px;
+}
+
+.col-header {
+  padding: 80px 20px 40px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 60px;
+}
+
+.col-crumbs {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.col-crumbs a { color: #888; text-decoration: none; }
+.col-crumbs a:hover { color: #000; }
+
+.col-title {
+  font-size: 48px;
+  font-weight: 800;
+  margin: 0 0 10px;
+  text-transform: capitalize;
+}
+
+.col-meta { color: #666; font-size: 14px; }
+
+.col-grid {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px 16px 40px;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 40px 24px;
 }
 
-.collection-head{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+/* Картка товару всередині колекції */
+.col-item {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  group: pointer;
+}
+
+.col-item__img {
+  aspect-ratio: 4/5;
+  background: #f4f4f4;
   margin-bottom: 16px;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.collection-breadcrumbs{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.collection-back{
-  text-decoration:none;
-  font-weight:700;
-  opacity:.9;
-  padding: 8px 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(0,0,0,.12);
-  background: rgba(255,255,255,.85);
-}
-
-.collection-title{
-  margin:0;
-  font-size: 28px;
-  font-weight: 850;
-}
-
-.collection-key{
-  font-size: 12px;
-  opacity: .75;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
-.collection-subtitle{
-  margin:0;
-  opacity:.85;
-  line-height:1.4;
-  max-width: 900px;
-}
-
-.collection-state{
-  padding: 18px;
-  border-radius: 14px;
-  border: 1px dashed rgba(0,0,0,.18);
-  background: rgba(255,255,255,.55);
-}
-
-.collection-state.error{
-  border-color: rgba(180, 30, 30, .35);
-}
-
-.collection-meta{
-  margin: 10px 0 14px;
-  font-weight: 700;
-  opacity: .9;
-}
-
-.collection-grid{
-  display:grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-}
-
-@media (max-width: 1200px){ .collection-grid{ grid-template-columns: repeat(4, 1fr); } }
-@media (max-width: 900px){ .collection-grid{ grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 620px){ .collection-grid{ grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 420px){ .collection-grid{ grid-template-columns: 1fr; } }
-
-.collection-card-item{
-  text-decoration:none;
-  color:inherit;
-  border-radius: 16px;
-  border: 1px solid rgba(0,0,0,.12);
-  background: rgba(255,255,255,.85);
-  overflow:hidden;
-  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-
-.collection-card-item:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 16px 40px rgba(0,0,0,.08);
-  border-color: rgba(0,0,0,.18);
-}
-
-.collection-card-imgWrap{
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  background: rgba(0,0,0,.04);
-}
-
-.collection-card-imgWrap img{
+.col-item__img img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display:block;
+  transition: transform 0.5s ease;
 }
 
-.collection-card-body{
-  padding: 10px 12px 12px;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
+.col-item:hover .col-item__img img {
+  transform: scale(1.05);
 }
 
-.collection-card-name{
-  font-weight: 800;
-  line-height: 1.2;
+.col-item__name {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  line-height: 1.4;
 }
 
-.collection-card-sub{
-  font-size: 12px;
-  opacity: .75;
+.col-item__price {
+  font-size: 15px;
+  font-weight: 700;
 }

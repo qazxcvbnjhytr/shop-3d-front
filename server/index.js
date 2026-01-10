@@ -1,5 +1,4 @@
 // server/index.js
-
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -10,37 +9,26 @@ import http from "http";
 import { Server } from "socket.io";
 
 import Message from "./models/Message.js";
+import User from "./models/userModel.js";
 
-// ==========================
 // Routes
-// ==========================
 import authRoutes from "./routes/authRoutes.js";
 import likeRoutes from "./routes/likeRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import subCategoryRoutes from "./routes/subCategoryRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import translationRoutes from "./routes/translations.js";
 import locationRoutes from "./routes/locationRoutes.js";
-
 import specTemplateRoutes from "./routes/specTemplateRoutes.js";
 import specConfigRoutes from "./routes/specConfigRoutes.js";
 
+// Middleware
 import { protect } from "./middleware/authMiddleware.js";
-import { setUserOnline } from "./middleware/onlineMiddleware.js";
-
-// ✅ Адмін middleware (wrapper)
 import { protectAdmin } from "./admin/middleware/protectAdmin.js";
-
-// ✅ Адмін router (без async import)
 import adminRouter from "./admin/routes/admin.index.js";
-
-// ==========================
-// Telegram bot (DISABLED by default)
-// ==========================
-let initTelegramBot = null;
-let sendToTelegram = null;
 
 dotenv.config();
 
@@ -49,7 +37,9 @@ const server = http.createServer(app);
 
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
-const ADMIN_ID = process.env.ADMIN_ID || "69486848fd50e39e9a7537b0";
+
+// ✅ One “support admin”, to whom everyone writes (optional)
+const SUPPORT_ADMIN_ID = String(process.env.SUPPORT_ADMIN_ID || "").trim();
 
 // --------------------------
 // CORS
@@ -64,62 +54,52 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// --------------------------
-// Static uploads
-// --------------------------
-// ВАЖЛИВО: все, що кладеш у server/public/uploads/* буде доступно як /uploads/*
+// static uploads
 app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
 
-// --------------------------
-// Health
-// --------------------------
-app.get("/api/health", (req, res) => res.json({ ok: true }));
-
 // ==========================
-// Socket.IO (Chat)
+// Chat helpers
 // ==========================
-const io = new Server(server, { cors: corsOptions });
+async function resolveSupportAdminId() {
+  if (SUPPORT_ADMIN_ID) return SUPPORT_ADMIN_ID;
 
-const TELEGRAM_ENABLED =
-  String(process.env.TELEGRAM_BOT_ENABLED || "false").toLowerCase() === "true";
+  // fallback: find first admin
+  const admin = await User.findOne({
+    $or: [{ role: "admin" }, { isAdmin: true }, { is_admin: true }],
+  }).select("_id");
 
-let tgBot = null;
+  return admin?._id ? String(admin._id) : "";
+}
 
-(async () => {
-  if (!TELEGRAM_ENABLED) {
-    console.log("ℹ️ Telegram bot: disabled (TELEGRAM_BOT_ENABLED=false)");
-    return;
-  }
-
+// ✅ Public endpoint for widget (guest/user without token also needs it)
+app.get("/api/chat/support-admin", async (req, res) => {
   try {
-    const mod = await import("./bot/telegramBot.js");
-    initTelegramBot = mod.initTelegramBot;
-    sendToTelegram = mod.sendToTelegram;
-
-    const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
-    const apiBase = `http://localhost:${PORT}`;
-
-    const res = initTelegramBot({
-      io,
-      adminId: ADMIN_ID,
-      token: TELEGRAM_TOKEN,
-      enabled: TELEGRAM_ENABLED,
-      apiBase,
-    });
-
-    tgBot = res?.bot || null;
-    console.log("✅ Telegram bot started");
+    const id = await resolveSupportAdminId();
+    if (!id) return res.status(404).json({ message: "NO_SUPPORT_ADMIN" });
+    res.json({ adminId: id });
   } catch (e) {
-    console.error("❌ Telegram bot failed to start:", e?.message || e);
+    res.status(500).json({ message: "SUPPORT_ADMIN_RESOLVE_ERROR" });
   }
-})();
+});
+
+// ==========================
+// Socket.IO (Real-time Chat)
+// ==========================
+const io = new Server(server, {
+  cors: {
+    origin: CLIENT_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  },
+  transports: ["polling", "websocket"],
+});
 
 io.on("connection", (socket) => {
   console.log(`🔌 Socket connected: ${socket.id}`);
 
-  socket.on("join_chat", (userId) => {
-    if (!userId) return;
-    socket.join(String(userId));
+  socket.on("join_chat", (roomId) => {
+    if (!roomId) return;
+    socket.join(String(roomId));
   });
 
   socket.on("send_message", async (data) => {
@@ -127,6 +107,7 @@ io.on("connection", (socket) => {
       const sender = String(data?.sender || "");
       const receiver = String(data?.receiver || "");
       const text = String(data?.text || "").trim();
+      const isGuest = Boolean(data?.isGuest);
 
       if (!sender || !receiver || !text) return;
 
@@ -134,16 +115,14 @@ io.on("connection", (socket) => {
         sender,
         receiver,
         text,
-        isGuest: Boolean(data?.isGuest),
+        isGuest,
         isRead: false,
       });
 
       io.to(receiver).emit("receive_message", newMessage);
       io.to(sender).emit("receive_message", newMessage);
 
-      if (TELEGRAM_ENABLED && tgBot && typeof sendToTelegram === "function") {
-        await sendToTelegram({ bot: tgBot, receiverId: receiver, text });
-      }
+      console.log(`✉️ Chat: ${sender} -> ${receiver}`);
     } catch (err) {
       console.error("Socket send_message error:", err);
     }
@@ -164,46 +143,31 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("typing", ({ from, to, isTyping }) => {
-    try {
-      if (!from || !to) return;
-      io.to(String(to)).emit("typing_update", {
-        from: String(from),
-        to: String(to),
-        isTyping: Boolean(isTyping),
-      });
-    } catch (e) {
-      console.error("Socket typing error:", e);
-    }
-  });
-
   socket.on("disconnect", () => console.log("🔌 Disconnected"));
 });
 
 // ==========================
-// API Routes (Main)
+// API Routes
 // ==========================
 app.use("/api/auth", authRoutes);
-
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
 app.use("/api/products", productRoutes);
-
-app.use("/api/spec-templates", specTemplateRoutes);
-app.use("/api/spec-config", specConfigRoutes);
-
-app.use("/api/likes", protect, setUserOnline, likeRoutes);
+app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
-app.use("/api/reviews", reviewRoutes);
-
+app.use("/api/likes", protect, likeRoutes);
 app.use("/api/translations", translationRoutes);
 app.use("/api/locations", locationRoutes);
 
-// ==========================
-// Chat REST endpoints
-// ==========================
+// ✅ Reviews (IMPORTANT for your 404)
+app.use("/api/reviews", reviewRoutes);
 
-// Messages between two users (front chat)
+// ✅ Specs
+app.use("/api/spec-templates", specTemplateRoutes);
+app.use("/api/spec-config", specConfigRoutes);
+
+// --- Chat REST API ---
+// History between two people (user/guest <-> admin)
 app.get("/api/messages/:u1/:u2", async (req, res) => {
   try {
     const { u1, u2 } = req.params;
@@ -217,26 +181,49 @@ app.get("/api/messages/:u1/:u2", async (req, res) => {
 
     res.json(messages);
   } catch (err) {
-    res.status(500).json({ message: "Error loading messages" });
+    res.status(500).json({ message: "Error loading history" });
   }
 });
 
-// Admin conversations list (admin panel)
+// Admin history (admin id from token)
+app.get("/api/admin/chat-history/:partnerId", protect, protectAdmin, async (req, res) => {
+  try {
+    const adminId = String(req.user._id);
+    const partnerId = String(req.params.partnerId);
+
+    const messages = await Message.find({
+      $or: [
+        { sender: adminId, receiver: partnerId },
+        { sender: partnerId, receiver: adminId },
+      ],
+    }).sort({ createdAt: 1 });
+
+    res.json(messages);
+  } catch (e) {
+    res.status(500).json({ message: "Error loading admin history" });
+  }
+});
+
+// Conversations inbox for support admin
 app.get("/api/admin/chat-conversations", protect, protectAdmin, async (req, res) => {
   try {
+    const currentAdminId = String(req.user._id);
+    const supportId = await resolveSupportAdminId();
+    const inboxId = supportId || currentAdminId;
+
     const conversations = await Message.aggregate([
-      { $match: { $or: [{ sender: ADMIN_ID }, { receiver: ADMIN_ID }] } },
+      { $match: { $or: [{ sender: inboxId }, { receiver: inboxId }] } },
       { $sort: { createdAt: -1 } },
       {
         $group: {
-          _id: { $cond: [{ $eq: ["$sender", ADMIN_ID] }, "$receiver", "$sender"] },
+          _id: { $cond: [{ $eq: ["$sender", inboxId] }, "$receiver", "$sender"] },
           lastMessage: { $first: "$text" },
           lastDate: { $first: "$createdAt" },
           isGuest: { $first: "$isGuest" },
           unreadCount: {
             $sum: {
               $cond: [
-                { $and: [{ $ne: ["$sender", ADMIN_ID] }, { $eq: ["$isRead", false] }] },
+                { $and: [{ $ne: ["$sender", inboxId] }, { $eq: ["$isRead", false] }] },
                 1,
                 0,
               ],
@@ -259,16 +246,9 @@ app.get("/api/admin/chat-conversations", protect, protectAdmin, async (req, res)
             $cond: {
               if: { $gt: [{ $size: "$userDetails" }, 0] },
               then: { $arrayElemAt: ["$userDetails.name", 0] },
-              else: {
-                $cond: {
-                  if: { $regexMatch: { input: "$_id", regex: /^tg:/ } },
-                  then: { $concat: ["Telegram (", { $substr: ["$_id", 3, 6] }, ")"] },
-                  else: { $concat: ["Гість (", { $substr: ["$_id", 6, 4] }, ")"] },
-                },
-              },
+              else: { $concat: ["Гість (", { $substr: ["$_id", 6, 4] }, ")"] },
             },
           },
-          userEmail: { $arrayElemAt: ["$userDetails.email", 0] },
           lastMessage: 1,
           lastDate: 1,
           isGuest: 1,
@@ -285,33 +265,20 @@ app.get("/api/admin/chat-conversations", protect, protectAdmin, async (req, res)
   }
 });
 
-// ==========================
-// Admin router (module)
-// ==========================
+// Admin router
 app.use("/api/admin", adminRouter);
-console.log("✅ Admin router mounted: /api/admin");
 
 // ==========================
-// Global error handler (optional but useful)
-// ==========================
-app.use((err, req, res, next) => {
-  console.error("❌ Unhandled error:", err);
-  res.status(500).json({ message: "Server error" });
-});
+// Health check (optional but useful)
+app.get("/api/health", (req, res) => res.json({ ok: true }));
 
 // ==========================
-// Mongo + Start
+// Start Server & Connect DB
 // ==========================
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
+  .then(() => {
+    console.log("✅ MongoDB connected");
+    server.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+  })
   .catch((err) => console.error("❌ MongoDB connection error:", err));
-
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log("🔎 Mounted routes:");
-  console.log("   ... /api/products/*");
-  console.log("   ... /api/categories/*");
-  console.log("   ... /api/translations/*");
-  console.log("   ... /api/admin/*");
-});

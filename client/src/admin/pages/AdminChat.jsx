@@ -1,223 +1,216 @@
-// client/src/admin/pages/AdminChat.jsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import PageHeader from "../components/PageHeader.jsx";
-import { adminApi } from "../api/adminApi.js";
-import { endpoints } from "../api/endpoints.js";
-import { useToast } from "../components/Toast.jsx";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { io } from "socket.io-client";
+import { useAuth } from "../../context/AuthContext.jsx";
+import axiosInstance from "../../api/axiosInstance.js";
+import "./AdminChat.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const ADMIN_ID = import.meta.env.VITE_ADMIN_ID || "";
+const RAW = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = String(RAW).replace(/\/+$/, "").replace(/\/api\/?$/, "");
+
+const str = (v) => (v == null ? "" : String(v));
+const same = (a, b) => str(a) === str(b);
 
 export default function AdminChat() {
-  const toast = useToast();
-  const [conversations, setConversations] = useState([]);
-  const [active, setActive] = useState(null);
+  const { user, loading: authLoading } = useAuth();
+  const adminId = useMemo(() => (user?._id ? String(user._id) : ""), [user?._id]);
 
+  const [supportAdminId, setSupportAdminId] = useState("");
+  const inboxId = useMemo(() => (supportAdminId ? String(supportAdminId) : adminId), [supportAdminId, adminId]);
+
+  const [connected, setConnected] = useState(false);
+  const [conversations, setConversations] = useState([]);
+  const [active, setActive] = useState(null); 
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+  const [err, setErr] = useState("");
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
-  const listRef = useRef(null);
   const socketRef = useRef(null);
-
-  const adminId = useMemo(() => ADMIN_ID, []);
-
-  const loadConversations = async () => {
-    try {
-      const r = await adminApi.get(endpoints.chatConversations);
-      setConversations(Array.isArray(r.data) ? r.data : []);
-    } catch (e) {
-      toast.error(e.friendlyMessage || "Failed to load conversations");
-    }
-  };
-
-  const loadMessages = async (partnerId) => {
-    try {
-      if (!adminId) {
-        toast.error("VITE_ADMIN_ID is not set in client/.env");
-        return;
-      }
-      const r = await adminApi.get(endpoints.messagesBetween(adminId, partnerId));
-      setMessages(Array.isArray(r.data) ? r.data : []);
-      // scroll
-      setTimeout(() => listRef.current?.scrollTo({ top: 999999, behavior: "smooth" }), 50);
-    } catch (e) {
-      toast.error(e.friendlyMessage || "Failed to load messages");
-    }
-  };
+  const bottomRef = useRef(null);
+  const activePartnerRef = useRef(null);
 
   useEffect(() => {
-    loadConversations();
+    activePartnerRef.current = active?.userId ? String(active.userId) : null;
+  }, [active]);
 
-    // init socket
-    socketRef.current = io(API_URL, { withCredentials: true });
+  // 1) Отримання ID головного адміна підтримки
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/chat/support-admin`);
+        const data = await res.json();
+        if (alive) setSupportAdminId(String(data?.adminId || ""));
+      } catch {
+        if (alive) setSupportAdminId("");
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
 
-    socketRef.current.on("connect", () => {
-      // join room = adminId
-      if (adminId) socketRef.current.emit("join_chat", adminId);
+  const loadConversations = useCallback(async () => {
+    try {
+      const { data } = await axiosInstance.get("/admin/chat-conversations");
+      const list = Array.isArray(data) ? data : data?.conversations || [];
+      setConversations(list);
+    } catch (e) {
+      setErr("Не вдалося завантажити список чатів");
+    }
+  }, []);
+
+  const loadHistory = useCallback(async (partnerId) => {
+    if (!inboxId || !partnerId) return;
+    setLoadingHistory(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/messages/${inboxId}/${partnerId}`);
+      const data = await res.json();
+      setMessages(Array.isArray(data) ? data : []);
+    } catch (e) {
+      setErr("Помилка завантаження історії");
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [inboxId]);
+
+  // 2) Налаштування Socket.IO
+  useEffect(() => {
+    if (authLoading || !inboxId) return;
+
+    const s = io(API_BASE, {
+      withCredentials: true,
+      transports: ["websocket", "polling"],
+    });
+    socketRef.current = s;
+
+    s.on("connect", () => {
+      setConnected(true);
+      s.emit("join_chat", inboxId);
     });
 
-    socketRef.current.on("receive_message", (msg) => {
-      // msg has sender/receiver/text
-      const s = String(msg?.sender || "");
-      const r = String(msg?.receiver || "");
-      // update list and current messages
-      setMessages((prev) => {
-        if (!active) return prev;
-        const partner = active.userId;
-        // show only messages for active partner
-        if (
-          (s === adminId && r === partner) ||
-          (s === partner && r === adminId)
-        ) {
+    s.on("disconnect", () => setConnected(false));
+
+    s.on("receive_message", (msg) => {
+      loadConversations(); // Оновити список зліва
+      const partner = activePartnerRef.current;
+      if (!partner) return;
+
+      const isChat = (same(msg.sender, inboxId) && same(msg.receiver, partner)) ||
+                     (same(msg.sender, partner) && same(msg.receiver, inboxId));
+
+      if (isChat) {
+        setMessages((prev) => {
+          const id = msg._id ? String(msg._id) : "";
+          if (id && prev.some((x) => String(x._id) === id)) return prev;
           return [...prev, msg];
-        }
-        return prev;
-      });
-
-      // refresh conversations list
-      loadConversations();
-      setTimeout(() => listRef.current?.scrollTo({ top: 999999, behavior: "smooth" }), 50);
+        });
+      }
     });
 
+    loadConversations();
     return () => {
-      socketRef.current?.disconnect();
+      s.disconnect();
       socketRef.current = null;
     };
-    // eslint-disable-next-line
-  }, [adminId, active?.userId]);
+  }, [inboxId, authLoading, loadConversations]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages.length, active?.userId]);
+
+  const selectConversation = async (conv) => {
+    const partnerId = String(conv.userId);
+    setActive(conv);
+    setMessages([]);
+    await loadHistory(partnerId);
+    socketRef.current?.emit("mark_read", { myId: inboxId, partnerId });
+    loadConversations();
+  };
+
+  const send = () => {
+    const t = text.trim();
+    if (!t || !active?.userId || !socketRef.current || !connected) return;
+
+    socketRef.current.emit("send_message", {
+      sender: inboxId,
+      receiver: String(active.userId),
+      text: t,
+      isGuest: Boolean(active?.isGuest),
+    });
+    setText("");
+  };
 
   return (
-    <>
-      <PageHeader
-        title="Chat"
-        subtitle="Admin chat-conversations + messages + socket.io."
-        actions={<button className="btn" onClick={loadConversations}>Refresh</button>}
-      />
-
-      <div className="grid cols-2" style={{ marginTop: 14 }}>
-        <div className="card">
-          <div className="card-head">
-            <div style={{ fontWeight: 900 }}>Conversations</div>
-          </div>
-          <div className="card-body" style={{ padding: 0 }}>
-            <div style={{ maxHeight: "68vh", overflow: "auto" }}>
-              {(conversations || []).map((c) => {
-                const isActive = active?.userId === c.userId;
-                return (
-                  <button
-                    key={c.userId}
-                    className="btn"
-                    style={{
-                      width: "100%",
-                      borderRadius: 0,
-                      textAlign: "left",
-                      border: "none",
-                      borderBottom: "1px solid rgba(255,255,255,0.08)",
-                      background: isActive ? "rgba(110,231,255,0.10)" : "transparent",
-                      padding: 12,
-                    }}
-                    onClick={() => {
-                      setActive(c);
-                      loadMessages(c.userId);
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                      <div style={{ fontWeight: 800 }}>{c.userName || c.userId}</div>
-                      {c.unreadCount ? <span className="badge warn">{c.unreadCount} unread</span> : <span className="badge">read</span>}
-                    </div>
-                    <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>
-                      {c.lastMessage || ""}
-                    </div>
-                  </button>
-                );
-              })}
-              {!conversations?.length ? (
-                <div style={{ padding: 14, opacity: 0.7 }}>No conversations</div>
-              ) : null}
-            </div>
-          </div>
+    <div className="admchat">
+      <aside className="admchat-left">
+        <div className="admchat-left-head">
+          <div className="admchat-title">MebliHub Support</div>
+          <button className="admchat-btn" onClick={loadConversations}>🔄</button>
         </div>
-
-        <div className="card">
-          <div className="card-head">
-            <div style={{ fontWeight: 900 }}>
-              {active ? `Dialog: ${active.userName || active.userId}` : "Select conversation"}
-            </div>
-          </div>
-
-          <div className="card-body" style={{ padding: 0 }}>
-            <div
-              ref={listRef}
-              style={{ height: "56vh", overflow: "auto", padding: 14, display: "grid", gap: 10 }}
+        <div className={`admchat-conn ${connected ? "online" : "offline"}`}>
+          {connected ? "● Online" : "○ Offline"}
+        </div>
+        <div className="admchat-list">
+          {conversations.map((c) => (
+            <button
+              key={String(c.userId)}
+              className={`admchat-item ${same(active?.userId, c.userId) ? "active" : ""}`}
+              onClick={() => selectConversation(c)}
             >
-              {messages.map((m) => {
-                const mine = String(m.sender) === adminId;
+              <div className="admchat-item-top">
+                <div className="admchat-name">{c.userName || "Гість"}</div>
+                {c.unreadCount > 0 && <div className="admchat-badge">{c.unreadCount}</div>}
+              </div>
+              <div className="admchat-last">{c.lastMessage}</div>
+              <div className="admchat-date">
+                {c.lastDate ? new Date(c.lastDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ""}
+              </div>
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      <section className="admchat-right">
+        {!active ? (
+          <div className="admchat-placeholder">
+            <div className="admchat-placeholder-title">Виберіть діалог</div>
+            <p>Натисніть на користувача зліва, щоб почати переписку</p>
+          </div>
+        ) : (
+          <>
+            <div className="admchat-right-head">
+              <div className="admchat-peer">{active.userName}</div>
+              <button className="admchat-btn ghost" onClick={() => setActive(null)}>Закрити</button>
+            </div>
+            <div className="admchat-msgs">
+              {loadingHistory && <div className="admchat-loading">Завантаження...</div>}
+              {messages.map((m, i) => {
+                const mine = same(m.sender, inboxId);
                 return (
-                  <div
-                    key={m._id || `${m.sender}-${m.receiver}-${m.createdAt}-${Math.random()}`}
-                    style={{
-                      marginLeft: mine ? "auto" : 0,
-                      maxWidth: "78%",
-                      background: mine ? "rgba(110,231,255,0.14)" : "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      borderRadius: 14,
-                      padding: 10,
-                    }}
-                  >
-                    <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>
-                      {mine ? "Admin" : "User"} • {m.createdAt ? new Date(m.createdAt).toLocaleString() : ""}
+                  <div key={m._id || i} className={`admchat-row ${mine ? "mine" : "theirs"}`}>
+                    <div className="admchat-bubble">
+                      <div className="admchat-text">{m.text}</div>
+                      <div className="admchat-time">
+                        {new Date(m.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </div>
                     </div>
-                    <div style={{ whiteSpace: "pre-wrap" }}>{m.text}</div>
                   </div>
                 );
               })}
-              {!messages?.length ? <div style={{ opacity: 0.7 }}>No messages</div> : null}
+              <div ref={bottomRef} />
             </div>
-
-            {active ? (
-              <div style={{ padding: 14, borderTop: "1px solid rgba(255,255,255,0.10)", display: "flex", gap: 10 }}>
-                <input
-                  className="input"
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Type message…"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      document.getElementById("adminSendBtn")?.click();
-                    }
-                  }}
-                />
-                <button
-                  id="adminSendBtn"
-                  className="btn primary"
-                  onClick={() => {
-                    const t = String(text || "").trim();
-                    if (!t) return;
-
-                    if (!socketRef.current) {
-                      toast.error("Socket not connected");
-                      return;
-                    }
-
-                    socketRef.current.emit("send_message", {
-                      sender: adminId,
-                      receiver: active.userId,
-                      text: t,
-                      isGuest: !!active.isGuest,
-                    });
-
-                    setText("");
-                  }}
-                >
-                  Send
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
-    </>
+            <div className="admchat-input">
+              <input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Напишіть повідомлення..."
+                disabled={!connected}
+                onKeyDown={(e) => e.key === "Enter" && send()}
+              />
+              <button className="admchat-send" onClick={send} disabled={!connected || !text.trim()}>Відправити</button>
+            </div>
+          </>
+        )}
+      </section>
+    </div>
   );
 }

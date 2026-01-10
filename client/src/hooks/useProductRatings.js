@@ -1,9 +1,10 @@
+// client/src/hooks/useProductRatings.js
 import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const RAW = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const BASE = String(RAW).replace(/\/+$/, "");
 
-/* ---------- helpers ---------- */
 const toNum = (v) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
@@ -13,7 +14,7 @@ const calcAvg = (items = []) => {
   const arr = Array.isArray(items) ? items : [];
   if (!arr.length) return 0;
   const sum = arr.reduce((acc, r) => acc + toNum(r?.rating), 0);
-  return Math.round((sum / arr.length) * 10) / 10; // 1 знак
+  return Math.round((sum / arr.length) * 10) / 10;
 };
 
 const normalizeReviewsResponse = (raw) => {
@@ -36,7 +37,6 @@ const normalizeReviewsResponse = (raw) => {
   return { avgRating, count };
 };
 
-/* ---------- module cache ---------- */
 const cache = new Map(); // productId -> { avgRating, count }
 
 export function useProductRatings({ items = [] } = {}) {
@@ -44,7 +44,7 @@ export function useProductRatings({ items = [] } = {}) {
     const arr = Array.isArray(items) ? items : [];
     const uniq = new Set();
     arr.forEach((p) => {
-      const id = p?._id;
+      const id = p?._id || p?.id;
       if (id) uniq.add(String(id));
     });
     return Array.from(uniq);
@@ -69,7 +69,6 @@ export function useProductRatings({ items = [] } = {}) {
 
     const missing = ids.filter((id) => !cache.has(id));
 
-    // оновимо state хоча б з кеша (щоб одразу показало, якщо є)
     setRatingsMap(() => {
       const m = {};
       ids.forEach((id) => {
@@ -86,17 +85,14 @@ export function useProductRatings({ items = [] } = {}) {
 
         const results = await Promise.all(
           missing.map(async (id) => {
-            const r = await axios.get(`${API_URL}/api/reviews/product/${id}`, {
+            const r = await axios.get(`${BASE}/api/reviews/product/${id}`, {
               params: { page: 1, limit: 10 },
               headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
             });
-
-            const normalized = normalizeReviewsResponse(r.data);
-            return [id, normalized];
+            return [id, normalizeReviewsResponse(r.data)];
           })
         );
 
-        // якщо цей ефект вже “застарів” — не пишемо state
         if (!alive || seq !== reqSeq.current) return;
 
         results.forEach(([id, data]) => cache.set(id, data));
@@ -108,10 +104,9 @@ export function useProductRatings({ items = [] } = {}) {
           });
           return m;
         });
-      } catch  {
-        // не валимо UI
+      } catch (e) {
         if (!alive) return;
-        setRatingsMap((prev) => prev);
+        console.warn("[Ratings] load error:", e?.response?.data || e.message);
       } finally {
         if (alive) setLoading(false);
       }
@@ -120,7 +115,7 @@ export function useProductRatings({ items = [] } = {}) {
     return () => {
       alive = false;
     };
-  }, [idsKey]); // важливо: залежність від idsKey, а не від items
+  }, [idsKey]);
 
   return { ratingsMap, loading };
 }

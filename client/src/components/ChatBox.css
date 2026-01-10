@@ -1,0 +1,119 @@
+.cb {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f8fafc;
+}
+
+/* --- Messages List --- */
+.cb-msgs {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+.cb-msgs::-webkit-scrollbar { width: 6px; }
+.cb-msgs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+/* --- Message Bubbles --- */
+.cb-row {
+  display: flex;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.cb-row.me { justify-content: flex-end; }
+.cb-row.them { justify-content: flex-start; }
+.cb-row.sys { justify-content: center; }
+
+.cb-bubble {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  position: relative;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Мої повідомлення */
+.cb-row.me .cb-bubble {
+  background: #2563eb;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+/* Відповіді підтримки */
+.cb-row.them .cb-bubble {
+  background: white;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  border-bottom-left-radius: 4px;
+}
+
+/* Системні вітання */
+.cb-row.sys .cb-bubble {
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+  text-align: center;
+  border-radius: 10px;
+}
+
+.cb-time {
+  font-size: 10px;
+  margin-top: 4px;
+  opacity: 0.7;
+  text-align: right;
+}
+
+.cb-row.me .cb-time { color: rgba(255, 255, 255, 0.8); }
+
+/* --- Input Zone --- */
+.cb-input {
+  padding: 15px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.cb-input input {
+  flex: 1;
+  background: #f1f5f9;
+  border: 1px solid transparent;
+  padding: 12px 18px;
+  border-radius: 25px;
+  outline: none;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.cb-input input:focus {
+  background: white;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.cb-input button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-size: 14px;
+}
+
+.cb-input button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

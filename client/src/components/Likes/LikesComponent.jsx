@@ -1,9 +1,9 @@
 // client/src/components/Likes/LikesComponent.jsx
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
+import { FaHeart } from "react-icons/fa";
 import { useLikes } from "../../context/LikesContext";
 import { useAuth } from "../../context/AuthContext";
-import { FaHeart } from "react-icons/fa";
 import "./Likes.css";
 
 const pickText = (value, language = "ua") => {
@@ -19,11 +19,9 @@ const LikesComponent = ({ product }) => {
   const { toggleLike, isLiked, isLoading } = useLikes();
   const { user } = useAuth();
 
-  // ✅ productId рахуємо завжди (без ранніх return до хуків)
   const productId = String(product?._id || product?.id || product?.productId || "");
   const liked = productId ? isLiked(productId) : false;
 
-  // ✅ useMemo викликається завжди, але може повернути null
   const normalizedProduct = useMemo(() => {
     if (!product || !productId) return null;
 
@@ -44,23 +42,21 @@ const LikesComponent = ({ product }) => {
 
     return {
       ...product,
-      id: product?.id || product?._id || productId,
       _id: product?._id || product?.id || productId,
       productId,
       name: nameStr,
       category: product?.category || product?.productCategory || "",
       image: imageStr,
       discount: Number(product?.discount || 0),
+      price: Number(product?.price || 0),
     };
   }, [product, productId]);
 
-  // ✅ ранній вихід ПІСЛЯ хуків
   if (!product || !productId) return null;
 
   const handleClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (isLoading) return;
 
     if (!user) {
@@ -69,12 +65,7 @@ const LikesComponent = ({ product }) => {
     }
 
     if (!normalizedProduct) return;
-
-    try {
-      await toggleLike(normalizedProduct);
-    } catch (err) {
-      console.error("Error toggling like:", err);
-    }
+    await toggleLike(normalizedProduct);
   };
 
   return (
