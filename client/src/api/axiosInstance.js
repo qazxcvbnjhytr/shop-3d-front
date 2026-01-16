@@ -1,15 +1,14 @@
 import axios from 'axios';
 
-// Визначаємо базу: якщо є змінна в .env — беремо її, якщо ні — localhost
-const BASE_URL = import.meta.env.VITE_API_URL 
+const API_BASE_URL = import.meta.env.VITE_API_URL 
   ? `${import.meta.env.VITE_API_URL}/api` 
   : 'http://localhost:5000/api';
 
 const axiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
 });
 
-// Автоматично додаємо токен до кожного запиту, якщо він є
+// Додаємо токен до кожного запиту автоматично
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {

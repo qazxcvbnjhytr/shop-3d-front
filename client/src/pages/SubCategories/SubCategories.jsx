@@ -12,7 +12,9 @@ import { normalizeLang, pickText } from "../../utils/pickText";
 import "./SubCategories.css";
 import "../DinamicProduct/DinamicProduct.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.DEV
+  ? "" // dev: Vite proxy
+  : (import.meta.env.VITE_API_URL || "");
 
 const DEFAULT_FILTERS = {
   q: "",
