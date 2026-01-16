@@ -1,14 +1,13 @@
-// client/src/context/AuthContext.jsx
 import React, { createContext, useEffect, useContext, useState, useCallback } from "react";
 import axiosInstance from "../api/axiosInstance";
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Отримання даних поточного юзера
   const fetchUser = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -21,7 +20,7 @@ export const AuthProvider = ({ children }) => {
       const res = await axiosInstance.get("/auth/me");
       setUser(res.data);
     } catch (err) {
-      console.error("[AUTH] /auth/me error:", err.response?.data || err.message);
+      console.error("[AUTH ERROR]:", err.response?.data || err.message);
       localStorage.removeItem("token");
       setUser(null);
     } finally {
@@ -29,11 +28,50 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Класичний вхід
   const login = async (email, password) => {
     const res = await axiosInstance.post("/auth/login", { email, password });
     localStorage.setItem("token", res.data.token);
     setUser(res.data.user);
     return res.data;
+  };
+
+  // 🔥 Розумний Google Login (з підтримкою вводу телефону)
+  const loginWithGoogle = async (googleToken, phone = null) => {
+    try {
+      const res = await axiosInstance.post("/auth/google", { 
+        token: googleToken, 
+        phone // Передаємо телефон, якщо бек його попросив
+      });
+      
+      localStorage.setItem("token", res.data.token);
+      setUser(res.data.user);
+      return { success: true, user: res.data.user };
+    } catch (err) {
+      // Якщо бек кидає 409 — значить треба вивести поле для телефону
+      if (err.response?.status === 409) {
+        return { requiresPhone: true };
+      }
+      throw err;
+    }
+  };
+
+  // 🔥 Функція для лайків (інтегрована в профіль)
+  const toggleLike = async (productData) => {
+    try {
+      // Відправляємо на бек об'єкт товару
+      const res = await axiosInstance.patch("/auth/likes", productData);
+      
+      // Сервер повертає оновлений масив лайків — міняємо його в юзері
+      setUser(prev => ({
+        ...prev,
+        likes: res.data
+      }));
+      return res.data;
+    } catch (err) {
+      console.error("[LIKE ERROR]:", err.response?.data?.message);
+      throw err;
+    }
   };
 
   const logout = () => {
@@ -46,11 +84,19 @@ export const AuthProvider = ({ children }) => {
   }, [fetchUser]);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, loading, fetchUser }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      setUser, 
+      login, 
+      loginWithGoogle, 
+      logout, 
+      toggleLike, // Тепер доступно всюди
+      loading, 
+      fetchUser 
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

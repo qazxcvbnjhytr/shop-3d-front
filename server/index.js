@@ -7,278 +7,170 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import http from "http";
 import { Server } from "socket.io";
+import helmet from "helmet";
+import { fileURLToPath } from "url";
+import fs from "fs";
 
-import Message from "./models/Message.js";
-import User from "./models/userModel.js";
-
-// Routes
+// ====== ROUTES (підстав свої реальні файли) ======
 import authRoutes from "./routes/authRoutes.js";
 import likeRoutes from "./routes/likeRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
-import orderRoutes from "./routes/orderRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import subCategoryRoutes from "./routes/subCategoryRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
-import translationRoutes from "./routes/translations.js";
+import translationRoutes from "./routes/translations.js"; // ✅ твій translations роут
 import locationRoutes from "./routes/locationRoutes.js";
-import specTemplateRoutes from "./routes/specTemplateRoutes.js";
 import specConfigRoutes from "./routes/specConfigRoutes.js";
 
-// Middleware
-import { protect } from "./middleware/authMiddleware.js";
-import { protectAdmin } from "./admin/middleware/protectAdmin.js";
-import adminRouter from "./admin/routes/admin.index.js";
+// (опційно) missing translations / адмін
+// import i18nMissingRoutes from "./routes/i18nMissingRoutes.js";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const app = express();
-const server = http.createServer(app);
+// ==================================================
+// ✅ DOTENV для монорепи:
+// 1) server/.env
+// 2) ../.env (корінь проекту)
+// ==================================================
+const envServer = path.resolve(__dirname, ".env");
+const envRoot = path.resolve(__dirname, "../.env");
+
+if (fs.existsSync(envServer)) {
+  dotenv.config({ path: envServer });
+  console.log("✅ Loaded env from:", envServer);
+} else if (fs.existsSync(envRoot)) {
+  dotenv.config({ path: envRoot });
+  console.log("✅ Loaded env from:", envRoot);
+} else {
+  dotenv.config();
+  console.log("⚠️ Loaded env from default lookup (no explicit .env found)");
+}
 
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const MONGO_URI = process.env.MONGO_URI;
 
-// ✅ One “support admin”, to whom everyone writes (optional)
-const SUPPORT_ADMIN_ID = String(process.env.SUPPORT_ADMIN_ID || "").trim();
+// ==================================================
+// APP + SERVER + SOCKET
+// ==================================================
+const app = express();
+const server = http.createServer(app);
 
-// --------------------------
-// CORS
-// --------------------------
-const corsOptions = {
-  origin: CLIENT_URL,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-app.use(express.json({ limit: "10mb" }));
-app.use(cookieParser());
-
-// static uploads
-app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
-
-// ==========================
-// Chat helpers
-// ==========================
-async function resolveSupportAdminId() {
-  if (SUPPORT_ADMIN_ID) return SUPPORT_ADMIN_ID;
-
-  // fallback: find first admin
-  const admin = await User.findOne({
-    $or: [{ role: "admin" }, { isAdmin: true }, { is_admin: true }],
-  }).select("_id");
-
-  return admin?._id ? String(admin._id) : "";
-}
-
-// ✅ Public endpoint for widget (guest/user without token also needs it)
-app.get("/api/chat/support-admin", async (req, res) => {
-  try {
-    const id = await resolveSupportAdminId();
-    if (!id) return res.status(404).json({ message: "NO_SUPPORT_ADMIN" });
-    res.json({ adminId: id });
-  } catch (e) {
-    res.status(500).json({ message: "SUPPORT_ADMIN_RESOLVE_ERROR" });
-  }
-});
-
-// ==========================
-// Socket.IO (Real-time Chat)
-// ==========================
 const io = new Server(server, {
   cors: {
     origin: CLIENT_URL,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   },
-  transports: ["polling", "websocket"],
 });
 
-io.on("connection", (socket) => {
-  console.log(`🔌 Socket connected: ${socket.id}`);
+// Якщо тобі треба доступ до io в контролерах:
+app.set("io", io);
 
-  socket.on("join_chat", (roomId) => {
-    if (!roomId) return;
-    socket.join(String(roomId));
+// ==================================================
+// SECURITY / MIDDLEWARE
+// ==================================================
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false, // щоб картинки/uploads не блокувались
+  })
+);
+
+app.use(
+  cors({
+    origin: CLIENT_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// ==================================================
+// STATIC (uploads)
+// Якщо ти зберігаєш фото/файли у server/uploads
+// ==================================================
+const uploadsPath = path.resolve(__dirname, "uploads");
+if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
+
+app.use("/uploads", express.static(uploadsPath));
+
+// ==================================================
+// HEALTHCHECK (для швидкої перевірки)
+// ==================================================
+app.get("/api/health", (req, res) => {
+  res.json({
+    ok: true,
+    db: mongoose.connection?.name || null,
+    time: new Date().toISOString(),
   });
-
-  socket.on("send_message", async (data) => {
-    try {
-      const sender = String(data?.sender || "");
-      const receiver = String(data?.receiver || "");
-      const text = String(data?.text || "").trim();
-      const isGuest = Boolean(data?.isGuest);
-
-      if (!sender || !receiver || !text) return;
-
-      const newMessage = await Message.create({
-        sender,
-        receiver,
-        text,
-        isGuest,
-        isRead: false,
-      });
-
-      io.to(receiver).emit("receive_message", newMessage);
-      io.to(sender).emit("receive_message", newMessage);
-
-      console.log(`✉️ Chat: ${sender} -> ${receiver}`);
-    } catch (err) {
-      console.error("Socket send_message error:", err);
-    }
-  });
-
-  socket.on("mark_read", async ({ myId, partnerId }) => {
-    try {
-      if (!myId || !partnerId) return;
-
-      await Message.updateMany(
-        { sender: String(partnerId), receiver: String(myId), isRead: false },
-        { $set: { isRead: true } }
-      );
-
-      io.to(String(partnerId)).emit("messages_read_update", { by: String(myId) });
-    } catch (err) {
-      console.error("Socket mark_read error:", err);
-    }
-  });
-
-  socket.on("disconnect", () => console.log("🔌 Disconnected"));
 });
 
-// ==========================
-// API Routes
-// ==========================
+// ==================================================
+// ROUTES
+// ==================================================
 app.use("/api/auth", authRoutes);
+app.use("/api/likes", likeRoutes);
+app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/cart", cartRoutes);
-app.use("/api/likes", protect, likeRoutes);
-app.use("/api/translations", translationRoutes);
-app.use("/api/locations", locationRoutes);
-
-// ✅ Reviews (IMPORTANT for your 404)
 app.use("/api/reviews", reviewRoutes);
-
-// ✅ Specs
-app.use("/api/spec-templates", specTemplateRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/translations", translationRoutes); // ✅ ОСЬ ТУТ ВАЖЛИВО
+app.use("/api/locations", locationRoutes);
 app.use("/api/spec-config", specConfigRoutes);
 
-// --- Chat REST API ---
-// History between two people (user/guest <-> admin)
-app.get("/api/messages/:u1/:u2", async (req, res) => {
-  try {
-    const { u1, u2 } = req.params;
+// app.use("/api/i18n-missing", i18nMissingRoutes);
 
-    const messages = await Message.find({
-      $or: [
-        { sender: String(u1), receiver: String(u2) },
-        { sender: String(u2), receiver: String(u1) },
-      ],
-    }).sort({ createdAt: 1 });
+// ==================================================
+// SOCKET.IO (мінімальний приклад)
+// ==================================================
+io.on("connection", (socket) => {
+  // console.log("🟢 socket connected:", socket.id);
 
-    res.json(messages);
-  } catch (err) {
-    res.status(500).json({ message: "Error loading history" });
-  }
+  socket.on("disconnect", () => {
+    // console.log("🔴 socket disconnected:", socket.id);
+  });
 });
 
-// Admin history (admin id from token)
-app.get("/api/admin/chat-history/:partnerId", protect, protectAdmin, async (req, res) => {
+// ==================================================
+// GLOBAL ERROR HANDLER
+// ==================================================
+app.use((err, req, res, next) => {
+  console.error("❌ Server error:", err);
+  res.status(err?.status || 500).json({
+    message: err?.message || "Server error",
+  });
+});
+
+// ==================================================
+// DB CONNECT + START
+// ==================================================
+async function start() {
   try {
-    const adminId = String(req.user._id);
-    const partnerId = String(req.params.partnerId);
+    if (!MONGO_URI) {
+      console.error("❌ MONGO_URI is missing. Check your .env path/loading.");
+      process.exit(1);
+    }
 
-    const messages = await Message.find({
-      $or: [
-        { sender: adminId, receiver: partnerId },
-        { sender: partnerId, receiver: adminId },
-      ],
-    }).sort({ createdAt: 1 });
+    await mongoose.connect(MONGO_URI);
+    console.log("✅ Mongo connected:", mongoose.connection.name);
+    console.log("✅ MONGO_URI:", MONGO_URI);
 
-    res.json(messages);
+    server.listen(PORT, () => {
+      console.log(`🚀 API running on http://localhost:${PORT}`);
+      console.log(`✅ Client URL allowed: ${CLIENT_URL}`);
+      console.log(`✅ Health: http://localhost:${PORT}/api/health`);
+      console.log(`✅ Translations test: http://localhost:${PORT}/api/translations?lang=ua`);
+    });
   } catch (e) {
-    res.status(500).json({ message: "Error loading admin history" });
+    console.error("❌ Failed to start server:", e);
+    process.exit(1);
   }
-});
+}
 
-// Conversations inbox for support admin
-app.get("/api/admin/chat-conversations", protect, protectAdmin, async (req, res) => {
-  try {
-    const currentAdminId = String(req.user._id);
-    const supportId = await resolveSupportAdminId();
-    const inboxId = supportId || currentAdminId;
-
-    const conversations = await Message.aggregate([
-      { $match: { $or: [{ sender: inboxId }, { receiver: inboxId }] } },
-      { $sort: { createdAt: -1 } },
-      {
-        $group: {
-          _id: { $cond: [{ $eq: ["$sender", inboxId] }, "$receiver", "$sender"] },
-          lastMessage: { $first: "$text" },
-          lastDate: { $first: "$createdAt" },
-          isGuest: { $first: "$isGuest" },
-          unreadCount: {
-            $sum: {
-              $cond: [
-                { $and: [{ $ne: ["$sender", inboxId] }, { $eq: ["$isRead", false] }] },
-                1,
-                0,
-              ],
-            },
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          let: { partnerId: "$_id" },
-          pipeline: [{ $match: { $expr: { $eq: [{ $toString: "$_id" }, "$$partnerId"] } } }],
-          as: "userDetails",
-        },
-      },
-      {
-        $project: {
-          userId: "$_id",
-          userName: {
-            $cond: {
-              if: { $gt: [{ $size: "$userDetails" }, 0] },
-              then: { $arrayElemAt: ["$userDetails.name", 0] },
-              else: { $concat: ["Гість (", { $substr: ["$_id", 6, 4] }, ")"] },
-            },
-          },
-          lastMessage: 1,
-          lastDate: 1,
-          isGuest: 1,
-          unreadCount: 1,
-        },
-      },
-      { $sort: { lastDate: -1 } },
-    ]);
-
-    res.json(conversations);
-  } catch (err) {
-    console.error("Aggregation Error:", err);
-    res.status(500).json({ message: "Error fetching conversations" });
-  }
-});
-
-// Admin router
-app.use("/api/admin", adminRouter);
-
-// ==========================
-// Health check (optional but useful)
-app.get("/api/health", (req, res) => res.json({ ok: true }));
-
-// ==========================
-// Start Server & Connect DB
-// ==========================
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("✅ MongoDB connected");
-    server.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
-  })
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+start();
