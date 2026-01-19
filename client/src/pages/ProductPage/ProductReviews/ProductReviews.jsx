@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import "./ProductReviews.css";
 
-import api from "../../../api/api.js"; // ✅ env-first axios instance (baseURL already contains /api)
+import api from "../../../api/api.js";
 
 const toNum = (v) => {
   const n = Number(v);

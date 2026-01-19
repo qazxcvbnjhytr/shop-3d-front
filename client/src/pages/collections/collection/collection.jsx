@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useContext } from "react";
 import { Link, useParams } from "react-router-dom";
 import "./collection.css";
 
-import api from "../../api/api.js";
+import api from "@api/api.js";
 import { getImageUrl } from "../../utils/imageUtils.js";
 import { LanguageContext } from "@context/LanguageContext";
 

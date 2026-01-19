@@ -4,7 +4,7 @@ import { useTranslation } from "../../hooks/useTranslation";
 import CollectionCard from "./CollectionCard/CollectionCard.jsx";
 import "./collections.css";
 
-import api from "../../api/api.js";
+import api from "../../../api/api.js";
 import { getImageUrl } from "../../utils/imageUtils.js";
 
 const normalizeProducts = (data) => {
