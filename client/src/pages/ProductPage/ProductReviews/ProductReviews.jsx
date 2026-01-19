@@ -1,9 +1,8 @@
 // client/src/pages/ProductPage/ProductReviews/ProductReviews.jsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import axios from "axios";
 import "./ProductReviews.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import api from "../../../api/api.js"; // ✅ env-first axios instance (baseURL already contains /api)
 
 const toNum = (v) => {
   const n = Number(v);
@@ -56,7 +55,13 @@ function normalizeReviewsResponse(raw) {
 const isOfflineLike = (e) => {
   const msg = String(e?.message || "");
   // Axios network errors often have no response
-  return !e?.response && (msg.includes("Network Error") || msg.includes("ECONNREFUSED") || msg.includes("Failed to fetch"));
+  return (
+    !e?.response &&
+    (msg.includes("Network Error") ||
+      msg.includes("ECONNREFUSED") ||
+      msg.includes("Failed to fetch") ||
+      msg.includes("ERR_NETWORK"))
+  );
 };
 
 export default function ProductReviews({ productId, token: tokenProp, onStatsChange }) {
@@ -84,7 +89,8 @@ export default function ProductReviews({ productId, token: tokenProp, onStatsCha
       setErr("");
 
       try {
-        const r = await axios.get(`${API_URL}/api/reviews/product/${productId}`, {
+        // ✅ api already points to .../api, so we use relative endpoints
+        const r = await api.get(`/reviews/product/${productId}`, {
           params: { page, limit: 10 },
           headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
         });
@@ -93,8 +99,7 @@ export default function ProductReviews({ productId, token: tokenProp, onStatsCha
         setData(normalized);
         onStatsChange?.({ avgRating: normalized.avgRating, count: normalized.count });
       } catch (e) {
-        // ✅ 404 = endpoint exists? Actually means route not found OR product invalid on backend
-        // For UI: treat it as "no reviews yet" to avoid ugly error.
+        // ✅ 404: treat as "no reviews yet"
         if (e?.response?.status === 404) {
           const normalized = normalizeReviewsResponse({ items: [] });
           setData(normalized);
@@ -107,7 +112,7 @@ export default function ProductReviews({ productId, token: tokenProp, onStatsCha
           const normalized = normalizeReviewsResponse({ items: [] });
           setData(normalized);
           onStatsChange?.({ avgRating: 0, count: 0 });
-          setErr("Немає з’єднання з сервером. Перевірте, чи запущено бекенд (порт 5000).");
+          setErr("Немає з’єднання з сервером. Перевірте, чи запущено бекенд.");
           return;
         }
 
@@ -136,7 +141,13 @@ export default function ProductReviews({ productId, token: tokenProp, onStatsCha
     }
 
     try {
-      await axios.post(`${API_URL}/api/reviews`, { productId, ...form }, { headers });
+      // ✅ post through api
+      await api.post(
+        "/reviews",
+        { productId, ...form },
+        { headers }
+      );
+
       setForm({ rating: 5, title: "", text: "" });
       await load(1);
     } catch (e2) {
@@ -178,7 +189,9 @@ export default function ProductReviews({ productId, token: tokenProp, onStatsCha
             {r.title && <div className="review-card__title">{r.title}</div>}
             {r.text && <div className="review-card__text">{r.text}</div>}
 
-            <div className="review-card__date">{new Date(r.createdAt).toLocaleString("uk-UA")}</div>
+            <div className="review-card__date">
+              {r.createdAt ? new Date(r.createdAt).toLocaleString("uk-UA") : ""}
+            </div>
           </div>
         ))}
 

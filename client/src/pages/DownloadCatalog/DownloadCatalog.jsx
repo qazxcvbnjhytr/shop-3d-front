@@ -1,15 +1,20 @@
 import React, { useRef, useState, useMemo } from "react";
-import axios from "axios";
 import html2pdf from "html2pdf.js";
 
-import { useTranslation } from "../../hooks/useTranslation"; // ✅ ДОДАТИ
+import { useTranslation } from "../../hooks/useTranslation";
+
+import api from "../../api/api.js";
 
 import { CatalogCover } from "./CatalogCover/CatalogCover";
 import { CatalogTOC } from "./CatalogTOC/CatalogTOC";
 import { CatalogProductPage } from "./CatalogProductPage/CatalogProductPage";
 import { CatalogCategoryPage } from "./CatalogCategoryPage/CatalogCategoryPage";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// ✅ env-first (без localhost fallback)
+const API_ORIGIN = import.meta.env.VITE_API_URL;
+if (!API_ORIGIN) {
+  throw new Error("Missing VITE_API_URL in client/.env(.local)");
+}
 
 // ✅ Нормалізація: твій проект часто має uk/ua
 const normalizeLang = (lang) => (lang === "uk" ? "ua" : (lang || "ua"));
@@ -22,26 +27,39 @@ const getTxtByLang = (obj, lang = "ua") => {
 
   if (typeof obj === "object") {
     // пріоритет: поточна мова -> ua -> en -> перше значення
-    return (
-      String(obj?.[L] ?? obj?.ua ?? obj?.en ?? Object.values(obj)[0] ?? "")
-    );
+    return String(obj?.[L] ?? obj?.ua ?? obj?.en ?? Object.values(obj)[0] ?? "");
   }
   return "";
 };
 
+const joinOriginUrl = (origin, raw) => {
+  if (!raw) return "";
+  const s = String(raw).trim();
+  if (!s) return "";
+  if (/^(https?:\/\/|data:|blob:)/i.test(s)) return s;
+
+  const o = String(origin || "").replace(/\/+$/, "");
+  const p = s.startsWith("/") ? s : `/${s}`;
+  return `${o}${p}`;
+};
+
 const toBase64 = (url) =>
   new Promise((resolve) => {
-    const img = new Image();
-    img.setAttribute("crossOrigin", "anonymous");
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      canvas.getContext("2d").drawImage(img, 0, 0);
-      resolve(canvas.toDataURL("image/jpeg", 0.9));
-    };
-    img.onerror = () => resolve(null);
-    img.src = url;
+    try {
+      const img = new Image();
+      img.setAttribute("crossOrigin", "anonymous");
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        canvas.getContext("2d").drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/jpeg", 0.9));
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    } catch {
+      resolve(null);
+    }
   });
 
 export default function DownloadCatalog() {
@@ -58,13 +76,26 @@ export default function DownloadCatalog() {
     setIsGenerating(true);
 
     try {
+      // ✅ api instance already has baseURL = .../api
       const [prodRes, catRes] = await Promise.all([
-        axios.get(`${API_URL}/api/products`, { params: { lang } }),     // ✅ якщо бекенд вміє
-        axios.get(`${API_URL}/api/categories`, { params: { lang } }),   // ✅ якщо бекенд вміє
+        api.get("/products", { params: { lang } }),
+        api.get("/categories", { params: { lang } }),
       ]);
 
-      const allProducts = prodRes.data;
-      const categories = catRes.data;
+      const allProductsRaw = prodRes.data;
+      const categoriesRaw = catRes.data;
+
+      const allProducts = Array.isArray(allProductsRaw)
+        ? allProductsRaw
+        : Array.isArray(allProductsRaw?.products)
+          ? allProductsRaw.products
+          : [];
+
+      const categories = Array.isArray(categoriesRaw)
+        ? categoriesRaw
+        : Array.isArray(categoriesRaw?.categories)
+          ? categoriesRaw.categories
+          : [];
 
       // 1) Будуємо структуру мовою lang
       const baseStructure = categories
@@ -95,27 +126,30 @@ export default function DownloadCatalog() {
       const finalStructure = [];
       for (const cat of baseStructure) {
         const categoryPageIndex = finalStructure.length + 1;
-        globalPageTracker++;
+        globalPageTracker++; // сторінка категорії
 
         const newSubCats = [];
         for (const sub of cat.subCategories) {
           const newProducts = [];
+
+          // ⚠️ ВАЖКО: base64 по черзі. Залишаю як у тебе, щоб не зламати.
           for (const prod of sub.products) {
-            const rawPath = prod.images?.[0];
-            const fullUrl = rawPath?.startsWith("http")
-              ? rawPath
-              : `${API_URL}${rawPath}`;
-            const b64 = await toBase64(fullUrl);
+            const rawPath = prod?.images?.[0] || prod?.image || "";
+            const fullUrl = joinOriginUrl(API_ORIGIN, rawPath);
+            const b64 = fullUrl ? await toBase64(fullUrl) : null;
 
             newProducts.push({
               ...prod,
+
               // ✅ назва/опис відповідно до мови
-              nameTxt: getTxtByLang(prod.name, lang),
-              descTxt: getTxtByLang(prod.description, lang),
+              nameTxt: getTxtByLang(prod?.name, lang),
+              descTxt: getTxtByLang(prod?.description, lang),
+
               b64,
               pageNo: globalPageTracker++,
             });
           }
+
           newSubCats.push({ ...sub, products: newProducts });
         }
 
@@ -133,7 +167,6 @@ export default function DownloadCatalog() {
 
       const opt = {
         margin: 0,
-        // ✅ файл теж може залежати від мови
         filename: `MEBLI_HUB_LUXURY_2025_${lang.toUpperCase()}.pdf`,
         image: { type: "jpeg", quality: 1.0 },
         html2canvas: {
@@ -165,14 +198,35 @@ export default function DownloadCatalog() {
   const btnBusy = t?.catalogPdf?.buildingBtn || "ЗБИРАЄМО СТОРІНКИ...";
 
   return (
-    <div style={{ textAlign: "center", padding: "100px", background: "#f5f5f5", minHeight: "100vh" }}>
-      <div style={{ maxWidth: "600px", margin: "0 auto", background: "#fff", padding: "40px", borderRadius: "20px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-        <h2 style={{ fontFamily: "Playfair Display, serif", fontSize: "24pt", marginBottom: "20px" }}>
+    <div
+      style={{
+        textAlign: "center",
+        padding: "100px",
+        background: "#f5f5f5",
+        minHeight: "100vh",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "600px",
+          margin: "0 auto",
+          background: "#fff",
+          padding: "40px",
+          borderRadius: "20px",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: "Playfair Display, serif",
+            fontSize: "24pt",
+            marginBottom: "20px",
+          }}
+        >
           {uiTitle}
         </h2>
-        <p style={{ color: "#666", marginBottom: "30px" }}>
-          {uiDesc}
-        </p>
+
+        <p style={{ color: "#666", marginBottom: "30px" }}>{uiDesc}</p>
 
         <button
           onClick={generate}
@@ -201,18 +255,12 @@ export default function DownloadCatalog() {
         <div ref={pdfRef} style={{ width: "210mm", background: "white" }}>
           {catalogStructure.length > 0 && (
             <>
-              {/* ✅ Передай мову/туди, де є текст */}
               <CatalogCover title={t?.catalogPdf?.coverTitle || "MEBLI HUB"} lang={lang} />
               <CatalogTOC structure={catalogStructure} lang={lang} t={t} />
 
               {catalogStructure.map((cat, idx) => (
                 <React.Fragment key={idx}>
-                  <CatalogCategoryPage
-                    categoryName={cat.catName}
-                    index={cat.catIndex}
-                    lang={lang}
-                    t={t}
-                  />
+                  <CatalogCategoryPage categoryName={cat.catName} index={cat.catIndex} lang={lang} t={t} />
 
                   {cat.subCategories.map((sub, sIdx) => (
                     <React.Fragment key={sIdx}>

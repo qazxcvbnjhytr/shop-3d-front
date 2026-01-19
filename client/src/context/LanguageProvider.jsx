@@ -2,11 +2,25 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { LanguageContext } from "./LanguageContext";
 
-const API_URL = "http://localhost:5000/api/translations";
+const API_URL = import.meta.env.VITE_API_URL;
+const API_PREFIX = import.meta.env.VITE_API_PREFIX || "/api";
+
+const normalizeOrigin = (url) => String(url || "").replace(/\/+$/, "");
+const normalizePrefix = (p) => {
+  const s = String(p || "/api").trim();
+  if (!s) return "/api";
+  return s.startsWith("/") ? s.replace(/\/+$/, "") : `/${s.replace(/\/+$/, "")}`;
+};
+
+if (!API_URL) {
+  throw new Error("Missing VITE_API_URL in client/.env(.local)");
+}
+
+const BASE = `${normalizeOrigin(API_URL)}${normalizePrefix(API_PREFIX)}`;
+// ✅ тепер translations endpoint: `${BASE}/translations/:lang`
 
 export const LanguageProvider = ({ children }) => {
-  // Поточна мова (з localStorage або ua)
-const defaultLang = localStorage.getItem("language") || "ua";
+  const defaultLang = localStorage.getItem("language") || "ua";
   const [language, setLanguage] = useState(defaultLang);
   const [translations, setTranslations] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,19 +31,15 @@ const defaultLang = localStorage.getItem("language") || "ua";
     const fetchTranslations = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API_URL}/${language}`);
-        if (isMounted) {
-          setTranslations(res.data);
-        }
+        const res = await axios.get(`${BASE}/translations/${language}`, {
+          withCredentials: true, // якщо бек використовує cookies/cors credentials
+        });
+        if (isMounted) setTranslations(res.data);
       } catch (error) {
         console.error("Failed to load translations:", error);
-        if (isMounted) {
-          setTranslations(null);
-        }
+        if (isMounted) setTranslations(null);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
 
@@ -41,18 +51,13 @@ const defaultLang = localStorage.getItem("language") || "ua";
     };
   }, [language]);
 
-  // Перемикач мови
-const toggleLanguage = () => {
-  setLanguage(prev => (prev === "ua" ? "en" : "ua"));
-};
+  const toggleLanguage = () => {
+    setLanguage((prev) => (prev === "ua" ? "en" : "ua"));
+  };
+
   return (
     <LanguageContext.Provider
-      value={{
-        language,
-        translations,
-        loading,
-        toggleLanguage
-      }}
+      value={{ language, translations, loading, toggleLanguage }}
     >
       {children}
     </LanguageContext.Provider>

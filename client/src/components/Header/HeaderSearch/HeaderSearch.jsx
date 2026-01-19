@@ -1,10 +1,9 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { LanguageContext } from "@context/LanguageContext";
+import api from "@/api/api"; // або "../api/api" — підкоригуй шлях під свій alias
+import { getImageUrl } from "@/utils/imageUtils"; // або "../utils/imageUtils"
 import "./HeaderSearch.css";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const MAX_RESULTS = 10;
 const MIN_LEN = 1;
@@ -38,13 +37,6 @@ const calcPrices = (price, discount) => {
   return { price: p, discount: d, hasDiscount, finalPrice };
 };
 
-const buildImg = (raw) => {
-  if (!raw || typeof raw !== "string") return "/placeholder.png";
-  if (/^(https?:\/\/|data:|blob:)/i.test(raw)) return raw;
-  if (raw.startsWith("/")) return `${API_URL}${raw}`;
-  return `${API_URL}/${raw}`.replace(/\/{2,}/g, "/").replace(":/", "://");
-};
-
 export default function HeaderSearch() {
   const navigate = useNavigate();
   const { language } = useContext(LanguageContext);
@@ -60,7 +52,6 @@ export default function HeaderSearch() {
   // [{ id, category, subCategory, img, nameUa, nameEn, price, discount, blob }]
   const [index, setIndex] = useState([]);
 
-  // debounce введення
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q), DEBOUNCE_MS);
     return () => clearTimeout(t);
@@ -73,7 +64,8 @@ export default function HeaderSearch() {
     try {
       setLoading(true);
 
-      const res = await axios.get(`${API_URL}/api/products`);
+      // ✅ baseURL + token вже в api instance
+      const res = await api.get("/products");
       const arr = Array.isArray(res.data) ? res.data : [];
 
       const mapped = arr.map((p, idx) => {
@@ -91,13 +83,11 @@ export default function HeaderSearch() {
           p?.productImage ||
           null;
 
-        const img = buildImg(imgRaw);
+        const img = getImageUrl(imgRaw);
 
-        // ✅ зберігаємо сирі значення з БД (price + discount%)
         const price = toNumber(p?.price);
         const discount = toNumber(p?.discount);
 
-        // blob для пошуку
         const type = p?.typeKey || p?.type || "";
         const material = p?.specifications?.materialKey || p?.materialKey || p?.material || "";
         const color = p?.colorKey || p?.color || "";
@@ -115,13 +105,12 @@ export default function HeaderSearch() {
     } catch (e) {
       console.error("[HeaderSearch] products load error:", e);
       setIndex([]);
-      loadedRef.current = false; // дозволяємо повторити
+      loadedRef.current = false;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // клік поза компонентом
   useEffect(() => {
     const onDown = (e) => {
       if (!wrapRef.current) return;
@@ -140,12 +129,8 @@ export default function HeaderSearch() {
     const out = index.filter((it) => it.blob.includes(queryNorm)).slice(0, MAX_RESULTS);
 
     return out.map((it) => {
-      const displayName =
-        language === "ua" ? (it.nameUa || it.nameEn) : (it.nameEn || it.nameUa);
-
+      const displayName = language === "ua" ? (it.nameUa || it.nameEn) : (it.nameEn || it.nameUa);
       const { hasDiscount, finalPrice } = calcPrices(it.price, it.discount);
-
-      // ✅ правильний роут: /catalog/:category/:subCategory/:id
       const to = `/catalog/${it.category}/${it.subCategory}/${it.id}`;
 
       return {

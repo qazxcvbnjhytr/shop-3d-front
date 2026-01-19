@@ -1,32 +1,15 @@
 import React, { useMemo, useRef, useCallback, useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import "./LikeDropdown.css";
 
 import { LanguageContext } from "@context/LanguageContext";
-// ✅ ВАЖЛИВО: імпорт тільки з одного місця (де Provider)
 import { useLikes } from "../../../context/LikesContext.jsx";
 
-const RAW_API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import api from "@/api/api"; // якщо нема alias "@/": заміни на відносний шлях
+import { getImageUrl } from "@/utils/imageUtils"; // якщо нема alias "@/": заміни на відносний шлях
+
 const MAX_VISIBLE = 8;
-
-// ✅ якщо сторінка лайків у тебе інша — поміняй тут
 const FAVS_ROUTE = "/favorites";
-
-const normalizeBase = (raw) => {
-  const s = String(raw || "").replace(/\/+$/, "");
-  return s.replace(/\/api\/?$/, "");
-};
-const BASE = normalizeBase(RAW_API);
-
-const getApiOrigin = (apiUrl) => {
-  try {
-    return new URL(apiUrl).origin;
-  } catch {
-    return normalizeBase(apiUrl);
-  }
-};
-const API_ORIGIN = getApiOrigin(RAW_API);
 
 const normLang = (language) => String(language || "ua").toLowerCase();
 
@@ -48,14 +31,6 @@ const formatUAH = (n) => {
   return `${Math.round(v).toLocaleString("uk-UA")} грн`;
 };
 
-const joinUrl = (origin, raw) => {
-  if (!raw || typeof raw !== "string") return "/placeholder.png";
-  if (/^(https?:\/\/|data:|blob:)/i.test(raw)) return raw;
-  const o = String(origin || "").replace(/\/+$/, "");
-  const p = raw.startsWith("/") ? raw : `/${raw}`;
-  return `${o}${p}`;
-};
-
 const calcFinalPrice = (price, discountPercent) => {
   const p = toNumber(price);
   const d = Math.min(100, Math.max(0, toNumber(discountPercent)));
@@ -72,7 +47,6 @@ const getProductIdFromLike = (like) => {
 export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
   const { language } = useContext(LanguageContext);
 
-  // ✅ тепер useLikes точно не null, бо імпорт з правильного файла
   const likesCtx = useLikes();
   const likedProducts = likesCtx?.likedProducts || [];
   const likedProductIds = likesCtx?.likedProductIds || [];
@@ -99,7 +73,7 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
     return Array.from(new Set(list));
   }, [likedProductIds]);
 
-  // ✅ чистимо кеш для видалених лайків
+  // чистимо кеш для видалених лайків
   useEffect(() => {
     setProductsById((prev) => {
       const next = {};
@@ -110,7 +84,7 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
     });
   }, [ids]);
 
-  // ✅ підвантажуємо деталі продуктів (для name/price/discount/route)
+  // підвантажуємо деталі продуктів
   useEffect(() => {
     if (!open) return;
     if (!ids.length) return;
@@ -121,7 +95,10 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
     let alive = true;
 
     (async () => {
-      const res = await Promise.allSettled(missing.map((id) => axios.get(`${BASE}/api/products/${id}`)));
+      // ✅ api instance вже має baseURL = .../api
+      const res = await Promise.allSettled(
+        missing.map((id) => api.get(`/products/${id}`))
+      );
 
       if (!alive) return;
 
@@ -157,7 +134,7 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
           "Товар";
 
         const imgRaw = like?.productImage || p?.images?.[0] || p?.image || "";
-        const img = joinUrl(API_ORIGIN, imgRaw);
+        const img = getImageUrl(imgRaw);
 
         const price = toNumber(p?.price ?? like?.price);
         const discount = toNumber(p?.discount ?? like?.discount);
@@ -210,7 +187,6 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
           <span className="like-dd__count">{ids.length}</span>
         </div>
 
-        {/* ✅ клік на сторінку лайків */}
         <Link className="like-dd__all" to={FAVS_ROUTE} onClick={() => onClose?.()}>
           {viewAll}
         </Link>
@@ -261,7 +237,6 @@ export default function LikeDropdown({ open, onClose, closeDelay = 180 }) {
         )}
       </div>
 
-      {/* ✅ низ: кнопка перейти на всі лайки (клікати легко) */}
       <div className="like-dd__footer">
         <Link className="like-dd__button" to={FAVS_ROUTE} onClick={() => onClose?.()}>
           {viewAll}

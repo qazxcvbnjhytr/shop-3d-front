@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useTranslation } from "../../hooks/useTranslation";
 import "../../components/styles/LoginPage.css";
+
+import api from "../../api/api.js"; // ✅ використовуємо централізований axios instance (env-first)
 
 export default function ForgotPasswordPage() {
   const { t, loading: langLoading } = useTranslation();
@@ -15,36 +16,31 @@ export default function ForgotPasswordPage() {
 
   const navigate = useNavigate();
 
-  if (langLoading || !texts) {
-    return null; // або Loader
-  }
+  if (langLoading || !texts) return null; // або Loader
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
     setError("");
 
-    if (!email) {
-      setError(texts.enterEmailError);
+    const safeEmail = String(email || "").trim();
+    if (!safeEmail) {
+      setError(texts.enterEmailError || "Вкажіть email");
       return;
     }
 
     setLoading(true);
     try {
-      await axios.post(
-        "http://localhost:5000/api/auth/forgot-password",
-        { email }
-      );
+      // ✅ api має baseURL = `${VITE_API_URL}${VITE_API_PREFIX||/api}`
+      await api.post("/auth/forgot-password", { email: safeEmail });
 
-      setMessage(texts.resetCodeSent);
+      setMessage(texts.resetCodeSent || "Код надіслано");
 
       navigate("/auth/reset-password", {
-        state: { email }
+        state: { email: safeEmail },
       });
     } catch (err) {
-      setError(
-        err.response?.data?.message || texts.somethingWentWrong
-      );
+      setError(err?.response?.data?.message || texts.somethingWentWrong || "Щось пішло не так");
     } finally {
       setLoading(false);
     }
@@ -64,6 +60,7 @@ export default function ForgotPasswordPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={texts.emailPlaceholder}
+          autoComplete="email"
         />
 
         <button type="submit" disabled={loading}>

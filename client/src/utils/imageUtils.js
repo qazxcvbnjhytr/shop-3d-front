@@ -1,5 +1,11 @@
 // client/src/utils/imageUtils.js
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
+
+if (!API_URL) {
+  throw new Error("Missing VITE_API_URL in client/.env(.local)");
+}
+
+const ORIGIN = String(API_URL).replace(/\/+$/, "");
 
 /** Простий placeholder SVG (data URI). Можна замінити своїм Base64-лейаутом */
 export const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(
@@ -12,13 +18,18 @@ export const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(
 /** Приводить шлях до дійсного URL з урахуванням локальних uploads */
 export function getImageUrl(raw) {
   if (!raw) return PLACEHOLDER_SVG;
+
   const s = String(raw || "").trim();
   if (!s) return PLACEHOLDER_SVG;
-  if (/^https?:\/\//i.test(s)) return s;
-  // якщо вже абсолютний шлях на сервері (/uploads/...)
-  if (s.startsWith("/")) return `${API_URL}${s}`;
-  // інакше — теж приписуємо API_URL
-  return `${API_URL}/${s}`;
+
+  // уже абсолютний URL (cdn/railway/etc)
+  if (/^(https?:)?\/\//i.test(s)) return s;
+
+  // якщо абсолютний шлях на сервері (/uploads/..., /img/..., /assets/...)
+  if (s.startsWith("/")) return `${ORIGIN}${s}`;
+
+  // інакше — приписуємо origin
+  return `${ORIGIN}/${s}`;
 }
 
 /** Preload зображення з crossOrigin; повертає або оригінальний url, або placeholder */
@@ -29,12 +40,9 @@ export function preloadImageSafe(url) {
       img.crossOrigin = "anonymous";
       img.onload = () => resolve(url);
       img.onerror = () => resolve(PLACEHOLDER_SVG);
-      // починаємо завантаження
       img.src = url;
-      // якщо браузер вже cached and complete
-      if (img.complete && img.naturalWidth) {
-        resolve(url);
-      }
+
+      if (img.complete && img.naturalWidth) resolve(url);
     } catch {
       resolve(PLACEHOLDER_SVG);
     }

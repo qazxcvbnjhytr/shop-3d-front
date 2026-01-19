@@ -3,20 +3,24 @@ import axios from "axios";
 
 const CartContext = createContext(null);
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const API_BASE = (() => {
-  const b = String(API_URL || "").replace(/\/+$/, "");
-  return /\/api(\/|$)/.test(b) ? b : `${b}/api`;
-})();
-const CART_URL = `${API_BASE}/cart`;
+const API_URL = import.meta.env.VITE_API_URL;
+const API_PREFIX = import.meta.env.VITE_API_PREFIX || "/api";
 
-const API_ORIGIN = (() => {
-  try {
-    return new URL(API_URL).origin;
-  } catch {
-    return String(API_URL || "").replace(/\/+$/, "").replace(/\/api\/?$/, "");
-  }
-})();
+const normalizeOrigin = (url) => String(url || "").replace(/\/+$/, "");
+const normalizePrefix = (p) => {
+  const s = String(p || "/api").trim();
+  if (!s) return "/api";
+  return s.startsWith("/") ? s.replace(/\/+$/, "") : `/${s.replace(/\/+$/, "")}`;
+};
+
+if (!API_URL) {
+  throw new Error("Missing VITE_API_URL in client/.env(.local)");
+}
+
+// BASE з /api вже всередині
+const API_ORIGIN = normalizeOrigin(API_URL); //
+const API_BASE = `${API_ORIGIN}${normalizePrefix(API_PREFIX)}`;
+const CART_URL = `${API_BASE}/cart`;
 
 const getToken = () =>
   localStorage.getItem("token") ||

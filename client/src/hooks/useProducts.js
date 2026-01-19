@@ -1,7 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
+const API_PREFIX = import.meta.env.VITE_API_PREFIX || "/api";
+
+const normalizeOrigin = (url) => String(url || "").replace(/\/+$/, "");
+const normalizePrefix = (p) => {
+  const s = String(p || "/api").trim();
+  if (!s) return "/api";
+  return s.startsWith("/") ? s.replace(/\/+$/, "") : `/${s.replace(/\/+$/, "")}`;
+};
+
+if (!API_URL) {
+  throw new Error("Missing VITE_API_URL in client/.env(.local)");
+}
+
+const BASE = `${normalizeOrigin(API_URL)}${normalizePrefix(API_PREFIX)}`;
+// ✅ products endpoint: `${BASE}/products`
 
 export default function useProducts(params = {}) {
   const [products, setProducts] = useState([]);
@@ -13,7 +28,7 @@ export default function useProducts(params = {}) {
       setLoading(true);
       setError("");
 
-      const res = await axios.get(`${API_URL}/api/products`, {
+      const res = await axios.get(`${BASE}/products`, {
         params: { ...params, _ts: Date.now() },
         headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
         timeout: 20000,
@@ -22,11 +37,8 @@ export default function useProducts(params = {}) {
       setProducts(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       console.error("[useProducts] error:", e);
-      const msg =
-        e?.response?.data?.message ||
-        e?.message ||
-        "Failed to load products";
-      setError(msg);
+      const msg = e?.response?.data?.message || e?.message || "Failed to load products";
+      setError(String(msg));
       setProducts([]);
     } finally {
       setLoading(false);

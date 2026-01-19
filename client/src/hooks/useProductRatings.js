@@ -2,8 +2,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 
-const RAW = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const BASE = String(RAW).replace(/\/+$/, "");
+const API_URL = import.meta.env.VITE_API_URL;
+const API_PREFIX = import.meta.env.VITE_API_PREFIX || "/api";
+
+const normalizeOrigin = (url) => String(url || "").replace(/\/+$/, "");
+const normalizePrefix = (p) => {
+  const s = String(p || "/api").trim();
+  if (!s) return "/api";
+  return s.startsWith("/") ? s.replace(/\/+$/, "") : `/${s.replace(/\/+$/, "")}`;
+};
+
+if (!API_URL) {
+  throw new Error("Missing VITE_API_URL in client/.env(.local)");
+}
+
+const BASE = `${normalizeOrigin(API_URL)}${normalizePrefix(API_PREFIX)}`;
+// ✅ reviews endpoint: `${BASE}/reviews/product/:id`
 
 const toNum = (v) => {
   const n = Number(v);
@@ -85,9 +99,10 @@ export function useProductRatings({ items = [] } = {}) {
 
         const results = await Promise.all(
           missing.map(async (id) => {
-            const r = await axios.get(`${BASE}/api/reviews/product/${id}`, {
+            const r = await axios.get(`${BASE}/reviews/product/${id}`, {
               params: { page: 1, limit: 10 },
               headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+              withCredentials: true,
             });
             return [id, normalizeReviewsResponse(r.data)];
           })

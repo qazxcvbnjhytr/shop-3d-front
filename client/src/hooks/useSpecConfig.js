@@ -2,7 +2,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
+const API_PREFIX = import.meta.env.VITE_API_PREFIX || "/api";
+
+const normalizeOrigin = (url) => String(url || "").replace(/\/+$/, "");
+const normalizePrefix = (p) => {
+  const s = String(p || "/api").trim();
+  if (!s) return "/api";
+  return s.startsWith("/") ? s.replace(/\/+$/, "") : `/${s.replace(/\/+$/, "")}`;
+};
+
+if (!API_URL) {
+  throw new Error("Missing VITE_API_URL in client/.env(.local)");
+}
+
+const BASE = `${normalizeOrigin(API_URL)}${normalizePrefix(API_PREFIX)}`;
 
 // Нормалізація помилок, щоб ти бачила "CONFIG_LOAD_FAILED" тільки коли реально треба
 function toErrorCode(err) {
@@ -41,7 +55,6 @@ export function useSpecConfig(typeKey) {
     const controller = new AbortController();
 
     const load = async () => {
-      // якщо в кеші — віддаємо одразу
       const cached = cacheRef.current.get(safeTypeKey);
       if (cached) {
         setState({ ...cached, loading: false, error: "" });
@@ -51,12 +64,13 @@ export function useSpecConfig(typeKey) {
       setState((prev) => ({ ...prev, loading: true, error: "" }));
 
       try {
-        // ВАЖЛИВО:
-        // - тут навмисно йдемо на бекенд (5000), щоб не залежати від Vite proxy
-        // - бо в тебе вже були ситуації, коли proxy "відвалювався"
-        const url = `${API_URL}/api/spec-templates/${encodeURIComponent(safeTypeKey)}`;
+        // ✅ прямий виклик на бекенд за BASE (не Vite proxy), але через env
+        const url = `${BASE}/spec-templates/${encodeURIComponent(safeTypeKey)}`;
 
-        const { data } = await axios.get(url, { signal: controller.signal });
+        const { data } = await axios.get(url, {
+          signal: controller.signal,
+          withCredentials: true,
+        });
 
         const normalized = {
           template: data?.template ?? null,

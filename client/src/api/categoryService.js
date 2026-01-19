@@ -1,23 +1,31 @@
-// client/src/api/categoryService.js (ФІНАЛЬНА ВЕРСІЯ)
+import axios from "axios";
 
-import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL;
+const API_PREFIX = import.meta.env.VITE_API_PREFIX || "/api";
 
-// ВИКОРИСТОВУЄМО ЗМІННУ ОТОЧЕННЯ, ЯКА МАЄ БУТИ: VITE_API_BASE_URL=http://localhost:5000
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const normalizeOrigin = (url) => String(url || "").replace(/\/+$/, "");
+const normalizePrefix = (p) => {
+  const s = String(p || "/api").trim();
+  if (!s) return "/api";
+  return s.startsWith("/") ? s.replace(/\/+$/, "") : `/${s.replace(/\/+$/, "")}`;
+};
 
-// 🔥 ВИПРАВЛЕНО: Додаємо /api
-const CATEGORIES_ENDPOINT = '/api/categories'; 
+if (!API_URL) {
+  throw new Error("Missing VITE_API_URL in client/.env(.local)");
+}
+
+const BASE = `${normalizeOrigin(API_URL)}${normalizePrefix(API_PREFIX)}`;
+// ✅ categories endpoint: `${BASE}/categories`
 
 export const fetchCategoriesAPI = async (language) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}${CATEGORIES_ENDPOINT}`, {
-            params: { lang: language }
-        });
+  try {
+    const response = await axios.get(`${BASE}/categories`, {
+      params: { lang: language },
+      withCredentials: true,
+    });
 
-        // ... (інша логіка обробки, як ми домовились)
-        return response.data;
-    } catch (error) {
-        // ... (обробка помилок)
-        throw error;
-    }
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };

@@ -1,30 +1,13 @@
 import React, { useEffect, useMemo, useState, useContext } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import "./Favorites.css";
 
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useLikes } from "../../context/LikesContext.jsx";
+import { LanguageContext } from "@context/LanguageContext";
 
-// Якщо у тебе є alias @context/LanguageContext — можеш використати його.
-// Якщо ні — просто видали LanguageContext і pickText буде брати ua/en за замовчуванням.
-let LanguageContext = null;
-try {
-  // eslint-disable-next-line import/no-unresolved
-  ({ LanguageContext } = await import("@context/LanguageContext"));
-} catch {
-  // ignore
-}
-
-const RAW_API = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const BASE = String(RAW_API).replace(/\/+$/, "").replace(/\/api\/?$/, "");
-const API_ORIGIN = (() => {
-  try {
-    return new URL(RAW_API).origin;
-  } catch {
-    return BASE;
-  }
-})();
+import api from "../../api/api.js";
+import { getImageUrl } from "../../utils/imageUtils.js";
 
 const normLang = (language) => String(language || "ua").toLowerCase();
 
@@ -33,14 +16,6 @@ const pickText = (value, language = "ua") => {
   if (typeof value === "string" || typeof value === "number") return String(value);
   if (value && typeof value === "object") return value?.[lang] || value?.ua || value?.uk || value?.en || "";
   return "";
-};
-
-const joinUrl = (origin, raw) => {
-  if (!raw || typeof raw !== "string") return "/placeholder.png";
-  if (/^(https?:\/\/|data:|blob:)/i.test(raw)) return raw;
-  const o = String(origin || "").replace(/\/+$/, "");
-  const p = raw.startsWith("/") ? raw : `/${raw}`;
-  return `${o}${p}`;
 };
 
 const toNumber = (v) => {
@@ -71,7 +46,7 @@ export default function Favorites() {
   const { user } = useAuth();
   const { likedProducts = [], likedProductIds = [], toggleLike, isLoading } = useLikes();
 
-  const language = LanguageContext ? useContext(LanguageContext)?.language : "ua";
+  const { language } = useContext(LanguageContext);
   const ua = normLang(language) === "ua" || normLang(language) === "uk";
 
   // Підвантажимо деталі товарів для правильних route (category/subCategory)
@@ -92,7 +67,8 @@ export default function Favorites() {
     let alive = true;
 
     (async () => {
-      const res = await Promise.allSettled(missing.map((id) => axios.get(`${BASE}/api/products/${id}`)));
+      // ✅ api instance already has baseURL = .../api
+      const res = await Promise.allSettled(missing.map((id) => api.get(`/products/${id}`)));
       if (!alive) return;
 
       setProductsById((prev) => {
@@ -124,10 +100,10 @@ export default function Favorites() {
         const name =
           pickText(like?.productName, language) ||
           pickText(p?.name, language) ||
-          "Товар";
+          (ua ? "Товар" : "Product");
 
         const imgRaw = like?.productImage || p?.images?.[0] || p?.image || "";
-        const img = joinUrl(API_ORIGIN, imgRaw);
+        const img = getImageUrl(imgRaw);
 
         const price = toNumber(p?.price ?? like?.price);
         const discount = toNumber(p?.discount ?? like?.discount);
@@ -142,19 +118,34 @@ export default function Favorites() {
             ? `/catalog/${category}/${subCategory}/${String(p._id || productId)}`
             : `/catalog/${category}`;
 
-        return { productId, to, img, name, price, discount, hasDiscount, finalPrice, missingProduct: p === null, rawLike: like };
+        return {
+          productId,
+          to,
+          img,
+          name,
+          price,
+          discount,
+          hasDiscount,
+          finalPrice,
+          missingProduct: p === null,
+          rawLike: like,
+        };
       })
       .filter(Boolean);
-  }, [likedProducts, productsById, language]);
+  }, [likedProducts, productsById, language, ua]);
 
   if (!user) {
     return (
       <div className="fav-page">
         <div className="fav-head">
           <h1 className="fav-title">{ua ? "Обрані товари" : "Favorites"}</h1>
-          <p className="fav-sub">{ua ? "Увійдіть, щоб бачити обрані товари." : "Please sign in to see favorites."}</p>
+          <p className="fav-sub">
+            {ua ? "Увійдіть, щоб бачити обрані товари." : "Please sign in to see favorites."}
+          </p>
         </div>
-        <Link className="fav-btn" to="/login">{ua ? "Увійти" : "Sign in"}</Link>
+        <Link className="fav-btn" to="/login">
+          {ua ? "Увійти" : "Sign in"}
+        </Link>
       </div>
     );
   }
@@ -216,7 +207,9 @@ export default function Favorites() {
         <div className="fav-empty">
           {ua ? "Поки що немає лайкнутих товарів." : "No liked products yet."}
           <div style={{ marginTop: 10 }}>
-            <Link className="fav-btn" to="/catalog">{ua ? "Перейти в каталог" : "Go to catalog"}</Link>
+            <Link className="fav-btn" to="/catalog">
+              {ua ? "Перейти в каталог" : "Go to catalog"}
+            </Link>
           </div>
         </div>
       )}

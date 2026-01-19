@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import "./WhereToBuy.css";
 import WhereToBuyMap from "./WhereToBuyMap/WhereToBuyMap";
 import { useTranslation } from "../../hooks/useTranslation";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import api from "@/api/api"; // якщо нема alias "@/": заміни на відносний шлях
 
 export default function WhereToBuy() {
   const { t } = useTranslation();
@@ -20,7 +19,8 @@ export default function WhereToBuy() {
         setLoading(true);
         setErr("");
 
-        const { data } = await axios.get(`${API_URL}/api/locations`);
+        // ✅ api вже містить baseURL = .../api
+        const { data } = await api.get("/locations");
         if (cancelled) return;
 
         setPoints(Array.isArray(data) ? data : []);
@@ -40,7 +40,6 @@ export default function WhereToBuy() {
 
   return (
     <div className="where-to-buy-page">
-      {/* ✅ Контейнер з max-width і боковими відступами */}
       <div className="where-to-buy-container">
         <div className="where-to-buy-hero">
           <h1 className="where-to-buy-title">{t?.whereToBuy?.title || "Where to Buy"}</h1>

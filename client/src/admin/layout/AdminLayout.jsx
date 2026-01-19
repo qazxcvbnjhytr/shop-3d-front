@@ -3,20 +3,30 @@ import React, { useMemo } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./admin.css";
 
+const API_URL = import.meta.env.VITE_API_URL; // ✅ env-first
+
+function getTitle(pathname) {
+  const p = String(pathname || "");
+  if (p.includes("/admin/products")) return "Products";
+  if (p.includes("/admin/categories")) return "Categories";
+  if (p.includes("/admin/users")) return "Users";
+  if (p.includes("/admin/orders")) return "Orders";
+  if (p.includes("/admin/chat")) return "Chat";
+  if (p.includes("/admin/translations")) return "Translations";
+  return "Dashboard";
+}
+
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const title = useMemo(() => {
-    const p = location.pathname;
-    if (p.includes("/admin/products")) return "Products";
-    if (p.includes("/admin/categories")) return "Categories";
-    if (p.includes("/admin/users")) return "Users";
-    if (p.includes("/admin/orders")) return "Orders";
-    if (p.includes("/admin/chat")) return "Chat";
-    if (p.includes("/admin/translations")) return "Translations";
-    return "Dashboard";
-  }, [location.pathname]);
+  const title = useMemo(() => getTitle(location.pathname), [location.pathname]);
+
+  // ✅ красиво показати API в UI (і не падати якщо env нема)
+  const apiLabel = useMemo(() => {
+    if (!API_URL) return "VITE_API_URL is not set";
+    return API_URL;
+  }, []);
 
   return (
     <div className="admin-shell">
@@ -26,7 +36,10 @@ export default function AdminLayout() {
             <div className="admin-brand-title">MebliHub Admin</div>
             <div className="admin-brand-sub">/admin</div>
           </div>
-          <button className="btn" onClick={() => navigate("/")}>Store</button>
+
+          <button className="btn" type="button" onClick={() => navigate("/")}>
+            Store
+          </button>
         </div>
 
         <nav className="admin-nav">
@@ -64,12 +77,13 @@ export default function AdminLayout() {
         <div className="admin-topbar">
           <div className="meta">
             <div className="title">{title}</div>
-            <div className="desc">
-              API: {import.meta.env.VITE_API_URL || "http://localhost:5000"}
-            </div>
+            <div className="desc">API: {apiLabel}</div>
           </div>
+
           <div className="admin-actions">
-            <button className="btn" onClick={() => window.location.reload()}>Reload</button>
+            <button className="btn" type="button" onClick={() => window.location.reload()}>
+              Reload
+            </button>
           </div>
         </div>
 

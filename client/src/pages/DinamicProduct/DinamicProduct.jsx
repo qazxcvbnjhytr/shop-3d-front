@@ -1,4 +1,5 @@
-import React, { useContext, useState, useEffect, useMemo } from "react";
+// client/src/pages/DinamicProduct/DinamicProduct.jsx
+import React, { useContext, useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
 
@@ -11,19 +12,35 @@ import { useBreadcrumbs } from "../../hooks/useBreadcrumbs";
 import { useCategories } from "../../hooks/useCategories";
 import { useTranslation } from "../../hooks/useTranslation";
 
-// Імпорт винесених хелперів
 import {
   DEFAULT_FILTERS,
   normalizeLang,
   pickText,
   readFiltersFromSearchParams,
   buildApiParams,
-  filtersToSearchParamsObject
+  filtersToSearchParamsObject,
 } from "./productHelpers";
 
 import "./DinamicProduct.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// ✅ env-first (без localhost fallback)
+const RAW_API = import.meta.env.VITE_API_URL;
+const API_PREFIX = import.meta.env.VITE_API_PREFIX || "/api";
+
+const normalizeOrigin = (url) => String(url || "").replace(/\/+$/, "");
+const normalizePrefix = (p) => {
+  const s = String(p || "/api").trim();
+  if (!s) return "/api";
+  return s.startsWith("/") ? s.replace(/\/+$/, "") : `/${s.replace(/\/+$/, "")}`;
+};
+
+if (!RAW_API) {
+  throw new Error("Missing VITE_API_URL in client/.env(.local)");
+}
+
+const API_ORIGIN = normalizeOrigin(RAW_API);
+const API_BASE = `${API_ORIGIN}${normalizePrefix(API_PREFIX)}`; // e.g. https://xxx.up.railway.app/api
+
 const ITEMS_PER_PAGE = 9;
 
 export default function DinamicProduct() {
@@ -47,38 +64,58 @@ export default function DinamicProduct() {
   }));
 
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [categoryChildren, setCategoryChildren] = useState([]);
   const [categoryParent, setCategoryParent] = useState(null);
+
+  // ✅ axios instance з baseURL один раз
+  const api = useMemo(() => {
+    return axios.create({
+      baseURL: API_BASE,
+      withCredentials: true,
+      timeout: 20000,
+      headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+    });
+  }, []);
 
   // Синхронізація локальних фільтрів з URL
   useEffect(() => {
     setDraftFilters((prev) => ({ ...prev, ...activeFilters }));
   }, [activeFilters]);
 
-  // Завантаження інформації про категорії (батьківська + дочірні)
+  // ✅ Завантаження інфи по категорії: parent + children (abort-safe)
   useEffect(() => {
     if (!category) return;
 
-    const fetchCategoryInfo = async () => {
+    let alive = true;
+    const controller = new AbortController();
+
+    (async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/categories/${category}/children`, {
-          params: { _ts: Date.now() },
-          headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+        const res = await api.get(`/categories/${encodeURIComponent(category)}/children`, {
+          params: { lang, _ts: Date.now() },
+          signal: controller.signal,
         });
 
+        if (!alive) return;
         setCategoryParent(res.data?.parent || null);
         setCategoryChildren(Array.isArray(res.data?.children) ? res.data.children : []);
-      } catch {
+      } catch (e) {
+        if (!alive) return;
+        // axios cancel or abort -> just ignore
+        if (axios.isCancel?.(e)) return;
         setCategoryParent(null);
         setCategoryChildren([]);
       }
-    };
+    })();
 
-    fetchCategoryInfo();
-  }, [category]);
+    return () => {
+      alive = false;
+      controller.abort();
+    };
+  }, [category, api, lang]);
 
   const parentName = useMemo(() => {
     const fromApi = pickText(categoryParent?.names, lang);
@@ -91,7 +128,7 @@ export default function DinamicProduct() {
   const subName = useMemo(() => {
     if (!subKey || subKey === "all") return lang === "ua" ? "Усі товари" : "All products";
 
-    const fromChildren = categoryChildren.find((c) => c?.key === subKey);
+    const fromChildren = categoryChildren.find((c) => String(c?.key) === String(subKey));
     const childName = pickText(fromChildren?.names, lang);
     if (childName) return childName;
 
@@ -102,71 +139,86 @@ export default function DinamicProduct() {
     return subKey;
   }, [subKey, categoryChildren, categoriesMap, lang]);
 
-  // Оновлення хлібних крихт
+  // ✅ Оновлення breadcrumbs
   useEffect(() => {
     setData?.((prev) => ({
       ...(prev || {}),
       categoryCode: category,
-      subCategoryCode: subKey,
+      subCategoryKey: subKey, // ✅ у тебе в Breadcrumbs використовується subCategoryKey
       productName: null,
     }));
   }, [category, subKey, setData]);
 
-  // Основний запит на завантаження товарів
+  // ✅ Основний запит товарів (abort-safe + reset page)
   useEffect(() => {
     if (!category) return;
 
-    const fetchProducts = async () => {
+    let alive = true;
+    const controller = new AbortController();
+
+    (async () => {
       try {
-        setLoading(true);
+        setLoadingProducts(true);
+
         const base = subKey && subKey !== "all" ? { category, subCategory: subKey } : { category };
         const params = buildApiParams(activeFilters, base);
 
-        const res = await axios.get(`${API_URL}/api/products/filter`, {
-          params: { ...params, _ts: Date.now() },
-          headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+        const res = await api.get("/products/filter", {
+          params: { ...params, lang, _ts: Date.now() },
+          signal: controller.signal,
         });
 
-        setProducts(Array.isArray(res.data) ? res.data : []);
+        if (!alive) return;
+        setProducts(Array.isArray(res.data) ? res.data : (Array.isArray(res.data?.items) ? res.data.items : []));
       } catch (err) {
-        console.error("Помилка завантаження товарів:", err);
+        if (!alive) return;
+        if (axios.isCancel?.(err)) return;
+
+        console.error("[DinamicProduct] products load error:", err?.response?.data || err?.message || err);
         setProducts([]);
       } finally {
-        setLoading(false);
+        if (alive) setLoadingProducts(false);
       }
-    };
+    })();
 
-    fetchProducts();
     setCurrentPage(1);
-  }, [category, subKey, activeFilters]);
 
-  const onApplyFilters = () => {
+    return () => {
+      alive = false;
+      controller.abort();
+    };
+  }, [category, subKey, activeFilters, api, lang]);
+
+  const onApplyFilters = useCallback(() => {
     const obj = filtersToSearchParamsObject(draftFilters);
     setSearchParams(obj, { replace: false });
     setCurrentPage(1);
-  };
+  }, [draftFilters, setSearchParams]);
 
-  const onResetFilters = () => {
+  const onResetFilters = useCallback(() => {
     setDraftFilters({ ...DEFAULT_FILTERS });
     setSearchParams({}, { replace: false });
     setCurrentPage(1);
-  };
+  }, [setSearchParams]);
 
-  const removeTag = (field, valueToRemove) => {
-    const current = draftFilters[field];
-    let next;
+  const removeTag = useCallback(
+    (field, valueToRemove) => {
+      const current = draftFilters[field];
+      let next;
 
-    if (Array.isArray(current)) {
-      next = current.filter((v) => v !== valueToRemove);
-    } else {
-      next = DEFAULT_FILTERS[field];
-    }
+      if (Array.isArray(current)) {
+        next = current.filter((v) => v !== valueToRemove);
+      } else {
+        next = DEFAULT_FILTERS[field];
+      }
 
-    const updated = { ...draftFilters, [field]: next };
-    setDraftFilters(updated);
-    setSearchParams(filtersToSearchParamsObject(updated), { replace: false });
-    setCurrentPage(1);
-  };
+      const updated = { ...draftFilters, [field]: next };
+      setDraftFilters(updated);
+      setSearchParams(filtersToSearchParamsObject(updated), { replace: false });
+      setCurrentPage(1);
+    },
+    [draftFilters, setSearchParams]
+  );
 
   const activeChips = useMemo(() => {
     const list = [];
@@ -222,22 +274,31 @@ export default function DinamicProduct() {
     });
   }, [activeFilters]);
 
-  if (loading || langLoading || categoriesLoading || trLoading) {
-    return <div className="loader-container"><div className="loader" /></div>;
+  // ✅ Показуємо loader якщо щось ще тягнеться
+  if (loadingProducts || langLoading || categoriesLoading || trLoading) {
+    return (
+      <div className="loader-container">
+        <div className="loader" />
+      </div>
+    );
   }
 
   return (
     <div className="category-page-container">
       <header className="category-header">
         <h1 className="category-title">
-          <span className="title-accent"></span>
+          <span className="title-accent" />
           {subName}
         </h1>
+
         <div style={{ marginTop: 10 }}>
           <Link to={`/catalog/${encodeURIComponent(category)}`} className="dp-back-link">
             ← {lang === "ua" ? "Назад до підкатегорій" : "Back to subcategories"}
           </Link>
         </div>
+
+        {/* якщо хочеш показувати parentName десь */}
+        {/* <div className="dp-parent">{parentName}</div> */}
       </header>
 
       <ProductFiltersBar
@@ -245,7 +306,7 @@ export default function DinamicProduct() {
         onChange={setDraftFilters}
         onApply={onApplyFilters}
         onReset={onResetFilters}
-        loading={loading}
+        loading={loadingProducts}
       />
 
       <ActiveChipsRow
@@ -260,7 +321,7 @@ export default function DinamicProduct() {
         itemsPerPage={ITEMS_PER_PAGE}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
-        apiUrl={API_URL}
+        apiUrl={API_ORIGIN}     // ✅ тільки origin, без /api
         category={category}
         subKey={subKey}
         lang={lang}

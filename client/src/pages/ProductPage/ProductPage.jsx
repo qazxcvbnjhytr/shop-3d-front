@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import { FaArrowLeft, FaCube, FaTruck, FaShieldAlt, FaCheckCircle } from "react-icons/fa";
 
 // Contexts
@@ -12,6 +11,9 @@ import { useTranslation } from "../../hooks/useTranslation";
 
 // ✅ Hook configs (spec templates/fields/dicts)
 import { useSpecConfig } from "../../hooks/useSpecConfig";
+
+// ✅ Central API instance (baseURL = VITE_API_URL + VITE_API_PREFIX)
+import api from "../../api/api.js";
 
 // Helpers
 import { pickText, toNumberOrNull, joinUrl } from "./productHelpers";
@@ -31,7 +33,11 @@ import LikesComponent from "../../components/Likes/LikesComponent.jsx";
 
 import "./ProductPage.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// ✅ env-first (без localhost fallback)
+const API_ORIGIN = import.meta.env.VITE_API_URL;
+if (!API_ORIGIN) {
+  throw new Error("Missing VITE_API_URL in client/.env(.local)");
+}
 
 export default function ProductPage() {
   const navigate = useNavigate();
@@ -66,12 +72,17 @@ export default function ProductPage() {
 
       try {
         let res;
+
+        // ✅ api instance already has /api in baseURL
         if (slugParam && categoryParam) {
-          res = await axios.get(
-            `${API_URL}/api/products/by-slug/${categoryParam}/${subCategoryParam}/${slugParam}`
+          res = await api.get(
+            `/products/by-slug/${encodeURIComponent(categoryParam)}/${encodeURIComponent(
+              subCategoryParam || "product"
+            )}/${encodeURIComponent(slugParam)}`
           );
         } else {
-          res = await axios.get(`${API_URL}/api/products/${productId}`);
+          if (!productId) throw new Error("Missing productId");
+          res = await api.get(`/products/${encodeURIComponent(productId)}`);
         }
 
         if (!alive) return;
@@ -83,12 +94,14 @@ export default function ProductPage() {
         });
       } catch (e) {
         if (alive) setError(txt("notFound", "Товар не знайдено"));
+        if (alive) setProduct(null);
       } finally {
         if (alive) setLoading(false);
       }
     };
 
     fetchProduct();
+
     return () => {
       alive = false;
     };
@@ -105,13 +118,14 @@ export default function ProductPage() {
     return Math.round(price * (1 - d / 100));
   }, [price, discount]);
 
+  // ✅ modelUrl should use API_ORIGIN (not /api)
   const modelUrl = useMemo(() => {
-    return product?.modelUrl ? joinUrl(API_URL, product.modelUrl) : "";
+    return product?.modelUrl ? joinUrl(API_ORIGIN, product.modelUrl) : "";
   }, [product]);
 
   const inStock = product?.inStock !== false;
 
-  // ✅ Важливо: typeKey з product -> конфіги
+  // ✅ typeKey з product -> конфіги
   const typeKey = useMemo(() => {
     return String(product?.typeKey || "default").trim() || "default";
   }, [product]);
@@ -136,7 +150,7 @@ export default function ProductPage() {
   return (
     <div className="product-page">
       <nav className="pp-nav">
-        <button className="pp-back-btn" onClick={onBack}>
+        <button className="pp-back-btn" onClick={onBack} type="button">
           <FaArrowLeft /> <span>{txt("back", "Назад")}</span>
         </button>
 
@@ -171,7 +185,7 @@ export default function ProductPage() {
 
             <div className="pp-rating-row">
               <RatingStars value={ratingState.avgRating} count={ratingState.count} />
-              <button className="pp-reviews-link" onClick={() => setActiveTab("reviews")}>
+              <button className="pp-reviews-link" type="button" onClick={() => setActiveTab("reviews")}>
                 {ratingState.count} {txt("reviewsCount", "відгуків")}
               </button>
             </div>
@@ -198,7 +212,7 @@ export default function ProductPage() {
               <BuyButton item={product} className="pp-main-cta" />
 
               {modelUrl && (
-                <button className="pp-3d-btn" onClick={() => setViewerOpen(true)}>
+                <button className="pp-3d-btn" type="button" onClick={() => setViewerOpen(true)}>
                   <FaCube className="icon-3d" />
                   <span>{txt("view3D", "Подивитись у 3D")}</span>
                 </button>
@@ -228,8 +242,7 @@ export default function ProductPage() {
                       className="color-dot active"
                       title={t?.colors?.[c] || c}
                       style={{
-                        background:
-                          c === "red" ? "#e74c3c" : c === "dark_gray" ? "#444" : "#555",
+                        background: c === "red" ? "#e74c3c" : c === "dark_gray" ? "#444" : "#555",
                       }}
                     />
                   ))}
@@ -249,6 +262,7 @@ export default function ProductPage() {
           {["reviews", "delivery", "specs"].map((tab) => (
             <button
               key={tab}
+              type="button"
               className={`pp-tab-btn ${activeTab === tab ? "active" : ""}`}
               onClick={() => setActiveTab(tab)}
             >
@@ -258,13 +272,13 @@ export default function ProductPage() {
         </div>
 
         <div className="pp-tab-content">
-        {activeTab === "reviews" && (
-  <ProductReviews
-    productId={product._id}
-    token={localStorage.getItem("token") || ""}
-    onStatsChange={setRatingState}
-  />
-)}
+          {activeTab === "reviews" && (
+            <ProductReviews
+              productId={product._id}
+              token={localStorage.getItem("token") || ""}
+              onStatsChange={setRatingState}
+            />
+          )}
 
           {activeTab === "delivery" && <DeliveryTab product={product} language={language} />}
 

@@ -4,22 +4,53 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import axiosInstance from "../../api/axiosInstance.js";
 import "./AdminChat.css";
 
-const RAW = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const API_BASE = String(RAW).replace(/\/+$/, "").replace(/\/api\/?$/, "");
+// ✅ env-first
+const RAW_API = import.meta.env.VITE_API_URL;          
+const RAW_SOCKET = import.meta.env.VITE_SOCKET_URL;   
+const API_PREFIX = import.meta.env.VITE_API_PREFIX || "/api";
+
+const normalizeOrigin = (url) => String(url || "").replace(/\/+$/, "");
+const normalizePrefix = (p) => {
+  const s = String(p || "/api").trim();
+  if (!s) return "/api";
+  return s.startsWith("/") ? s.replace(/\/+$/, "") : `/${s.replace(/\/+$/, "")}`;
+};
+const stripApiSuffix = (origin) => String(origin || "").replace(/\/api\/?$/, "");
+
+// ❗ Без localhost fallback у коді
+if (!RAW_API && !RAW_SOCKET) {
+  throw new Error("Missing VITE_API_URL (or VITE_SOCKET_URL) in client/.env(.local)");
+}
+
+const API_ORIGIN = normalizeOrigin(RAW_API);
+const API_BASE = `${API_ORIGIN}${normalizePrefix(API_PREFIX)}`; 
+
+const SOCKET_ORIGIN = stripApiSuffix(normalizeOrigin(RAW_SOCKET || RAW_API)); 
 
 const str = (v) => (v == null ? "" : String(v));
 const same = (a, b) => str(a) === str(b);
+
+// простий fetch wrapper на той самий API_BASE
+async function apiGetJson(path) {
+  const url = `${API_BASE}${path.startsWith("/") ? "" : "/"}${path}`;
+  const res = await fetch(url, { credentials: "include" });
+  if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
+  return res.json();
+}
 
 export default function AdminChat() {
   const { user, loading: authLoading } = useAuth();
   const adminId = useMemo(() => (user?._id ? String(user._id) : ""), [user?._id]);
 
   const [supportAdminId, setSupportAdminId] = useState("");
-  const inboxId = useMemo(() => (supportAdminId ? String(supportAdminId) : adminId), [supportAdminId, adminId]);
+  const inboxId = useMemo(
+    () => (supportAdminId ? String(supportAdminId) : adminId),
+    [supportAdminId, adminId]
+  );
 
   const [connected, setConnected] = useState(false);
   const [conversations, setConversations] = useState([]);
-  const [active, setActive] = useState(null); 
+  const [active, setActive] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [err, setErr] = useState("");
@@ -36,20 +67,26 @@ export default function AdminChat() {
   // 1) Отримання ID головного адміна підтримки
   useEffect(() => {
     let alive = true;
+
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/chat/support-admin`);
-        const data = await res.json();
+        setErr("");
+        const data = await apiGetJson("/chat/support-admin");
         if (alive) setSupportAdminId(String(data?.adminId || ""));
       } catch {
         if (alive) setSupportAdminId("");
       }
     })();
-    return () => { alive = false; };
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const loadConversations = useCallback(async () => {
     try {
+      setErr("");
+      // axiosInstance вже має baseURL на /api (твоя axiosInstance.js)
       const { data } = await axiosInstance.get("/admin/chat-conversations");
       const list = Array.isArray(data) ? data : data?.conversations || [];
       setConversations(list);
@@ -58,28 +95,34 @@ export default function AdminChat() {
     }
   }, []);
 
-  const loadHistory = useCallback(async (partnerId) => {
-    if (!inboxId || !partnerId) return;
-    setLoadingHistory(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/messages/${inboxId}/${partnerId}`);
-      const data = await res.json();
-      setMessages(Array.isArray(data) ? data : []);
-    } catch (e) {
-      setErr("Помилка завантаження історії");
-    } finally {
-      setLoadingHistory(false);
-    }
-  }, [inboxId]);
+  const loadHistory = useCallback(
+    async (partnerId) => {
+      if (!inboxId || !partnerId) return;
+
+      setLoadingHistory(true);
+      try {
+        setErr("");
+        const data = await apiGetJson(`/messages/${encodeURIComponent(inboxId)}/${encodeURIComponent(partnerId)}`);
+        setMessages(Array.isArray(data) ? data : []);
+      } catch {
+        setErr("Помилка завантаження історії");
+        setMessages([]);
+      } finally {
+        setLoadingHistory(false);
+      }
+    },
+    [inboxId]
+  );
 
   // 2) Налаштування Socket.IO
   useEffect(() => {
     if (authLoading || !inboxId) return;
 
-    const s = io(API_BASE, {
+    const s = io(SOCKET_ORIGIN, {
       withCredentials: true,
       transports: ["websocket", "polling"],
     });
+
     socketRef.current = s;
 
     s.on("connect", () => {
@@ -91,22 +134,25 @@ export default function AdminChat() {
 
     s.on("receive_message", (msg) => {
       loadConversations(); // Оновити список зліва
+
       const partner = activePartnerRef.current;
       if (!partner) return;
 
-      const isChat = (same(msg.sender, inboxId) && same(msg.receiver, partner)) ||
-                     (same(msg.sender, partner) && same(msg.receiver, inboxId));
+      const isChat =
+        (same(msg.sender, inboxId) && same(msg.receiver, partner)) ||
+        (same(msg.sender, partner) && same(msg.receiver, inboxId));
 
       if (isChat) {
         setMessages((prev) => {
-          const id = msg._id ? String(msg._id) : "";
-          if (id && prev.some((x) => String(x._id) === id)) return prev;
+          const id = msg?._id ? String(msg._id) : "";
+          if (id && prev.some((x) => String(x?._id) === id)) return prev;
           return [...prev, msg];
         });
       }
     });
 
     loadConversations();
+
     return () => {
       s.disconnect();
       socketRef.current = null;
@@ -136,6 +182,7 @@ export default function AdminChat() {
       text: t,
       isGuest: Boolean(active?.isGuest),
     });
+
     setText("");
   };
 
@@ -144,15 +191,22 @@ export default function AdminChat() {
       <aside className="admchat-left">
         <div className="admchat-left-head">
           <div className="admchat-title">MebliHub Support</div>
-          <button className="admchat-btn" onClick={loadConversations}>🔄</button>
+          <button className="admchat-btn" type="button" onClick={loadConversations}>
+            🔄
+          </button>
         </div>
+
         <div className={`admchat-conn ${connected ? "online" : "offline"}`}>
           {connected ? "● Online" : "○ Offline"}
         </div>
+
+        {err && <div className="admchat-error">{err}</div>}
+
         <div className="admchat-list">
           {conversations.map((c) => (
             <button
               key={String(c.userId)}
+              type="button"
               className={`admchat-item ${same(active?.userId, c.userId) ? "active" : ""}`}
               onClick={() => selectConversation(c)}
             >
@@ -162,7 +216,9 @@ export default function AdminChat() {
               </div>
               <div className="admchat-last">{c.lastMessage}</div>
               <div className="admchat-date">
-                {c.lastDate ? new Date(c.lastDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ""}
+                {c.lastDate
+                  ? new Date(c.lastDate).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                  : ""}
               </div>
             </button>
           ))}
@@ -179,25 +235,33 @@ export default function AdminChat() {
           <>
             <div className="admchat-right-head">
               <div className="admchat-peer">{active.userName}</div>
-              <button className="admchat-btn ghost" onClick={() => setActive(null)}>Закрити</button>
+              <button className="admchat-btn ghost" type="button" onClick={() => setActive(null)}>
+                Закрити
+              </button>
             </div>
+
             <div className="admchat-msgs">
               {loadingHistory && <div className="admchat-loading">Завантаження...</div>}
+
               {messages.map((m, i) => {
                 const mine = same(m.sender, inboxId);
                 return (
-                  <div key={m._id || i} className={`admchat-row ${mine ? "mine" : "theirs"}`}>
+                  <div key={m?._id || i} className={`admchat-row ${mine ? "mine" : "theirs"}`}>
                     <div className="admchat-bubble">
                       <div className="admchat-text">{m.text}</div>
                       <div className="admchat-time">
-                        {new Date(m.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        {m?.createdAt
+                          ? new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                          : ""}
                       </div>
                     </div>
                   </div>
                 );
               })}
+
               <div ref={bottomRef} />
             </div>
+
             <div className="admchat-input">
               <input
                 value={text}
@@ -206,7 +270,14 @@ export default function AdminChat() {
                 disabled={!connected}
                 onKeyDown={(e) => e.key === "Enter" && send()}
               />
-              <button className="admchat-send" onClick={send} disabled={!connected || !text.trim()}>Відправити</button>
+              <button
+                className="admchat-send"
+                type="button"
+                onClick={send}
+                disabled={!connected || !text.trim()}
+              >
+                Відправити
+              </button>
             </div>
           </>
         )}

@@ -10,7 +10,10 @@ export const CurrencyContext = createContext({
   refreshRates: async () => {},
 });
 
-const NBU_URL = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";
+const NBU_URL =
+  import.meta.env.VITE_NBU_URL ||
+  "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";
+
 const CACHE_KEY = "ts_nbu_rates_v1";
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 годин
 
@@ -32,7 +35,6 @@ async function fetchNbuRates() {
 
   const data = await res.json();
 
-  // rate = UAH за 1 одиницю валюти (USD, EUR, CAD, ...)
   const map = { UAH: 1 };
 
   if (Array.isArray(data)) {
@@ -63,10 +65,7 @@ export function CurrencyProvider({ children, defaultCurrency = "UAH" }) {
       const fresh = await fetchNbuRates();
       setRates(fresh);
 
-      localStorage.setItem(
-        CACHE_KEY,
-        JSON.stringify({ ts: Date.now(), rates: fresh })
-      );
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), rates: fresh }));
     } catch (e) {
       setRatesError(e?.message || "Failed to load rates");
     } finally {
@@ -109,5 +108,4 @@ export function CurrencyProvider({ children, defaultCurrency = "UAH" }) {
   return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;
 }
 
-// щоб не ламати старі імпорти default
 export default CurrencyContext;

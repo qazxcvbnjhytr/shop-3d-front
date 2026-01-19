@@ -1,7 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
+const API_PREFIX = import.meta.env.VITE_API_PREFIX || "/api";
+
+const normalizeOrigin = (url) => String(url || "").replace(/\/+$/, "");
+const normalizePrefix = (p) => {
+  const s = String(p || "/api").trim();
+  if (!s) return "/api";
+  return s.startsWith("/") ? s.replace(/\/+$/, "") : `/${s.replace(/\/+$/, "")}`;
+};
+
+if (!API_URL) {
+  throw new Error("Missing VITE_API_URL in client/.env(.local)");
+}
+
+const BASE = `${normalizeOrigin(API_URL)}${normalizePrefix(API_PREFIX)}`;
+// ✅ locations endpoint: `${BASE}/locations`
 
 export function useLocations() {
   const [locations, setLocations] = useState([]);
@@ -12,10 +27,10 @@ export function useLocations() {
     setLoading(true);
     setError("");
     try {
-      const r = await axios.get(`${API_URL}/api/locations`);
+      const r = await axios.get(`${BASE}/locations`, { withCredentials: true });
       setLocations(Array.isArray(r.data) ? r.data : []);
     } catch (e) {
-      setError(e?.response?.data?.message || e?.message || "Failed to load locations");
+      setError(String(e?.response?.data?.message || e?.message || "Failed to load locations"));
       setLocations([]);
     } finally {
       setLoading(false);
