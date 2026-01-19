@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "../../hooks/useTranslation";
 import "../../components/styles/LoginPage.css";
 
-import api from "../../../api/api.js";
+import api from "@api/api.js";
 
 export default function ForgotPasswordPage() {
   const { t, loading: langLoading } = useTranslation();

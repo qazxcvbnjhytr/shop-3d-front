@@ -3,7 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import "./collection.css";
 
 import api from "@api/api.js";
-import { getImageUrl } from "../../utils/imageUtils.js";
+
+import { getImageUrl } from "@/utils/imageUtils.js";
+
 import { LanguageContext } from "@context/LanguageContext";
 
 // Допоміжна функція для отримання тексту (ua/en)

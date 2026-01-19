@@ -7,7 +7,7 @@ import Modal from "../components/Modal.jsx";
 import FormRow from "../components/FormRow.jsx";
 import Confirm from "../components/Confirm.jsx";
 import ImageUploader from "../components/ImageUploader.jsx";
-import { adminApi, API_URL } from "../api/adminApi.js";
+import { adminApi } from "../api/adminApi.js";
 import { endpoints } from "../api/endpoints.js";
 import { useToast } from "../components/Toast.jsx";
 
