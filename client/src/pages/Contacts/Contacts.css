@@ -1,340 +1,284 @@
-/* =========================================
-   Contacts.css: Фінальна версія стилів (Світла тема + Динамічні Градієнти)
-   ========================================= */
+/* ============================================================
+   PAGE: Contacts (Gallery Cream / Architectural)
+   ============================================================ */
 
-/* --- Базові налаштування --- */
-body {
-    background-color: #f7f9fc; /* Ледь сірий фон тіла */
-    color: #1a2b2b; /* Основний темний текст */
-    line-height: 1.6;
+:root {
+  --c-cream: #F0EEE6;
+  --c-white: #FFFFFF;
+  --c-dark: #1F1F1F;
+  --c-accent: #C25E00;
+  --c-border: #1F1F1F;
+  --font-main: 'Inter', sans-serif;
+  --font-head: 'Tektur', sans-serif;
 }
 
-/* --- Контейнер сторінки --- */
-.contacts-page-container {
-    padding: 80px 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-    position: relative;
-    overflow: hidden; 
+.contacts-page {
+  background-color: var(--c-cream);
+  min-height: 100vh;
+  position: relative;
+  padding: 100px 0;
+  color: var(--c-dark);
 }
 
-/* --- Динамічний Паралакс-Еліпс (Креативний фон) --- */
-.parallax-bg {
-    position: absolute;
-    top: -100px;
-    left: -50%;
-    width: 200%;
-    height: 400px;
-    background: linear-gradient(135deg, #00bfae, #a3e635); 
-    opacity: 0.12;
-    border-radius: 50%;
-    z-index: 0;
-    transition: transform 0.1s linear;
-    filter: blur(50px); /* М'яке розмиття */
-    pointer-events: none;
+/* FILM GRAIN EFFECT */
+.has-grain::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("https://upload.wikimedia.org/wikipedia/commons/7/76/1k_Grained_Noise.png");
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: 100;
 }
 
-/* --- Загальні стилі секцій --- */
-section {
-    position: relative;
-    z-index: 1; 
-    margin-bottom: 60px;
+.contacts-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 60px;
+  position: relative;
+  z-index: 2;
 }
 
-/* --- Анімації (Fade In) --- */
-@keyframes fadeInUp {
-    0% { opacity: 0; transform: translateY(20px);}
-    100% { opacity: 1; transform: translateY(0);}
+/* 1. HEADER */
+.header-meta {
+  font-family: var(--font-head);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  color: var(--c-accent);
+  margin-bottom: 15px;
 }
 
-@keyframes fadeIn {
-    0% { opacity: 0;}
-    100% { opacity: 1;}
+.arch-title {
+  font-family: var(--font-head);
+  font-size: clamp(3.5rem, 10vw, 8rem);
+  font-weight: 900;
+  line-height: 0.8;
+  text-transform: uppercase;
 }
 
-/* --- 1. Контактна інформація (Hero & Cards) --- */
-.contact-info h1 {
-    text-align: center;
-    font-size: 3rem;
-    font-weight: 900;
-    /* Градієнтний текст */
-    background: linear-gradient(90deg, #00bfae, #a3e635);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 40px;
-    animation: fadeInUp 1s ease forwards;
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
 }
 
-.info-grid {
-    display: flex;
-    gap: 24px;
-    justify-content: center;
-    flex-wrap: wrap;
+.title-underline {
+  width: 150px;
+  height: 2px;
+  background-color: var(--c-dark);
 }
 
-.info-card {
-    background: #fff;
-    padding: 30px 20px;
-    border-radius: 20px;
-    box-shadow: 0 12px 30px rgba(0,191,174,0.15);
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    width: 280px; 
-    border: 1px solid #f0f0f0; 
+.coordinates {
+  font-family: var(--font-head);
+  font-size: 12px;
+  color: #999;
 }
 
-.info-card:hover {
-    transform: translateY(-8px); 
-    box-shadow: 0 20px 40px rgba(0,191,174,0.25); 
+/* 2. MAIN LAYOUT */
+.main-info-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 120px;
+  margin: 100px 0;
 }
 
-.info-icon {
-    font-size: 2.5rem;
-    color: #00bfae;
-    margin-bottom: 12px;
+.contact-huge-item {
+  margin-bottom: 80px;
 }
 
-/* КРЕАТИВ 1: Анімація Пульсу для Іконок */
-@keyframes iconPulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.05); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
+.contact-huge-item label {
+  font-family: var(--font-head);
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #888;
+  display: block;
+  margin-bottom: 20px;
 }
 
-.info-card:hover .info-icon {
-    animation: iconPulse 1.5s infinite ease-in-out;
+.interactive-text {
+  font-size: clamp(1.8rem, 5vw, 3.5rem);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: color 0.3s ease;
 }
 
-.info-card h3 {
-    color: #1a2b2b;
-    font-size: 1.25rem;
-    margin-top: 0;
-}
-.info-card p {
-    color: #4b6b6b;
-    font-size: 1rem;
-}
+.interactive-text:hover { color: var(--c-accent); }
+.copy-icon { font-size: 1.2rem; opacity: 0; transition: 0.3s; }
+.interactive-text:hover .copy-icon { opacity: 0.5; }
 
-
-/* --- 2. Форма зворотного зв'язку --- */
-.contact-form-section {
-    margin: 80px 0;
-    text-align: center;
-    
+/* Status Dot (Online Indicator) */
+.phone-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: clamp(1.8rem, 5vw, 3.5rem);
+  font-weight: 700;
 }
 
-.contact-form-section h2 {
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin-bottom: 40px;
-        background: linear-gradient(90deg, #00bfae, #a3e635);
-    
+.phone-wrapper a { text-decoration: none; color: inherit; }
+
+.status-dot {
+  width: 14px; height: 14px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  position: relative;
 }
 
-.contact-form {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    max-width: 550px; 
-    margin: 0 auto;
-    background: #ffffff;
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05); 
-    
-    /* КРЕАТИВ 2: База для Голографічної Обводки */
-    position: relative;
-    z-index: 1;
-    overflow: hidden;
+.status-dot::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: #22c55e;
+  border-radius: 50%;
+  animation: ripple-green 2s infinite;
 }
 
-/* КРЕАТИВ 2: Голографічний/Неоновий Ефект Обводки */
-.contact-form::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    bottom: -5px;
-    background: linear-gradient(
-        45deg,
-        #a3e635, 
-        #00bfae, 
-        #ff5722
-    );
-    z-index: -1;
-    border-radius: 25px;
-    opacity: 0;
-    filter: blur(20px); 
-    transition: opacity 0.5s ease-in-out;
+@keyframes ripple-green {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(3.5); opacity: 0; }
 }
 
-.contact-form:hover::before {
-    opacity: 0.3; /* Світиться при наведенні */
-}
-/* Кінець Креативу 2 */
-
-.contact-form input,
-.contact-form textarea {
-    padding: 16px 20px;
-    border-radius: 12px;
-    border: 1px solid #e0f7f4; 
-    font-size: 1rem;
-    outline: none;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    background-color: #fcfcfc;
+/* Social Boxes */
+.social-links-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background-color: var(--c-border);
+  border: 1px solid var(--c-border);
 }
 
-.contact-form input:focus,
-.contact-form textarea:focus {
-    border-color: #00bfae;
-    box-shadow: 0 0 15px rgba(0, 191, 174, 0.4); /* Додана тінь фокусу */
+.social-box {
+  background-color: var(--c-white);
+  padding: 30px;
+  text-decoration: none;
+  color: var(--c-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
 }
 
-.contact-form textarea {
-    resize: vertical;
-    min-height: 140px;
+.social-box:hover {
+  background-color: var(--c-dark);
+  color: var(--c-white);
 }
 
-.contact-form button {
-    background: linear-gradient(90deg, #00bfae, #a3e635);
-    color: #fff;
-    padding: 16px 0;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.15rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.3s ease;
+/* 3. WORKING HOURS CARD */
+.work-hours-card {
+  background-color: var(--c-white);
+  padding: 50px;
+  border: 1px solid var(--c-border);
+  box-shadow: 25px 25px 0px var(--c-accent); /* Архітектурна жорстка тінь */
 }
 
-.contact-form button:hover {
-    transform: scale(1.01); 
-    box-shadow: 0 12px 25px rgba(0,191,174,0.35);
+.work-hours-card h3 {
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  font-size: 14px;
+  margin-bottom: 40px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
 }
 
-.success-msg {
-    margin-top: 12px;
-    color: #28a745;
-    font-weight: 600;
-    animation: fadeIn 0.5s ease forwards;
+.hours-list { list-style: none; padding: 0; margin-bottom: 40px; }
+.hours-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 14px;
 }
 
-/* --- 3. FAQ (Часті питання) --- */
-.faq-section {
-    padding-bottom: 80px;
+.closed-day { color: #cc0000; font-weight: 700; }
+
+.location-note p { margin-top: 10px; color: #666; font-size: 14px; line-height: 1.6; }
+
+/* 4. FORM & FAQ SECTION */
+.form-faq-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 100px;
+  padding-top: 100px;
+  border-top: 1px solid var(--c-border);
 }
 
-.faq-section h2 {
-    text-align: center;
-    font-size: 2.4rem;
-    font-weight: 800;
-    margin-bottom: 40px;
-    /* Градієнтний текст */
-    background: linear-gradient(90deg, #00bfae, #a3e635);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+.section-title {
+  font-family: var(--font-head);
+  font-size: 1.8rem;
+  text-transform: uppercase;
+  margin-bottom: 50px;
 }
 
-.faq-grid {
-    display: grid;
-    gap: 15px; 
-    max-width: 900px;
-    margin: 0 auto;
+/* Inputs */
+.arch-form { display: flex; flex-direction: column; gap: 30px; }
+.input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+
+.arch-form input, .arch-form textarea {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--c-border);
+  padding: 15px 0;
+  font-size: 1rem;
+  outline: none;
+  transition: 0.3s;
 }
 
-.faq-card {
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,191,174,0.1);
-    padding: 15px 25px;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s;
-    border: 1px solid transparent; 
+.arch-form input:focus, .arch-form textarea:focus { border-bottom-color: var(--c-accent); }
+.arch-form textarea { min-height: 120px; resize: none; }
+
+.submit-btn {
+  background: var(--c-dark);
+  color: #fff;
+  border: none;
+  padding: 25px;
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  cursor: pointer;
+  transition: 0.4s;
 }
 
-.faq-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,191,174,0.15);
+.submit-btn:hover { background: var(--c-accent); letter-spacing: 0.2em; }
+
+/* FAQ List */
+.faq-list { display: flex; flex-direction: column; }
+.faq-item { border-bottom: 1px solid rgba(0,0,0,0.1); cursor: pointer; }
+
+.faq-trigger {
+  padding: 30px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
-/* КРЕАТИВ 3: Світіння Активного FAQ */
-.faq-card.active {
-    border-color: #00bfae;
-    box-shadow: 
-        0 0 10px rgba(0, 191, 174, 0.1), 
-        0 0 30px rgba(163, 230, 53, 0.2); /* Акцентне світіння */
+.faq-content-wrap {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.faq-question {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: #1a2b2b;
-}
+.faq-item.active .faq-content-wrap { max-height: 500px; }
+.faq-content-inner { padding-bottom: 30px; color: #555; line-height: 1.8; }
 
-.faq-icon {
-    font-size: 1.1rem;
-    color: #00bfae;
-    /* КРЕАТИВ 3: Пружний перехід */
-    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.faq-card.active .faq-icon {
-    transform: rotate(45deg); 
-    color: #a3e635; /* Зміна кольору на акцентний */
-}
-
-/* Структура для плавного розкриття в JSX */
-.faq-answer-wrapper {
-  
-    overflow: hidden;
-    transition: max-height 0.4s ease-in-out, margin-top 0.4s ease-in-out;
-}
-
-.faq-card.active .faq-answer-wrapper {
-    max-height: 500px;
-    margin-top: 14px;
-}
-
-.faq-answer {
-    color: #4b6b6b;
-    line-height: 1.7;
-    padding-bottom: 10px;
-    
-    /* КРЕАТИВ 3: Анімація "проявлення" тексту */
-    transform: translateY(10px);
-    opacity: 0;
-    transition: transform 0.4s ease-out 0.1s, opacity 0.4s ease-out 0.1s;
-}
-
-.faq-card.active .faq-answer {
-    transform: translateY(0);
-    opacity: 1;
-}
-/* Кінець Креативу 3 */
-
-
-/* --- Адаптивність --- */
-@media (max-width: 992px) {
-    .info-card {
-        width: 45%; 
-    }
-}
-
-@media (max-width: 768px) {
-    .contacts-page-container {
-        padding: 50px 15px;
-    }
-    .contact-info h1 {
-        font-size: 2.4rem;
-    }
-    .faq-section h2, .contact-form-section h2 {
-        font-size: 2rem;
-    }
-    .info-card {
-        width: 100%; 
-    }
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .main-info-layout, .form-faq-layout { grid-template-columns: 1fr; gap: 60px; }
+  .contacts-container { padding: 0 30px; }
+  .work-hours-card { box-shadow: 15px 15px 0px var(--c-accent); }
 }

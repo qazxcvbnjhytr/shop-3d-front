@@ -1,20 +1,59 @@
-.articule{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin: 6px 12px 0;
-  font-size: 12px;
-  opacity: .75;
-  white-space: nowrap;
+/* ============================================================
+   COMPONENT: Articule (Technical Marking)
+   ============================================================ */
+
+.articule {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Tektur', sans-serif;
+  padding: 2px 13px 0; /* Відступ зверху для кращої видимості */
+  cursor: help; /* Бо є повний SKU в title */
+  transition: opacity 0.3s ease;
 }
 
-.articule__label{
-  font-weight: 700;
-}
-
-.articule__code{
-  letter-spacing: .5px;
+/* Напис "Артикул" */
+.articule__label {
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #888888; /* Приглушений колір */
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+/* Сама назва артикулу */
+.articule__code {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #1F1F1F; /* Графітовий */
+  letter-spacing: 0.1em;
+  background-color: rgba(0, 0, 0, 0.03); /* Ледь помітна підкладка */
+  padding: 1px 4px;
+  border-radius: 0; /* ГОСТРІ КУТИ */
+}
+
+/* Ефект при наведенні на всю картку */
+.hth-card:hover .articule {
+  opacity: 1;
+}
+
+.articule:hover .articule__code {
+  background-color: #1F1F1F;
+  color: #FFFFFF;
+}
+
+/* Модифікатор для сторінки товару (якщо треба більший) */
+.articule--large {
+  gap: 10px;
+}
+
+.articule--large .articule__label {
+  font-size: 12px;
+}
+
+.articule--large .articule__code {
+  font-size: 14px;
+  padding: 2px 8px;
 }

@@ -1,319 +1,144 @@
-/* client/src/pages/DinamicProduct/DinamicProduct.css */
+/* ============================================================
+   PAGE: DinamicProduct (Products List with Filters)
+   THEME: Gallery Cream (Architectural Layout)
+   ============================================================ */
 
-.category-page-container{
-  max-width: 1600px;              /* ✅ було 1400 — тепер влізе 5 */
+:root {
+  --dp-bg: #F0EEE6;           /* Основний кремовий фон */
+  --dp-text: #1F1F1F;         /* Графіт */
+  --dp-accent: #C25E00;       /* Палена глина */
+  --dp-border: #1F1F1F;       /* Чорна лінія розділення */
+  --dp-font-head: 'Tektur', sans-serif;
+}
+
+.category-page-container {
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 20px 16px 40px;
+  padding: 40px 60px 100px;
+  background-color: var(--dp-bg);
+  min-height: 100vh;
 }
 
-.category-header{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin-bottom: 12px;
+/* 1. HEADER SECTION */
+.category-header {
+  margin-bottom: 50px;
+  border-bottom: 1px solid var(--dp-border);
+  padding-bottom: 30px;
 }
 
-.category-title{
-  margin:0;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: .2px;
-}
-
-.title-accent{
-  opacity:.65;
-  font-weight: 700;
-}
-
-.dp-back-link{
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  padding: 8px 12px;
-  border-radius: 12px;
-
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 1;
-
-  color: rgba(15, 23, 42, 0.88);
-  background: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(15, 23, 42, 0.12);
-
-  transition: transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
-}
-
-.dp-back-link:hover{
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(15, 23, 42, 0.18);
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.10);
-  transform: translateY(-1px);
-}
-
-.dp-back-link:active{
-  transform: translateY(0);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.10);
-}
-
-.dp-back-link:focus-visible{
-  outline: 3px solid rgba(59, 130, 246, 0.35);
-  outline-offset: 3px;
-}
-
-
-.dp-content{
-  width: 100%;
-  margin-top: 10px;
-}
-
-/* toolbar: "Всі фільтри" + chips */
-.dp-toolbar{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:center;
-  margin: 6px 0 16px;
-}
-
-.dp-all-filters-btn{
-  border:1px solid rgba(0,0,0,.16);
-  background:#fff;
-  border-radius:999px;
-  padding:10px 14px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-weight:600;
-}
-
-.dp-count{
-  min-width:24px;
-  height:24px;
-  border-radius:999px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  border:1px solid rgba(0,0,0,.16);
-  font-size:13px;
-  padding:0 6px;
-}
-
-.dp-chip{
-  border:1px solid rgba(0,0,0,.14);
-  background:#fff;
-  border-radius:999px;
-  padding:8px 12px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:14px;
-}
-
-.dp-chip--reset{
-  border-color: rgba(0,0,0,.20);
-  font-weight:700;
-}
-
-.dp-x{ font-size:16px; line-height:0; }
-
-/* =========================
-   GRID (✅ 4–5 cards desktop)
-   ========================= */
-.catalog-grid{
-  display:grid;
-  gap: 18px;
-  align-items: stretch;
-
-  /* база: сама підбирає кількість */
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-}
-
-/* 5 колонок */
-@media (min-width: 1400px){
-  .catalog-grid{
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
-
-/* 4 колонки */
-@media (min-width: 1100px) and (max-width: 1399px){
-  .catalog-grid{
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-/* 3 колонки */
-@media (min-width: 900px) and (max-width: 1099px){
-  .catalog-grid{
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-/* 2 колонки */
-@media (max-width: 899px){
-  .catalog-grid{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* 1 колонка */
-@media (max-width: 640px){
-  .catalog-grid{
-    grid-template-columns: 1fr;
-  }
-}
-
-.catalog-card{
-  position:relative;
-  background:#fff;
-  border: 1px solid rgba(0,0,0,.08);
-  border-radius: 18px;
-  overflow:hidden;
-  box-shadow: 0 8px 24px rgba(0,0,0,.06);
-}
-
-.card-actions-top{
-  position:absolute;
-  top:10px;
-  right:10px;
-  z-index: 2;
-}
-
-.card-badge-wrapper{
-  position:absolute;
-  top:10px;
-  left:10px;
-  z-index: 2;
-}
-
-.card-image-link{
-  display:block;
-  text-decoration:none;
-}
-
-.image-wrapper{
-  width:100%;
-  aspect-ratio: 4 / 3;
-  background: rgba(0,0,0,.03);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-}
-
-.card-image{
-  width:100%;
-  height:100%;
-  object-fit: cover;
-  display:block;
-}
-
-.card-content{
-  padding: 14px 14px 16px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-.card-title{
-  margin:0;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.dp-rating{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-size: 14px;
-  opacity:.95;
-}
-
-.dp-stars{ letter-spacing: 1px; }
-.dp-star{ font-size: 14px; }
-.dp-star--filled{ opacity: 1; }
-.dp-star--empty{ opacity: .25; }
-
-.dp-rating__meta{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-}
-.dp-rating__num{ font-weight: 700; }
-.dp-rating__count{ opacity: .8; }
-.dp-rating__empty{ opacity: .6; }
-
-.price-block{
-  display:flex;
-  align-items:baseline;
-  gap:10px;
-}
-
-.price-old{
-  text-decoration: line-through;
-  opacity: .6;
-  font-weight: 600;
-}
-
-.price-current{
+.category-title {
+  font-family: var(--dp-font-head);
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
   font-weight: 800;
-  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
 }
 
-/* pagination */
-.pagination{
-  margin-top: 18px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:12px;
+.title-accent {
+  display: block;
+  width: 12px;
+  height: clamp(2.5rem, 6vw, 4.5rem);
+  background-color: var(--dp-accent);
+  margin-top: 5px;
 }
 
-.pagination button{
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  border: 1px solid rgba(0,0,0,.12);
-  background:#fff;
-  cursor:pointer;
+.dp-back-link {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--dp-text);
+  font-family: var(--dp-font-head);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+  transition: opacity 0.3s, color 0.3s;
 }
 
-.pagination button:disabled{
-  opacity:.5;
-  cursor:not-allowed;
+.dp-back-link:hover {
+  opacity: 1;
+  color: var(--dp-accent);
 }
 
-/* empty */
-.empty-state{
-  grid-column: 1 / -1;
-  padding: 28px;
-  border-radius: 18px;
-  border: 1px dashed rgba(0,0,0,.18);
-  background: rgba(255,255,255,.65);
+/* 2. FILTERS & CHIPS BAR */
+/* Ці компоненти мають власні CSS, але тут ми задаємо їм ритм */
+.category-page-container .product-filters-bar {
+  margin-bottom: 20px;
 }
 
-/* loader */
-.loader-container{
+.category-page-container .active-chips-row {
+  margin-bottom: 40px;
+}
+
+/* 3. LOADER (Architectural Spinner) */
+.loader-container {
+  width: 100%;
   height: 60vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--dp-bg);
 }
 
-.loader{
-  width: 46px;
-  height: 46px;
-  border-radius: 999px;
-  border: 4px solid rgba(0,0,0,.12);
-  border-top-color: rgba(0,0,0,.55);
-  animation: spin .8s linear infinite;
+.loader {
+  width: 50px;
+  height: 50px;
+  border: 2px solid rgba(31, 31, 31, 0.1);
+  border-top-color: var(--dp-accent);
+  border-right-color: var(--dp-border);
+  border-radius: 0; /* ГОСТРІ КУТИ */
+  animation: architectural-spin 1s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
-@keyframes spin{
-  to{ transform: rotate(360deg); }
+@keyframes architectural-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 4. RESPONSIVENESS */
+@media (max-width: 1024px) {
+  .category-page-container {
+    padding: 30px 24px;
+  }
+  
+  .category-title {
+    font-size: 3rem;
+  }
+  
+  .title-accent {
+    height: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .category-header {
+    margin-bottom: 30px;
+  }
+  
+  .category-title {
+    font-size: 2.2rem;
+  }
+  
+  .title-accent {
+    width: 8px;
+    height: 2.2rem;
+  }
+}
+
+/* Додатково: Стилізація ProductsGrid для безшовної інтеграції */
+.products-grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px; /* Тонка лінія сітки */
+  background-color: var(--dp-border); /* Сітка як розділювач */
+  border: 1px solid var(--dp-border);
+}
+
+/* Кожна картка всередині */
+.products-grid-container .product-card {
+  background-color: #fff;
 }

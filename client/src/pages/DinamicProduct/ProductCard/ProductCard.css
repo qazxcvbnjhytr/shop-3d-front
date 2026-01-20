@@ -1,25 +1,44 @@
+/* ============================================================
+   COMPONENT: ProductCard
+   THEME: Gallery Cream (Architectural & Sharp)
+   ============================================================ */
+
+:root {
+  --pc-bg: #FFFFFF;
+  --pc-border: #1F1F1F;
+  --pc-text: #1F1F1F;
+  --pc-accent: #C25E00;
+  --pc-muted: #888888;
+  --pc-font-head: 'Tektur', sans-serif;
+}
+
+/* 1. CONTAINER */
 .hth-card {
   display: flex;
   flex-direction: column;
-  border-radius: 18px;
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  background-color: var(--pc-bg);
+  border: 1px solid var(--pc-border);
+  padding: 0;
+  height: 100%;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  /* Для ефекту безшовної сітки, якщо картки стоять поруч */
+  margin: -0.5px; 
 }
 
 .hth-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.10);
+  z-index: 10;
+  box-shadow: 15px 15px 0px rgba(0, 0, 0, 0.05);
+  transform: translateY(-4px);
 }
 
-/* MEDIA */
+/* 2. MEDIA (Image Area) */
 .hth-media {
-  position: relative; /* ✅ потрібно для badge-wrapper */
-  background: rgba(255, 255, 255, 0.6);
+  position: relative;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
-  aspect-ratio: 4 / 3;
+  border-bottom: 1px solid var(--pc-border);
+  background-color: #FAFAFA;
 }
 
 .hth-img-link {
@@ -31,248 +50,169 @@
 .hth-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  display: block;
+  object-fit: contain; /* Щоб меблі було видно повністю */
+  padding: 20px;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ACTIONS */
+.hth-card:hover .hth-img {
+  transform: scale(1.08);
+}
+
+/* Actions (Likes, 3D) */
 .hth-actions {
   position: absolute;
   top: 10px;
-  right: 10px;
-  z-index: 20;
+  right: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  z-index: 5;
 }
 
 
 
-/* META */
+/* Badge Wrapper */
+.badge-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+}
+
+/* 3. META (Stock & Rating) */
 .hth-meta {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px 6px;
+  align-items: center;
+  padding: 12px 16px 4px;
 }
 
-.hth-meta-left {
+.hth-stock, .hth-delivery {
   display: flex;
   align-items: center;
-  min-height: 18px;
+  gap: 4px;
+  font-family: var(--pc-font-head);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.hth-meta-spacer {
-  display: block;
-  width: 70px;
-  height: 14px;
-}
+.hth-stock { color: #16a34a; }
+.hth-delivery { color: var(--pc-muted); }
 
-
-.hth-meta-right {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  min-height: 20px;
-}
-
-.hth-stock,
-.hth-delivery {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: rgba(15, 23, 42, 0.86);
-  white-space: nowrap;
-}
-
-/* DIMS */
-.hth-dims {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px 10px;
-  font-size: 12px;
-  color: rgba(15, 23, 42, 0.62);
-}
-
-.hth-dims-icon {
-  display: inline-flex;
-  width: 18px;
-  height: 18px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  background: rgba(255, 255, 255, 0.70);
-}
-
-/* TITLE */
+/* 4. TITLE */
 .hth-title {
-  padding: 0 12px;
-  font-size: 14px;
+  display: block;
+  padding: 8px 16px;
+  font-family: var(--pc-font-head);
+  font-size: 16px;
   font-weight: 800;
-  color: rgba(15, 23, 42, 0.95);
+  text-transform: uppercase;
   text-decoration: none;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 40px;
+  color: var(--pc-text);
+  line-height: 1.2;
+  margin-bottom: auto; /* Штовхає контент вниз */
 }
 
 .hth-title:hover {
-  text-decoration: underline;
+  color: var(--pc-accent);
 }
 
-/* SKU row */
-.hth-sku-row {
-  padding: 6px 12px 0;
-  font-size: 12px;
-  color: rgba(15, 23, 42, 0.55);
-}
-.hth-price--center{
+/* 5. DIMS & ARTICULE */
+.hth-dims {
+  padding: 0 16px 4px;
   display: flex;
-  align-items: baseline;
-  justify-content: center; /* ✅ як на сайті */
-  gap: 12px;
-  padding: 10px 0 6px;     /* ✅ без бокових зсувів */
-  width: 100%;
-}
-
-/* COLORS */
-.hth-colors {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px 12px;
-}
-.hth-rating{
-  display: inline-flex;
   align-items: center;
   gap: 6px;
+  color: var(--pc-muted);
+  font-size: 12px;
 }
 
-.hth-rating-count{
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(15, 23, 42, 0.55);
+/* Адаптуємо ваш компонент Articule */
+.hth-card .articule-container {
+  padding: 0 16px 8px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+/* 6. PRICE */
+.hth-price {
+  padding: 12px 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.hth-price--center { justify-content: flex-start; }
+
+.price--new {
+  font-family: var(--pc-font-head);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--pc-accent);
+}
+
+.price--old {
+  font-family: var(--pc-font-head);
+  font-size: 14px;
+  color: var(--pc-muted);
+  text-decoration: line-through;
+}
+
+/* 7. COLORS (Swatches) */
+.hth-colors {
+  padding: 0 16px 16px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 
 .hth-swatch {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(0,0,0,0.1);
+  display: inline-block;
 }
 
 .hth-swatch[data-ring="1"] {
-  outline: 2px solid rgba(0, 0, 0, 0.25);
-  outline-offset: 1px;
+  border-color: var(--pc-border);
 }
 
 .hth-more {
-  font-size: 12px;
-  font-weight: 800;
-  color: rgba(15, 23, 42, 0.60);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pc-muted);
 }
 
-/* CTA */
+/* 8. CTA (Buy Button) */
 .hth-cta {
-  padding: 12px;
-  padding-top: 0;
-}
-/* ✅ Stack actions (Like + 3D) у правому верхньому куті фото */
-.hth-media { position: relative; }
-
-.hth-actions{
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 30;
-
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
+  padding: 0 16px 16px;
 }
 
-/* обгортка для кожної кнопки (і лайк, і 3D) */
-.hth-action-btn{
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Стилізація вашого BuyButton всередині картки */
+.hth-cta button {
+  width: 100% !important;
+  border-radius: 0 !important;
+  background-color: var(--pc-border) !important;
+  color: white !important;
+  font-family: var(--pc-font-head) !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  padding: 12px !important;
+  border: none !important;
+  transition: background-color 0.2s !important;
 }
 
-/* ✅ FIX: прибрати absolute у like-button ТІЛЬКИ в картці */
-.hth-actions .like-button{
-  position: static !important;
-  top: auto !important;
-  right: auto !important;
-
-  width: 32px;
-  height: 32px;
-  padding: 0;
+.hth-cta button:hover {
+  background-color: var(--pc-accent) !important;
 }
 
-/* щоб іконка сердечка підлаштувалась */
-.hth-actions .like-button .heart-icon{
-  width: 16px;
-  height: 16px;
-}
-
-/* ✅ 3D badge такого ж розміру і стилю */
-.hth-actions .model3d-badge{
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-
-  background: rgba(255,255,255,.75);
-  border: 1px solid rgba(0,0,0,.10);
-  box-shadow: 0 2px 6px rgba(0,0,0,.10);
-
-  text-decoration: none;
-  color: rgba(15,23,42,.92);
-}
-
-.hth-actions .model3d-badge svg{
-  width: 16px;
-  height: 16px;
-}
-
-.hth-actions .model3d-badge__text{
-  font-size: 9px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.hth-actions .model3d-badge:hover,
-.hth-actions .like-button:hover{
-  background: rgba(255,255,255,.92);
-  transform: translateY(-1px);
-  box-shadow: 0 5px 12px rgba(0,0,0,.16);
-}
-
-@media (max-width: 520px){
-  .hth-actions{ top: 10px; right: 10px; gap: 6px; }
-
-  .hth-actions .like-button,
-  .hth-actions .model3d-badge{
-    width: 28px;
-    height: 28px;
-  }
-
-  .hth-actions .model3d-badge svg{ width: 14px; height: 14px; }
-  .hth-actions .model3d-badge__text{ font-size: 8px; }
-  .hth-actions .like-button .heart-icon{ width: 14px; height: 14px; }
+/* Mobile Adjustments */
+@media (max-width: 480px) {
+  .hth-title { font-size: 14px; }
+  .price--new { font-size: 18px; }
+  .hth-media { padding: 10px; }
 }

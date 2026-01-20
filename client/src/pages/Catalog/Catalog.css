@@ -1,244 +1,162 @@
-/* ==============================
-   Premium Minimal (Light)
-   ============================== */
+/* ============================================================
+   PAGE: Catalog (Optimized Layout)
+   ============================================================ */
 
-:root{
-  --bg: #fbfbfc;
-  --surface: #ffffff;
-
-  --text: #111827;      /* near-black */
-  --muted: #6b7280;     /* slate */
-
-  --border: rgba(17,24,39,0.10);
-
-  --shadow-sm: 0 8px 18px rgba(17,24,39,0.06);
-  --shadow-md: 0 16px 40px rgba(17,24,39,0.10);
-
-  --radius: 18px;
-
-  /* container width for 4 cards */
-  --container: 1240px;
+:root {
+  --c-bg: #F0EEE6;
+  --c-border: #1F1F1F;
+  --c-accent: #C25E00;
+  --c-white: #FFFFFF;
 }
 
-*{ box-sizing: border-box; }
-
-.c-page{
+.c-page {
+  background-color: var(--c-bg);
   min-height: 100vh;
-  width: 100%;
-  background: var(--bg);
-  color: var(--text);
+  padding: 40px 0 80px;
 }
 
-/* centered content + side paddings */
-.c-wrap{
-  max-width: var(--container);
+.c-wrap {
+  max-width: 1440px; /* Обмежили ширину, щоб не було гігантських карток */
   margin: 0 auto;
-  padding: 22px 24px 48px;
-}
-
-.c-state{
-  min-height: 60vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight: 700;
-  color: var(--muted);
+  padding: 0 40px;
 }
 
 /* Header */
-.c-head{
-  display:flex;
-  align-items:flex-end;
-  justify-content: space-between;
-  gap: 16px;
-
-  padding: 18px 18px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+.c-head {
+  padding: 40px 0 60px;
+  border-bottom: 1px solid var(--c-border);
+  margin-bottom: 40px;
 }
 
-.c-title{
+.c-title {
+  font-family: 'Tektur', sans-serif;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.9;
   margin: 0;
-  font-size: 34px;
-  line-height: 1.12;
   letter-spacing: -0.02em;
-  font-weight: 800;
 }
 
-.c-sub{
-  margin: 8px 0 0;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.45;
-  max-width: 62ch;
+.c-sub {
+  margin-top: 20px;
+  font-size: 1rem;
+  color: rgba(31, 31, 31, 0.6);
+  max-width: 400px;
 }
 
-.c-chip{
-  display:inline-flex;
-  align-items:center;
-  gap: 8px;
-
-  padding: 10px 12px;
-  border-radius: 999px;
-  background: #f3f4f6;
-  border: 1px solid rgba(17,24,39,0.08);
-
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(17,24,39,0.80);
-  white-space: nowrap;
+/* 2. Grid - Тепер 3 колонки замість 2 */
+.c-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background-color: var(--c-border);
+  border: 1px solid var(--c-border);
 }
 
-.c-chip__strong{
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 1px solid rgba(17,24,39,0.10);
-  color: rgba(17,24,39,0.92);
-}
-
-/* Alerts / Empty */
-.c-alert{
-  margin-top: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: #fef2f2;
-  border: 1px solid rgba(239,68,68,0.25);
-  color: rgba(127,29,29,0.90);
-  font-weight: 600;
-}
-
-.c-empty{
-  margin-top: 16px;
-  padding: 18px 16px;
-  border-radius: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  font-weight: 600;
-  text-align: center;
-}
-
-/* ==============================
-   Grid: 4 cards centered
-   ============================== */
-.c-grid{
-  width: 100%;
-  margin-top: 16px;
-
-  display:grid;
-  gap: 16px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-/* Card as button */
-.c-card{
-  border: 0;
-  padding: 0;
-  background: transparent;
+/* 3. Card */
+.c-card {
+  background-color: var(--c-white);
   cursor: pointer;
-  text-align: left;
-  border-radius: var(--radius);
-  outline: none;
-
-  transition: transform .18s ease;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease;
 }
 
-.c-card__media{
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-
-  transition: box-shadow .22s ease, border-color .22s ease;
-}
-
-.c-card__img{
+.c-card__visual {
+  position: relative;
   width: 100%;
-  height: 220px;
-  object-fit: cover;
-  display:block;
-
-  transition: transform .35s ease;
+  /* Змінили на 1:1 або 4:3 для компактності */
+  aspect-ratio: 1 / 1; 
+  overflow: hidden;
+  padding: 30px; /* Зменшили падінги */
+  background-color: #fcfcfc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.c-card__meta{
-  margin-top: 10px;
-  padding: 0 2px;
+.c-card__img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-  display:flex;
-  align-items:center;
+/* Якщо фото з помилкою - робимо його напівпрозорим */
+.c-card__img.is-error {
+  opacity: 0.2;
+  filter: grayscale(1);
+  transform: scale(0.5);
+}
+
+.c-card__bg-num {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-family: 'Tektur', sans-serif;
+  font-size: 4rem;
+  font-weight: 900;
+  color: rgba(0,0,0,0.03);
+  pointer-events: none;
+}
+
+/* Card Footer */
+.c-card__footer {
+  padding: 20px 24px;
+  display: flex;
   justify-content: space-between;
-  gap: 10px;
+  align-items: center;
+  border-top: 1px solid var(--c-border);
 }
 
-.c-card__name{
-  min-width: 0;
-  font-size: 15px;
+.c-card__label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.c-card__idx {
+  font-family: 'Tektur', sans-serif;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
-  color: rgba(17,24,39,0.94);
-
-  overflow:hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: var(--c-accent);
 }
 
-.c-card__cta{
-  flex: 0 0 auto;
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(17,24,39,0.68);
-
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #f3f4f6;
-  border: 1px solid rgba(17,24,39,0.08);
-
-  transition: background .2s ease, color .2s ease;
+.c-card__name {
+  font-family: 'Tektur', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
 }
 
-/* Hover / Focus (subtle, premium) */
-.c-card:hover{
-  transform: translateY(-1px);
-}
-.c-card:hover .c-card__media{
-  box-shadow: var(--shadow-md);
-  border-color: rgba(17,24,39,0.14);
-}
-.c-card:hover .c-card__img{
-  transform: scale(1.03);
-}
-.c-card:hover .c-card__cta{
-  background: #111827;
-  border-color: #111827;
-  color: #ffffff;
+.c-card__arrow {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
 }
 
-.c-card:focus-visible .c-card__media{
-  box-shadow: 0 0 0 4px rgba(17,24,39,0.12), var(--shadow-sm);
-  border-color: rgba(17,24,39,0.18);
+/* Hover States */
+.c-card:hover {
+  background-color: var(--c-bg);
 }
 
-/* ==============================
-   Responsive
-   ============================== */
-@media (max-width: 1200px){
-  :root{ --container: 1100px; }
-  .c-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.c-card:hover .c-card__img:not(.is-error) {
+  transform: scale(1.1);
 }
 
-@media (max-width: 900px){
-  .c-head{ flex-direction: column; align-items: flex-start; }
-  .c-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.c-card:hover .c-card__arrow {
+  transform: translateX(5px);
+  color: var(--c-accent);
 }
 
-@media (max-width: 560px){
-  .c-wrap{ padding: 14px 14px 36px; }
-  .c-title{ font-size: 28px; }
-  .c-grid{ grid-template-columns: 1fr; }
-  .c-card__img{ height: 210px; }
+/* Mobile Adjustments */
+@media (max-width: 1100px) {
+  .c-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 650px) {
+  .c-grid { grid-template-columns: 1fr; }
+  .c-wrap { padding: 0 20px; }
+  .c-card__visual { aspect-ratio: 4 / 3; }
 }

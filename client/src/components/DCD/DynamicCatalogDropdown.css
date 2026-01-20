@@ -1,237 +1,260 @@
-/* --- ОСНОВНИЙ КОНТЕЙНЕР --- */
-.catalog-sidebar-wrapper {
-    border-radius: 12px;
+/* ============================================================
+   COMPONENT: DynamicCatalogDropdown
+   THEME: Gallery Cream (Architectural, Sharp & Black)
+   STATUS: Fixed Conflicts & Wide Layout
+   ============================================================ */
 
-  width: 280px; /* Стандартна ширина сайдбару */
+:root {
+  --cat-trigger-bg: #1F1F1F;    
+  --cat-trigger-text: #FFFFFF;  
+  
+  --cat-list-bg: #FFFFFF;       
+  --cat-text-idle: #1F1F1F;     
+  
+  --cat-item-hover-bg: #1F1F1F; 
+  --cat-item-hover-text: #FFFFFF; 
+  
+  --cat-accent: #C25E00;        
+  --cat-border: #E5E5E5;        
+  --cat-border-outer: #1F1F1F;  
+}
+
+/* 1. WRAPPER */
+.catalog-wrapper {
   position: relative;
-  z-index: 20; /* Щоб було вище звичайного контенту, але нижче модалок */
+  width: 320px; /* Ширина меню */
+  z-index: 50;
+  font-family: 'Tektur', sans-serif;
+  
+  /* Скидання відступів, щоб уникнути конфліктів з HeaderNav */
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
-/* --- ШАПКА (Як на фото: Бежева) --- */
-.catalog-header {
-  background: rgba(96, 221, 211, 0.95);
-  color: #333; /* Темний текст */
-  padding: 15px 20px;
+/* 2. TRIGGER - ЗАВЖДИ ЧОРНИЙ */
+.catalog-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+  width: 100%;
+  height: 100%;       /* На всю висоту батьківського блоку */
+  min-height: 50px;
+  padding: 0 24px;
+  
+  /* !important для уникнення конфліктів стилів */
+  background-color: var(--cat-trigger-bg) !important; 
+  color: var(--cat-trigger-text) !important;
+  
+  border: 1px solid var(--cat-trigger-bg) !important;
+  border-radius: 0 !important;
+  
   cursor: pointer;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  transition: background 0.3s;
   user-select: none;
+  box-sizing: border-box;
 }
-/* Основний контейнер для елемента списку має бути relative, 
-   щоб підменю позиціонувалося відносно нього */
+
+/* Прибираємо зміни кольору на інших сторінках */
+.mode-overlay .catalog-trigger {
+  background-color: var(--cat-trigger-bg) !important;
+  color: var(--cat-trigger-text) !important;
+  border-color: var(--cat-trigger-bg) !important;
+}
+
+.catalog-trigger:hover {
+  background-color: #000000 !important; /* Трохи темніше при наведенні */
+}
+
+.trigger-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.trigger-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 14px;
+  color: #FFFFFF !important;
+}
+
+.trigger-icon,
+.trigger-arrow {
+  color: #FFFFFF !important;
+}
+
+.trigger-arrow {
+  font-size: 10px;
+  transition: transform 0.3s ease;
+}
+.trigger-arrow.rotated {
+  transform: rotate(90deg);
+}
+
+/* 3. DROPDOWN LIST */
+.catalog-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  
+  background-color: var(--cat-list-bg);
+  border: 1px solid var(--cat-border-outer);
+  border-top: none;
+  
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* Тінь */
+}
+
+/* Статичний список на головній */
+.mode-home .catalog-list {
+  position: relative;
+  top: auto;
+  left: auto;
+  border-top: 1px solid var(--cat-border-outer);
+  margin-top: -1px;
+  box-shadow: none;
+}
+
+/* 4. ITEMS */
 .catalog-item {
-  position: relative; 
-  display: block;
+  position: relative;
+  border-bottom: 1px solid var(--cat-border);
+}
+.catalog-item:last-child {
+  border-bottom: none;
 }
 
 .catalog-link {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  color: #333;
+  width: 100%;
+  padding: 14px 24px;
+  
   text-decoration: none;
-  transition: background 0.2s, color 0.2s;
-  cursor: pointer;
+  
+  /* Чорний текст у спокої */
+  color: var(--cat-text-idle) !important; 
+  background-color: transparent;
+  
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.1s ease;
 }
 
-.catalog-link:hover {
-  background-color: #f8f9fa; /* Світло-сірий фон при наведенні */
-  color: #00bfaf; /* Ваш акцентний колір */
-}
-
-.arrow-icon {
-  font-size: 0.8em;
+.cat-arrow {
+  font-size: 10px;
   color: #999;
 }
 
-/* --- СТИЛІ ДЛЯ ВИПАДАЮЧОГО МЕНЮ (SUBCATEGORIES) --- */
+/* --- HOVER STATE: PARENT --- */
+/* Стає чорним, коли миша на ньому АБО на його підменю */
+.catalog-item:hover > .catalog-link {
+  background-color: var(--cat-item-hover-bg);
+  color: var(--cat-item-hover-text) !important;
+}
 
-.subcategory-popup {
+.catalog-item:hover > .catalog-link .cat-arrow {
+  color: var(--cat-accent);
+}
+
+/* 5. SUBMENU */
+.submenu-wrap {
   position: absolute;
-  top: 0;
-  left: 100%; /* Зсуваємо повністю вправо від батьківського li */
-  width: 250px; /* Ширина підменю */
-  min-height: 100%; /* Висота мінімум як у батьківського елемента */
-  background-color: #fff;
-  box-shadow: 4px 0 15px rgba(0,0,0,0.1); /* Тінь праворуч */
-  border: 1px solid #eee;
-  z-index: 1000;
+  top: -1px;
+  left: 100%;
+  width: 320px; /* Широке підменю */
+  min-height: calc(100% + 1px);
   
-  /* Анімація появи */
+  background-color: var(--cat-list-bg);
+  border: 1px solid var(--cat-border-outer);
+  border-left: 1px solid var(--cat-border);
+  
+  box-shadow: 10px 10px 30px rgba(0,0,0,0.1);
+  
   opacity: 0;
   visibility: hidden;
-  transform: translateX(-10px);
-  animation: slideInSub 0.2s forwards;
+  z-index: 101;
 }
 
-@keyframes slideInSub {
-  to {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(0);
-  }
+.catalog-item:hover .submenu-wrap {
+  opacity: 1;
+  visibility: visible;
 }
 
-/* Список всередині підменю */
-.subcategory-list {
+.submenu-list {
   list-style: none;
-  padding: 10px 0;
-  margin: 0;
-}
-
-.subcategory-item {
-  display: block;
-}
-
-.subcategory-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  text-decoration: none;
-  color: #555;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-}
-
-.subcategory-link:hover {
-  background-color: #f0fdfc; /* Дуже світлий акцент */
-  color: #00bfaf;
-  padding-left: 25px; /* Легкий зсув вправо при наведенні */
-}
-
-.sub-img {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-}
-
-/* --- АДАПТИВНІСТЬ --- */
-/* На мобільних телефонах ховер не працює коректно, 
-   тому зазвичай підкатегорії роблять акордеоном вниз. 
-   Цей код приховає "вилітання" на малих екранах */
-
-@media (max-width: 768px) {
-  .subcategory-popup {
-    position: static; /* Стає частиною потоку */
-    width: 100%;
-    box-shadow: none;
-    border: none;
-    background: #f9f9f9;
-    padding-left: 20px;
-    animation: none;
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-  }
-
-  .catalog-link {
-    font-weight: 600;
-  }
-  
-  /* На мобільному потрібно змінювати логіку з hover на click у JS,
-     або залишити як є, якщо меню використовується тільки як Sidebar */
-}
-/* Якщо це режим "Overlay" (не головна), робимо кнопку трохи темнішою при наведенні */
-.mode-overlay .catalog-header:hover {
-  filter: brightness(0.95);
-  border-radius: 4px; /* На інших сторінках заокруглюємо все */
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  gap: 15px; /* Відступ між іконкою і текстом */
-}
-
-.burger-icon {
-  font-size: 1.2rem;
-  color: #333;
-}
-
-.header-title {
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 14px;
-  letter-spacing: 0.5px;
-}
-
-/* --- СПИСОК (Білий) --- */
-.catalog-list {
-  list-style: none;
-  margin: 0;
   padding: 0;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-top: none; /* Прибираємо подвійну лінію зверху */
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  margin: 0;
 }
 
-/* Логіка відображення на різних сторінках */
-.mode-home .catalog-list {
-  display: block; /* Завжди видно на головній */
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
+.submenu-item {
+  border-bottom: 1px solid var(--cat-border);
 }
 
-.mode-overlay .catalog-list {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  z-index: 1000;
-  border-radius: 0 0 4px 4px;
-}
-
-/* --- ПУНКТИ МЕНЮ --- */
-.catalog-item {
-  border-bottom: 1px solid #f0f0f0; /* Тонка лінія між пунктами */
-}
-
-.catalog-item:last-child {
-  border-bottom: none;
-}
-
-.catalog-link {
-  display: left;
-  justify-content: space-between; /* Текст зліва, стрілка справа */
-  align-items: center;
-  padding: 12px 20px;
+.submenu-link {
+  display: block;
+  padding: 14px 24px;
   text-decoration: none;
-  color: #555; /* Сірий колір тексту */
+  
+  color: var(--cat-text-idle);
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition: all 0.1s ease;
 }
 
-/* Ефекти при наведенні */
-.catalog-link:hover {
-  background-color: #f9f9f9;
-  color: #c79c3d; /* Золотистий колір тексту при наведенні */
-  padding-left: 25px; /* Ефект зсуву вправо */
+/* --- HOVER STATE: CHILD --- */
+.submenu-link:hover {
+  background-color: var(--cat-item-hover-bg);   /* Чорний фон */
+  color: var(--cat-item-hover-text) !important; /* Білий текст */
+  padding-left: 30px; /* Зсув */
 }
 
-.arrow-icon {
-  font-size: 10px;
-  color: #ccc;
-  transition: color 0.2s;
-}
-
-.catalog-link:hover .arrow-icon {
-  color: #c79c3d;
-}
-
-/* --- СТАТУСИ (Завантаження / Помилка) --- */
-.status-item {
-  padding: 20px;
-  text-align: center;
-  color: #999;
+/* 6. STATUS & MOBILE */
+.catalog-status {
+  padding: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+  color: #888;
 }
-.spinner { animation: spin 1s linear infinite; }
-.error { color: #e74c3c; }
+.catalog-status.error { color: #e74c3c; }
+.spinner { animation: spin 1s linear infinite; font-size: 1.2rem; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
+
+@media (max-width: 768px) {
+  .catalog-wrapper {
+    width: 100%;
+  }
+  .catalog-list {
+    position: static;
+    border: none;
+    border-top: 1px solid var(--cat-border);
+  }
+  .submenu-wrap {
+    position: static;
+    width: 100%;
+    border: none;
+    box-shadow: none;
+    border-top: 1px solid var(--cat-border);
+    background-color: #fafafa;
+    min-height: auto;
+  }
+  /* Вимикаємо чорний ховер на мобільному */
+  .catalog-item:hover > .catalog-link,
+  .submenu-link:hover {
+    background-color: transparent;
+    color: var(--cat-text-idle) !important;
+    padding-left: 24px;
+  }
+}

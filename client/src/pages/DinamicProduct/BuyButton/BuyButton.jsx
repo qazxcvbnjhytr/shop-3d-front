@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
+import { IoBagHandleOutline } from "react-icons/io5"; // Преміальна іконка сумки
 import "./BuyButton.css";
 
 const BuyButton = ({ item }) => {
@@ -10,25 +11,25 @@ const BuyButton = ({ item }) => {
 
   const handleBuy = (e) => {
     e.preventDefault();
-    
-    // Беремо ТІЛЬКИ ID
+    e.stopPropagation(); // Важливо, щоб не спрацював перехід на сторінку товару
+
     const productId = item?._id || item?.id;
 
     if (!productId) {
-      console.error("❌ Помилка: ID товару не знайдено!");
+      console.error("❌ ID товару не знайдено!");
       return;
     }
 
-    // Шлемо в контекст ТІЛЬКИ ID (рядок)
     addItem(productId, 1);
-
-    // Летимо в кошик
     navigate("/shopping-cart");
   };
 
   return (
     <button type="button" className="dp-buy-btn" onClick={handleBuy}>
-      Купити
+      <span className="btn-label">Купити</span>
+      <span className="btn-icon">
+        <IoBagHandleOutline size={18} />
+      </span>
     </button>
   );
 };

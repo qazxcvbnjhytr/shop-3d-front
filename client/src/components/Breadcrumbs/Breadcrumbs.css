@@ -1,200 +1,93 @@
-/* client/src/components/Breadcrumbs.css */
+/* ============================================================
+   COMPONENT: Breadcrumbs (High Contrast Architectural)
+   ============================================================ */
 
-/* ======================================= */
-/* 🚀 СЕКЦІЯ ЗАГОЛОВКУ ТА ФОНУ */
-/* ======================================= */
+:root {
+  --br-bg: #FFFFFF;            /* Чисто білий для контрасту з кремовим */
+  --br-text: #1F1F1F;          /* Графіт */
+  --br-accent: #C25E00;        /* Палена глина */
+  --br-border: #1F1F1F;        /* Чорна лінія розділення */
+  --br-font: 'Tektur', sans-serif;
+}
 
 .breadcrumbs-wrapper {
-    width: 100%;
-    
-    position: relative;
-    margin-top: 0;
+  width: 100%;
+  background-color: var(--br-bg); /* Біла смуга на фоні кремової сторінки */
+  border-bottom: 1px solid var(--br-border); /* Чітка лінія розділення */
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
-
-.breadcrumbs-bg {
-    width: 100%;
-    /* Оптимальна висота для хедера */
-    height: 80px; 
-    
-    /* Фонові налаштування */
-    background-image: url("/Breadcrumbs/bg.jpg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    /* Фіксований фон створює ефект паралаксу при скролі */
-    background-attachment: scroll; 
-
-    display: flex;
-    align-items: flex-end; /* Текст внизу блоку */
-    justify-content: flex-start; 
-
-    padding: 30px 10%; /* Відступи у відсотках для кращої адаптивності */
-    position: relative; 
-    overflow: hidden; 
-}
-
-/* Градієнтне затемнення (Overlay) */
-.breadcrumbs-bg::after { 
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    /* Більш складний градієнт для глибини */
-    background: linear-gradient(
-        180deg, 
-        rgba(26, 43, 43, 0.7) 0%, 
-        rgba(0, 0, 0, 0.6) 100%
-    );
-    /* Легке розмиття фону для акценту на тексті */
-    backdrop-filter: blur(2px);
-}
-
-/* ======================================= */
-/* 📝 СТИЛІЗАЦІЯ СПИСКУ */
-/* ======================================= */
 
 .breadcrumbs {
-    display: flex;
-    flex-wrap: wrap; /* Дозволяє переносити текст на малих екранах */
-    align-items: center;
-    position: relative;
-    z-index: 2;
-    
-    font-family: 'Montserrat', sans-serif; /* Переконайтесь, що шрифт підключено */
-    font-size: 1rem; 
-    font-weight: 500; 
-    color: #fff;
-    letter-spacing: 0.5px;
-    
-    /* М'яка тінь для тексту */
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); 
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 15px 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none; /* Приховати скрол */
 }
 
+.breadcrumbs::-webkit-scrollbar {
+  display: none;
+}
+
+/* СТИЛЬ КРИХТИ */
 .crumb {
-    display: flex;
-    align-items: center;
-    position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--br-font);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
 }
 
-/* ======================================= */
-/* 🏠 ІКОНКА HOME */
-/* ======================================= */
-
-.home-icon {
-    font-size: 1.3rem;
-    color: #e0e0e0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-bottom: 2px; /* Візуальне вирівнювання */
-}
-
-.home-crumb a {
-    display: flex;
-    align-items: center;
-}
-
-.home-crumb a:hover .home-icon {
-    color: #00bfae; /* Ваш фірмовий бірюзовий */
-    transform: scale(1.1); /* Легке збільшення */
-}
-
-/* ======================================= */
-/* 🔗 ПОСИЛАННЯ (LINKS) */
-/* ======================================= */
-
+/* Посилання */
 .crumb a {
-    color: #e0e0e0; 
-    text-decoration: none;
-    transition: color 0.3s ease;
-    padding: 2px 0;
-    position: relative;
+  text-decoration: none;
+  color: var(--br-text);
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
 }
 
-/* Анімоване підкреслення */
-.crumb.link-crumb a::after {
-    content: '';
-    position: absolute;
-    width: 0%;
-    height: 2px;
-    bottom: 0;
-    left: 0;
-    background-color: #00bfae; /* Акцентний колір */
-    transition: width 0.3s ease-in-out;
+.crumb a:hover {
+  color: var(--br-accent);
 }
 
-.crumb.link-crumb a:hover {
-    color: #ffffff;
+/* Поточна сторінка */
+.crumb.current {
+  color: var(--br-accent);
 }
 
-.crumb.link-crumb a:hover::after {
-    width: 100%;
+.current-page-name {
+  color: var(--br-accent);
 }
 
-/* ======================================= */
-/* ➡️ РОЗДІЛЬНИК (SEPARATOR) */
-/* ======================================= */
+/* Іконки */
+.home-icon {
+  font-size: 16px;
+  margin-top: -2px;
+}
 
 .separator {
-    margin: 0 12px;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 0.9em;
-    display: flex;
-    align-items: center;
-    transform: translateY(1px); /* Мікро-корекція по висоті */
+  display: flex;
+  align-items: center;
+  color: #DDD; /* Світло-сірий для розділювача */
+  font-size: 12px;
 }
 
-/* ======================================= */
-/* 🎯 ПОТОЧНА СТОРІНКА */
-/* ======================================= */
-
-.crumb.current .current-page-name {
-    color: #ffffff;
-    font-weight: 700;
-    cursor: default;
-    position: relative;
-    /* Світіння тексту для активної сторінки */
-    text-shadow: 0 0 10px rgba(0, 191, 174, 0.3);
-}
-
-/* Маркер активної сторінки (крапка знизу) */
-.crumb.current .current-page-name::after {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(90deg, #00bfae, transparent);
-    margin-top: 2px;
-    border-radius: 2px;
-}
-
-/* ======================================= */
-/* 📱 АДАПТИВНІСТЬ (MOBILE) */
-/* ======================================= */
-
+/* Адаптивність */
 @media (max-width: 768px) {
-    .breadcrumbs-bg {
-        height: auto;
-        min-height: 80px;
-        padding: 20px 20px;
-        align-items: center; /* Центруємо по вертикалі на мобільному */
-    }
-
-    .breadcrumbs {
-        font-size: 0.85rem;
-        line-height: 1.5;
-    }
-
-    .separator {
-        margin: 0 6px;
-        font-size: 0.8em;
-    }
-
-    .home-icon {
-        font-size: 1.1rem;
-    }
-    
-    /* На дуже малих екранах можна приховати проміжні ланки, 
-       але краще просто дозволити перенос (flex-wrap вже є) */
+  .breadcrumbs {
+    padding: 12px 20px;
+  }
+  .crumb {
+    font-size: 10px;
+  }
 }

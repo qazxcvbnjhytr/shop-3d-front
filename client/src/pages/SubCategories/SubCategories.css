@@ -1,261 +1,155 @@
-/* client/src/pages/SubCategories/SubCategories.css */
-/* Контейнер для ряду чіпсів */
-.sc-chips-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 15px 0;
-  margin-bottom: 10px;
-  align-items: center;
+/* ============================================================
+   PAGE: SubCategories (Architectural Design)
+   ============================================================ */
+
+:root {
+  --sc-bg: #F0EEE6;
+  --sc-text: #1F1F1F;
+  --sc-accent: #C25E00;
+  --sc-border: #1F1F1F;
 }
 
-/* Базовий стиль чіпса */
-.sc-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  background: #f0f0f0;
-  border: 1px solid #e0e0e0;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.sc-chip:hover {
-  background: #e8e8e8;
-  border-color: #ccc;
-}
-
-/* Іконка ікса всередині чіпса */
-.sc-chip-x {
-  font-size: 16px;
-  line-height: 1;
-  color: #999;
-  transition: color 0.2s;
-}
-
-.sc-chip:hover .sc-chip-x {
-  color: #000;
-}
-
-/* Спеціальний стиль для кнопки "Скинути всі" */
-.sc-chip--reset {
-  background: transparent;
-  border: 1px dashed #999;
-  color: #666;
-}
-
-.sc-chip--reset:hover {
-  background: #fff0f0; /* Легкий червоний відтінок при наведенні */
-  border-color: #ff4d4f;
-  color: #ff4d4f;
-}
-
-.sc-chip--reset:hover .sc-chip-x {
-  color: #ff4d4f;
-}
-
-/* Анімація появи чіпсів */
-.sc-chip {
-  animation: chipAppear 0.2s ease-out;
-}
-
-@keyframes chipAppear {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Адаптивність */
-@media (max-width: 768px) {
-  .sc-chips-row {
-    gap: 6px;
-    padding: 10px 0;
-  }
-  
-  .sc-chip {
-    padding: 5px 12px;
-    font-size: 12px;
-  }
-}
-.sc-page{
-  max-width: 1400px;
+.sc-page {
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 18px 18px 36px;
+  padding: 40px;
+  background-color: var(--sc-bg);
 }
 
-.sc-topbar{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  margin-bottom: 10px;
-}
-
-.sc-back{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  text-decoration:none;
-  font-weight: 700;
-  padding: 10px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(0,0,0,.10);
-  background: rgba(255,255,255,.72);
-  backdrop-filter: blur(6px);
-}
-
-.sc-head{
-  display:flex;
-  justify-content:center;
-  text-align:center;
-  margin: 10px 0 18px;
-}
-
-.sc-title{
-  margin:0;
-  font-size: 34px;
-  font-weight: 900;
-  letter-spacing: .2px;
-}
-
-/* states */
-.sc-state{
-  padding: 18px;
-  border-radius: 16px;
-  border: 1px dashed rgba(0,0,0,.16);
-  background: rgba(255,255,255,.70);
-}
-
-.sc-state--error{
-  border-style: solid;
-  border-color: rgba(255,0,0,.25);
-}
-
-/* ===== CIRCLES STRIP ===== */
-.sc-strip{
-  display:flex;
-  align-items:flex-start;
-  gap: 34px;
-  padding: 8px 10px 10px;
-
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-
-.sc-strip::-webkit-scrollbar{
-  height: 8px;
-}
-.sc-strip::-webkit-scrollbar-thumb{
-  background: rgba(0,0,0,.12);
-  border-radius: 999px;
-}
-.sc-strip::-webkit-scrollbar-track{
-  background: rgba(0,0,0,.04);
-  border-radius: 999px;
-}
-
-/* ✅ ВАЖЛИВО: прибираємо будь-який фон/карточку під серіями */
-.sc-item{
-  flex: 0 0 auto;
-  width: 140px;
-  scroll-snap-align: start;
-
-  display:flex;
-  flex-direction: column;
-  align-items:center;
-  gap: 10px;
-
-  /* перебиває глобальні стилі для <a> */
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-
+/* 1. TOP BAR */
+.sc-topbar { margin-bottom: 30px; }
+.sc-back {
   text-decoration: none;
-  color: inherit;
-}
-
-/* circle */
-.sc-avatar{
-  width: 118px;
-  height: 118px;
-  border-radius: 999px;
-  background: #fff;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  border: 1px solid rgba(0,0,0,.08);
-  box-shadow: 0 10px 26px rgba(0,0,0,.08);
-  transition: transform .18s ease, box-shadow .18s ease;
-  overflow:hidden;
-}
-
-/* ✅ фото заповнює круг */
-.sc-avatar img{
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.sc-avatar__fallback{
-  width: 100%;
-  height: 100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight: 900;
-  letter-spacing: .8px;
-  opacity: .7;
-}
-
-.sc-item:hover .sc-avatar{
-  transform: translateY(-2px);
-  box-shadow: 0 14px 34px rgba(0,0,0,.12);
-}
-
-/* ✅ текст без фону */
-.sc-name{
-  width: 100%;
-  text-align:center;
-  font-weight: 800;
-  line-height: 1.2;
-
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-
-  display:-webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow:hidden;
-  min-height: 2.4em;
-}
-
-/* hint */
-.sc-hint{
-  margin-top: 16px;
-  text-align:center;
-  opacity: .7;
+  color: var(--sc-text);
+  font-family: 'Tektur', sans-serif;
+  font-size: 13px;
+  text-transform: uppercase;
   font-weight: 700;
+  letter-spacing: 0.1em;
 }
 
-@media (min-width: 1200px){
-  .sc-strip{
-    justify-content:center;
-  }
+/* 2. TITLE */
+.sc-title {
+  font-family: 'Tektur', sans-serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 40px;
+  padding-left: 20px;
+}
+
+/* 3. CATEGORY STRIP */
+.sc-strip {
+  display: flex;
+  gap: 35px;
+  overflow-x: auto;
+  padding: 20px 0;
+  margin-bottom: 50px;
+  scrollbar-width: none;
+}
+.sc-strip::-webkit-scrollbar { display: none; }
+
+.sc-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  min-width: 90px;
+  transition: transform 0.3s ease;
+}
+
+.sc-avatar {
+  width: 85px;
+  height: 85px;
+  border: 1px solid var(--sc-border);
+  overflow: hidden;
+  background: white;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.sc-name {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--sc-text);
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.sc-item--active .sc-avatar {
+  border-color: var(--sc-accent);
+  box-shadow: 0 0 0 4px rgba(194, 94, 0, 0.15);
+  transform: scale(1.1);
+}
+
+.sc-item--active .sc-name { color: var(--sc-accent); }
+
+/* 4. RESULTS INFO */
+.sc-results-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 40px 0 20px;
+  padding: 0 5px;
+}
+
+.sc-results-count {
+  font-family: 'Tektur', sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #888;
+}
+
+/* 5. GRID & SKELETON */
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+.sc-skeleton-card {
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: sc-shimmer 1.5s infinite linear;
+  border: 1px solid #ddd;
+}
+
+@keyframes sc-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 6. EMPTY STATE */
+.sc-empty-container {
+  padding: 120px 0;
+  text-align: center;
+  background: #fff;
+  border: 1px dashed #ccc;
+}
+
+.sc-empty-text { font-size: 1.2rem; color: #555; margin-bottom: 25px; }
+
+.sc-reset-btn {
+  background: var(--sc-border);
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  font-family: 'Tektur', sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sc-reset-btn:hover { background: var(--sc-accent); }
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .sc-page { padding: 20px; }
+  .sc-avatar { width: 70px; height: 70px; }
+  .catalog-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
 }

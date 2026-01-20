@@ -1,298 +1,199 @@
-/* =========================
-   HEADER TOP (HeaderTop)
-   Layout: Logo | Search | Controls
-   Mobile: Row1 (Logo + Controls), Row2 (Search)
-   ========================= */
+/* ============================================================
+   COMPONENT: HeaderTop
+   THEME: Gallery Cream (Niche & Sharp)
+   ============================================================ */
 
-.header-top {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+:root {
+  /* --- Palette: Raw Canvas & Graphite --- */
+  --ht-bg:#bb9f86;      /* Світлий "кам'яний" крем */
+  --ht-text: #1F1F1F;          /* Майже чорний графіт */
+  --ht-border: #D4D1C9;        /* Темніший відтінок крему для рамок */
+  
+  --ht-accent: #C25E00;        /* Палена глина (залишаємо для акценту) */
+  --ht-hover-bg: #1F1F1F;      /* Чорний фон при наведенні */
+  --ht-hover-text: #F0EEE6;    /* Світлий текст при наведенні */
 
-  /* desktop */
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 16px;
-
-  align-items: center;
-  padding: 12px 18px;
-
-  background: linear-gradient(135deg, #c3ffe8, #00bfaf);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  /* --- Dimensions --- */
+  --ht-height: 80px;
+  --icon-size: 48px;
 }
 
-/* LEFT */
-.header-top-left {
+/* 1. Main Container */
+.header-top {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  
+  width: 100%;
+  height: var(--ht-height);
+  
+  background-color: var(--ht-bg); /* ✅ Світлий фон */
+  border-bottom: 1px solid var(--ht-border);
+  
+  padding-inline: 2rem; 
+  box-sizing: border-box;
+  box-shadow: none; /* Плоский дизайн */
 }
 
-/* CENTER: search */
-.header-top-center {
-  display: flex; /* ✅ було display: right; (НЕВІРНО) */
-  align-items: center;
-  justify-content: center;
-  min-width: 0; /* щоб search не ламав grid */
-}
-
-/* RIGHT: controls */
+/* 2. Layout Sections */
+.header-top-left,
 .header-top-right {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-
-  flex-wrap: nowrap; /* ✅ щоб іконки не переносило і не “випадали” */
-  min-width: max-content;
+  gap: 1.5rem; 
 }
 
-/* =========================
-   PHONE (desktop only)
-   ========================= */
+.header-top-center {
+  flex-grow: 1;
+  margin-inline: 3rem;
+  display: flex;
+  justify-content: center; 
+}
 
+/* 3. Typography: Phone Number */
 .header-phone {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  font-size: 14px;
-  font-weight: 600;
-  color: #0f172a;
+  font-family: 'Tektur', sans-serif;
+  font-weight: 500;
+  font-size: 0.95rem; /* Трохи крупніше на світлому фоні */
+  color: var(--ht-text);
   text-decoration: none;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  
+  position: relative;
+  padding-block: 4px;
+  transition: color 0.2s ease;
+}
 
-  padding: 8px 10px;
-  border-radius: 12px;
-
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.8);
-
-  transition: transform 0.12s ease, background 0.12s ease;
+/* Підкреслення (Clay color) */
+.header-phone::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  height: 2px; /* Трохи товстіше для характеру */
+  background-color: var(--ht-accent);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .header-phone:hover {
-  background: rgba(255, 255, 255, 0.95);
+  color: var(--ht-text); /* Текст залишається чорним */
 }
 
-.header-phone:active {
-  transform: scale(0.98);
+.header-phone:hover::after {
+  width: 100%;
 }
 
-/* =========================
-   ICONS (wishlist/cart/phone/user/lang)
-   ========================= */
-
+/* 4. Interactive Icons (Sharp Buttons) */
 .header-icon {
   position: relative;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-
-  width: 42px;
-  height: 42px;
-
-  border-radius: 14px;
+  
+  width: var(--icon-size);
+  height: var(--icon-size);
+  
+  background-color: transparent;
+  color: var(--ht-text);
+  
+  /* Тонка рамка кольору графіту або темного бежу */
+  border: 1px solid var(--ht-border);
+  border-radius: 0; /* ⚠️ ГОСТРІ КУТИ */
+  
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  padding: 0;
   text-decoration: none;
-  font-size: 18px;
-  color: #0f172a;
-
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.85);
-
-  transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
-}
-/* ... десь у вашому HeaderTop.css */
-
-.header-icon {
-    position: relative; /* ВАЖЛИВО: для позиціювання бейджа */
-    /* ... інші стилі header-icon ... */
 }
 
-.header-icon__badge {
-    position: absolute;
-    top: -4px; /* Зсув вгору */
-    right: -4px; /* Зсув вправо */
-    
-    min-width: 18px; /* Мінімальна ширина для 1 або 2 цифр */
-    height: 18px; 
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 11px;
-    font-weight: 800;
-    line-height: 1;
-
-    color: #fff;
-    background: #ef4444; /* Червоний */
-    border-radius: 999px; /* Ідеальне коло */
-    
-    border: 2px solid rgba(255, 255, 255, 0.95);
-    
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-/* На мобільному */
-@media (max-width: 720px) {
-    .header-icon__badge {
-        top: -2px;
-        right: -2px;
-        min-width: 17px;
-        height: 17px;
-        font-size: 10px;
-    }
-}
-.header-icon:hover {
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
-}
-
-.header-icon:active {
-  transform: scale(0.98);
-}
-
-/* SVG inside icons */
 .header-icon__svg {
-  display: block;
-  line-height: 1;
-  font-size: 18px;
+  font-size: 1.25rem;
+  fill: currentColor;
+  transition: transform 0.2s ease;
 }
 
-/* Badge (optional) */
-.header-icon .badge {
+/* --- HOVER STATE: High Contrast Inversion --- */
+.header-icon:hover {
+  background-color: var(--ht-hover-bg);   /* Стає чорним */
+  border-color: var(--ht-hover-bg);
+  color: var(--ht-hover-text);            /* Іконка стає кремовою */
+}
+
+.header-icon:hover .header-icon__svg {
+  transform: scale(1.1);
+}
+
+/* Active State */
+.header-icon:active {
+  background-color: var(--ht-accent);
+  border-color: var(--ht-accent);
+  color: #fff;
+}
+
+/* 5. Wrappers */
+.header-like-wrap,
+.header-cart-wrap {
+  display: flex;
+  align-items: center;
+}
+
+/* 6. Badges (Counters) */
+.header-icon__badge {
   position: absolute;
   top: -6px;
   right: -6px;
-
+  
   min-width: 18px;
   height: 18px;
-  padding: 0 6px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 11px;
+  padding: 2px 4px;
+  
+  /* Акцентний фон */
+  background-color: var(--ht-accent);
+  color: #fff;
+  
+  font-family: 'Tektur', monospace;
+  font-size: 0.7rem;
   font-weight: 700;
   line-height: 1;
-
-  color: #fff;
-  background: #ef4444;
-  border-radius: 999px;
-  border: 2px solid rgba(255, 255, 255, 0.95);
-}
-
-/* =========================
-   WISHLIST WRAP (hover-safe)
-   ========================= */
-
-.header-like-wrap {
-  position: relative; /* щоб dropdown позиціонувався від іконки */
-  display: inline-flex;
+  
+  display: flex;
   align-items: center;
+  justify-content: center;
+  
+  border-radius: 0; /* ⚠️ ГОСТРІ КУТИ */
+  
+  /* Рамка кольору фону, щоб "відрізати" куточок кнопки */
+  border: 2px solid var(--ht-bg); 
+  z-index: 10;
 }
 
-/* Hover-місток між іконкою та dropdown */
-@media (hover: hover) and (pointer: fine) {
-  .header-like-wrap::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    right: 0;
-    width: 380px; /* як у dropdown */
-    height: 14px; /* запас */
-    background: transparent;
+/* 7. Mobile Adaptation */
+@media (max-width: 992px) {
+  :root {
+    --ht-height: 70px;
   }
-}
-
-/* =========================
-   RESPONSIVE
-   ========================= */
-
-@media (max-width: 1024px) {
+  
   .header-top {
-    padding: 10px 12px;
-    gap: 10px;
-  }
-
-  /* ховаємо телефон на моб/планшеті */
-  .header-phone {
-    display: none;
-  }
-
-  /* якщо твій search має клас .header-search */
-  .header-search {
-    width: 100%;
-    border-radius: 12px;
+    padding-inline: 1rem;
   }
 }
 
-/* ✅ Мобільна сітка як на твоєму скріні:
-   1 рядок: logo (ліва) + іконки (права)
-   2 рядок: search на всю ширину
-*/
 @media (max-width: 720px) {
-  .header-top {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    grid-template-areas:
-      "left right"
-      "center center";
-    gap: 10px;
-  }
-
-  .header-top-left {
-    grid-area: left;
-  }
-
   .header-top-right {
-    grid-area: right;
-    justify-content: flex-end;
-    gap: 8px;
+    gap: 0.5rem; /* Щільніше на мобільному */
   }
-
-  .header-top-center {
-    grid-area: center;
-    justify-content: stretch;
-  }
-
-  /* трохи зменшимо іконки, щоб усе вміщалось */
+  
   .header-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 12px;
+    width: 42px;
+    height: 42px;
   }
-
-  .header-icon__svg {
-    font-size: 17px;
-  }
-
-  /* якщо кнопка в search займає багато місця — хай буде на всю ширину */
-  .header-search {
-    grid-template-columns: 1fr;
-  }
-
-  .header-search button {
-    width: 100%;
-  }
-}
-
-/* дуже вузькі екрани */
-@media (max-width: 380px) {
-  .header-top-right {
-    gap: 6px;
-  }
-
-  .header-icon {
-    width: 36px;
-    border-radius: 12px;
-  }
-
-  .header-icon__svg {
-    font-size: 16px;
+  
+  /* Телефон на мобільному має трохи темніший фон для контрасту */
+  .header-icon--phone-mobile {
+    background-color: rgba(31, 31, 31, 0.05);
+    border-color: transparent;
   }
 }

@@ -1,159 +1,83 @@
-/* =========================
-   LIKE BUTTON (smaller)
-   ========================= */
+/* ============================================================
+   COMPONENT: LikesComponent (Smaller & Refined)
+   ============================================================ */
 
-.like-button{
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  z-index: 100;
-
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-
-  background: rgba(255,255,255,.65);
-  border: 1px solid rgba(0,0,0,.10);
-
+.like-btn-minimal {
+  background: none;
+  border: none;
+  padding: 6px; /* Менші відступи */
+  margin: 0;
+  cursor: pointer;
+  outline: none;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  cursor: pointer;
-  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,.10);
-
-  overflow: visible;
+  
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 10;
 }
 
-.like-button:hover{
-
-  transform: scale(1.06);
-  box-shadow: 0 6px 14px rgba(0,0,0,.18);
+/* СТИЛЬ СЕРДЕЧКА */
+.like-btn-minimal svg {
+  /* Зменшений розмір: 22px — золота середина */
+  font-size: 22px; 
+  
+  /* Початковий стан: тонкий акуратний контур */
+  color: transparent;
+  stroke: #1F1F1F; 
+  stroke-width: 35px; /* Трохи тонше для меншого розміру */
+  
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 0 0 rgba(0,0,0,0));
 }
 
-.like-button:active{
-  transform: scale(.96);
+/* ЕФЕКТ ПРИ НАВЕДЕННІ */
+.like-btn-minimal:hover {
+  transform: scale(1.1);
 }
 
-/* loading */
-.like-button.loading{
-  opacity: .8;
-  cursor: wait;
-  animation: spin-load .55s linear infinite;
+.like-btn-minimal:hover svg {
+  stroke: #C25E00; /* Зміна кольору контуру */
 }
 
-@keyframes spin-load{
-  from{ transform: rotate(0deg); }
-  to{ transform: rotate(360deg); }
+/* АКТИВНИЙ СТАН (LIKE) */
+.like-btn-minimal.is-active svg {
+  color: #C25E00;
+  stroke: #C25E00;
+  
+  /* М'якше сяйво для меншого об'єкта */
+  filter: drop-shadow(0 3px 8px rgba(194, 94, 0, 0.3));
+  
+  animation: heartSmallPop 0.4s ease-out forwards;
 }
 
-/* icon */
-.like-button .heart-icon{
-  width: 18px;
-  height: 18px;
-  transition: transform .2s ease, filter .2s ease;
-  z-index: 2;
+/* СТАН ЗАВАНТАЖЕННЯ */
+.like-btn-minimal.is-loading {
+  opacity: 0.3;
+  transform: scale(0.9);
 }
 
-/* not liked */
-.heart-icon.is-unliked{
-  fill: none;
-  stroke: #374151;
-  stroke-width: 20px;
-  opacity: .85;
+/* АНІМАЦІЯ ПОЯВИ */
+@keyframes heartSmallPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); } /* Менший стрибок */
+  100% { transform: scale(1.1); }
 }
 
-/* liked */
-.like-button.liked .heart-icon.is-liked{
-  fill: #ff3040;
-  stroke: #ff3040;
-  stroke-width: 0;
-  animation: heart-pop .25s ease-in-out;
-  filter: drop-shadow(0 0 3px rgba(255,48,64,.55));
-}
-
-@keyframes heart-pop{
-  0%{ transform: scale(1); }
-  60%{ transform: scale(1.18); }
-  100%{ transform: scale(1.08); }
-}
-
-/* =========================
-   Fountain (smaller)
-   ========================= */
-.like-button.liked::before{
-  content:"";
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform: translate(-50%, -50%);
-  width: 1px;
-  height: 1px;
-  z-index: 0;
-
-  box-shadow:
-    0 0 0 1px rgba(255,130,142,.95),
-    -8px 0 0 1px rgba(255,89,107,.95),
-    10px 0 0 1px rgba(255,48,64,.95),
-    4px 0 0 1px rgba(255,130,142,.85);
-
-  animation: fountain-rise .8s ease-out forwards;
-}
-
-.like-button:not(.liked)::before{
-  display:none;
-}
-
-@keyframes fountain-rise{
-  0%{
-    transform: translate(-50%, -50%);
-    opacity: 1;
-  }
-  100%{
-    transform: translate(-50%, -55px);
-    opacity: 0;
-    box-shadow:
-      -14px -44px 0 0 rgba(255,130,142,.85),
-      -22px -38px 0 0 rgba(255,89,107,.85),
-      22px -48px 0 0 rgba(255,48,64,.85),
-      8px -32px 0 0 rgba(255,130,142,.75);
-  }
-}
-
-/* =========================
-   On-image wrapper (smaller)
-   ========================= */
-.like-container-on-image{
+/* Ефект хвилі при кліку */
+.like-btn-minimal.is-active::after {
+  content: '';
   position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 15;
-  pointer-events: auto;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #C25E00;
+  border-radius: 50%; /* Для хвилі краще коло */
+  animation: rippleSmall 0.5s ease-out;
+  opacity: 0;
 }
 
-/* якщо кнопка всередині */
-.like-container-on-image button{
-  background: rgba(255,255,255,.65);
-  border-radius: 999px;
-  padding: 0; /* щоб не роздувало кнопку */
-  box-shadow: none;
-}
-
-/* Mobile */
-@media (max-width: 600px){
-  .like-button{
-    width: 28px;
-    height: 28px;
-    top: 6px;
-    right: 6px;
-  }
-  .like-button .heart-icon{
-    width: 16px;
-    height: 16px;
-  }
-  .like-container-on-image{
-    top: 8px;
-    right: 8px;
-  }
+@keyframes rippleSmall {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
 }

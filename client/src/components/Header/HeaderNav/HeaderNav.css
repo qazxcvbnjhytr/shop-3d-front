@@ -1,223 +1,218 @@
-/* =========================================
-   1. VARIABLES & RESET
-   ========================================= */
+/* ============================================================
+   COMPONENT: HeaderNav
+   THEME: Gallery Cream (Architectural & Sharp)
+   STATUS: Fixed Catalog Wrapper Conflict
+   ============================================================ */
+
 :root {
-  /* Palette: Turquoise/Teal Theme */
-  --header-bg: rgb(0, 191, 175);
-  --header-bg-scrolled: rgba(0, 153, 140, 0.98);
-  --header-text: #000000;
-  --header-accent: #ffffff; /* Білий акцент */
-  --header-text-hover: #00bfaf; /* Колір тексту при ховері (в дропдаунах) */
-  
-  /* Dimensions & Spacing */
-  --header-height: 70px;
-  /* 🔥 ФІКС: Зменшили бічні відступи, щоб влізло довге меню */
-  --header-padding: 2%; 
-  --border-radius: 8px;
-  
-  /* Animations */
-  --ease-premium: cubic-bezier(0.4, 0, 0.2, 1);
-  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.1);
-  --shadow-deep: 0 10px 30px rgba(0, 0, 0, 0.2);
+  --nav-bg-color: #F0EEE6;      /* Кремовий фон */
+  --nav-text-color: #1F1F1F;    /* Графіт */
+  --nav-hover-bg: #1F1F1F;      /* Чорний блок ховеру */
+  --nav-hover-text: #FFFFFF;    /* Білий текст на чорному */
+  --nav-accent: #C25E00;        /* Палена глина */
+  --nav-border: #D4D1C9;        /* Розділювач */
+  --nav-height: 60px;
 }
 
-/* =========================================
-   2. HEADER CONTAINER
-   ========================================= */
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
+/* 1. Main Container */
+.header-nav {
   width: 100%;
-  height: var(--header-height);
-  padding: 0 var(--header-padding);
+  height: var(--nav-height);
+  background-color: var(--nav-bg-color);
+  border-bottom: 1px solid var(--nav-border);
   
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   
-  background: rgba(0, 191, 174, 0.95);
-  backdrop-filter: blur(12px); /* Ефект скла */
-  box-shadow: var(--shadow-soft);
+  position: sticky;
+  top: 0;
+  z-index: 100;
   
-  z-index: 1000;
-  transition: background 0.3s ease, height 0.3s ease;
-  box-sizing: border-box;
+  transition: all 0.3s ease;
 }
 
-.header.scrolled {
-  background: var(--header-bg-scrolled);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+.header-nav.scrolled {
+  box-shadow: 0 4px 20px rgba(31, 31, 31, 0.05);
+  --nav-height: 50px;
 }
 
-/* Логотип не стискається */
-.logo {
-  flex-shrink: 0;
-  margin-right: 20px;
-  display: flex;
-  align-items: center;
-}
-
-/* =========================================
-   3. NAVIGATION (DESKTOP)
-   ========================================= */
+/* 2. Navigation Container */
 .nav {
-  height: 50%;
+  height: 100%;
   display: flex;
   align-items: center;
-  flex-grow: 1;
-    background: rgba(0, 191, 174, 0.95);
-
-  justify-content: center; /* Центруємо меню */
 }
 
+/* 3. The List */
 .nav-list {
+  position: relative;
   display: flex;
-  align-items: center;
-  /* 🔥 ФІКС: Адаптивний відступ між пунктами */
-gap: 30px; /* Було велике значення */  list-style: none;
+  align-items: stretch; /* ВАЖЛИВО: Щоб всі елементи були на всю висоту */
+  gap: 0; /* Прибираємо gap, контролюємо падінгами */
   margin: 0;
   padding: 0;
-  position: relative;
+  list-style: none;
+  height: 100%;
 }
 
-.nav-item a, 
-.catalog-link {
-  text-decoration: none;
-  color: var(--header-text);
-  font-weight: 700;
-  text-transform: uppercase;
-  
-  /* 🔥 ФІКС: Заборона переносу рядків */
-  white-space: nowrap; 
-  
-  /* 🔥 ФІКС: Шрифт зменшується автоматично, якщо екран вузький */
-  font-size: clamp(0.7rem, 0.9vw, 0.9rem); 
-  
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  display: block;
-}
-
-/* Hover Effect: Pill Shape */
-.nav-item a:hover,
-.catalog-link:hover,
-.nav-item a:focus-visible {
-  background-color: rgba(255, 255, 255, 0.15);
-}
-
-/* Sliding Line (вимкнено для чистоти дизайну) */
+/* 4. The "Sliding Monolith" (Background Hover) */
 .nav-bg {
-  display: none; 
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  height: 100%;
+  background-color: var(--nav-hover-bg);
+  pointer-events: none;
+  z-index: 0;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border-radius: 0;
+  width: 0;
+  opacity: 1;
 }
 
-/* =========================================
-   5. CONTROLS & USER MENU
-   ========================================= */
-.controls {
-  flex-shrink: 0;
+/* 5. Menu Items */
+.nav-item {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  align-items: center; /* Центрування тексту по вертикалі */
+}
+
+/* Links inside items */
+.nav-item a {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-left: 10px;
-}
-
-
-.lang-button:hover {
-  background: #fff;
-  color: var(--header-text-hover);
-}
-
-.user-menu {
- 
+  padding: 0 1.5rem;
   height: 100%;
-
-  cursor: pointer;
+  text-decoration: none;
+  color: var(--nav-text-color);
+  font-family: 'Tektur', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.3s ease;
 }
 
+.nav-item:hover a {
+  color: var(--nav-hover-text);
+}
 
-.user-dropdown {
-  left: auto;
-  right: 0;
+.nav-item a.active {
+  color: var(--nav-accent);
+  font-weight: 700;
+}
+
+/* ============================================================
+   6. SPECIAL CATALOG WRAPPER (FIXED)
+   ============================================================ */
+.catalog-wrapper-in-header {
+  /* Відступи для візуального відділення від меню */
+  margin-right: 1.5rem; 
+  
+  /* ВАЖЛИВО: Розтягуємо на всю висоту, щоб не було пробілів */
+  height: 100%; 
+  display: flex;
+  align-items: stretch !important; /* Перебиваємо center, щоб кнопка була на всю висоту */
+  
+  /* Скидаємо будь-які падінги, бо компонент каталогу має свої */
+  padding: 0 !important;
+  border: none !important;
+  
+  /* Піднімаємо z-index, щоб меню випадало поверх всього */
+  z-index: 1000; 
+}
+
+/* Прибираємо старий стиль для button, він більше не потрібен */
+
+/* 7. Mobile Toggle */
+.menu-toggle {
+  display: none;
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  border: 1px solid var(--nav-border);
+  color: var(--nav-text-color);
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 200;
+  border-radius: 0;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.menu-toggle:hover {
+  background-color: var(--nav-hover-bg);
+  color: var(--nav-hover-text);
 }
 
 /* =========================================
-   6. MOBILE ADAPTATION
+   MOBILE VERSION
    ========================================= */
-.menu-toggle { display: none; }
-.mobile-user-link { display: none; }
-
 @media (max-width: 1024px) {
-  .header { padding: 0 20px; height: 60px; }
-  
-  .menu-toggle {
-    display: block;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 1.5rem;
-    cursor: pointer;
-    z-index: 1200;
-  }
-  
-  .user-menu { display: none; } 
-  
-  .nav {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-    background-color: rgba(0, 0, 0, 0.6);
-    opacity: 0; visibility: hidden;
-    transition: opacity 0.3s ease;
-    z-index: 1000; display: block;
+  .header-nav {
+    justify-content: flex-end;
+    padding-inline: 1rem;
+    height: 60px;
   }
 
-  .nav.active { opacity: 1; visibility: visible; }
+  .menu-toggle {
+    display: flex;
+  }
+
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: var(--nav-bg-color);
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 150;
+    display: flex;
+    flex-direction: column;
+    padding-top: 80px;
+  }
+
+  .nav.active {
+    transform: translateX(0);
+  }
 
   .nav-list {
-    position: absolute; top: 0; right: 0; width: 280px; height: 100%;
-    background: #fff;
-    box-shadow: -5px 0 25px rgba(0,0,0,0.2);
-    display: flex; flex-direction: column; align-items: stretch;
-    gap: 0; padding: 70px 0 20px 0;
-    transform: translateX(100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow-y: auto;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    gap: 0;
   }
 
-  .nav.active .nav-list { transform: translateX(0); }
-
-  .nav-item { width: 100%; border-bottom: 1px solid #f0f0f0; }
-
-  .nav-item a, .catalog-link {
-    color: #333; padding: 15px 20px; font-size: 1rem;
-    border-radius: 0; width: 100%; box-sizing: border-box;
-    white-space: normal; /* На мобільному перенос дозволено */
+  .nav-bg {
+    display: none;
   }
 
-  .catalog-dropdown { display: block; width: 100%; }
-  
-  .catalog-dropdown .dropdown-menu {
-    position: static; opacity: 1; visibility: visible; transform: none;
-    box-shadow: none; background: #fafafa; width: 100%;
-    border-radius: 0; margin: 0; padding: 5px 0; display: none;
-    border-top: 1px solid #eee;
+  .nav-item {
+    width: 100%;
+    height: 60px;
+    border-bottom: 1px solid var(--nav-border);
   }
 
-  .catalog-dropdown:hover .dropdown-menu { display: block; }
-  .dropdown-item a { padding-left: 40px; color: #555; }
-  .dropdown-menu::before { display: none; }
-
-  .mobile-user-link {
-    display: flex; flex-direction: column; margin-top: auto;
-    padding: 20px; background: #f4fcfb; border-top: 2px solid var(--header-text-hover); gap: 10px;
+  .nav-item a {
+    width: 100%;
+    justify-content: flex-start;
+    padding-left: 2rem;
+    font-size: 1.1rem;
   }
 
-  .mobile-login-btn, .mobile-account-btn, .mobile-logout {
-    display: flex; align-items: center; justify-content: center;
-    width: 100%; padding: 12px; border-radius: 6px;
-    font-weight: 600; font-size: 1rem; cursor: pointer; border: none; text-decoration: none;
+  /* Стиль обгортки каталогу на мобільному */
+  .catalog-wrapper-in-header {
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0; /* Dropdown сам зробить відступи */
+    border-bottom: 1px solid var(--nav-border);
+    display: block; /* На мобільному це блок */
   }
-
-  .mobile-login-btn, .mobile-account-btn { background-color: var(--header-text-hover); color: #fff !important; }
-  .mobile-logout { background-color: transparent; border: 1px solid var(--header-text-hover); color: var(--header-text-hover) !important; }
 }

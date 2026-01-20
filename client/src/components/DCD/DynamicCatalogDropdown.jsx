@@ -7,13 +7,20 @@ import { fetchCategoriesAPI } from "../../api/categoryService";
 
 import "./DynamicCatalogDropdown.css";
 
-// Helper для отримання повної перекладеної назви
+// Helper: отримання назви
 const getDisplayName = (item, language) => {
   if (!item) return "Item";
   if (item.names && typeof item.names === 'object') {
     return item.names[language] || item.names.en || item.names.ua || item.key || "Unnamed";
   }
   return item.name || item.category || item.key || "Unnamed";
+};
+
+// Helper: скорочення назви (&)
+const getShortLabel = (text) => {
+  if (!text) return "";
+  if (text.includes("&")) return text.split("&")[0].trim();
+  return text;
 };
 
 export default function DynamicCatalogDropdown({ setMenuActive }) {
@@ -32,8 +39,8 @@ export default function DynamicCatalogDropdown({ setMenuActive }) {
   const isHomePage = location.pathname === "/";
 
   const t = translations?.catalogDropdown || {};
-  const tAuth = translations?.auth || {}; 
 
+  // Завантаження даних
   useEffect(() => {
     let isMounted = true;
     const loadCategories = async () => {
@@ -47,7 +54,7 @@ export default function DynamicCatalogDropdown({ setMenuActive }) {
         }
       } catch (err) {
         console.error("Failed to load categories:", err);
-        if (isMounted) setError(t.error || "Error loading");
+        if (isMounted) setError(t.error || "Error");
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -57,6 +64,7 @@ export default function DynamicCatalogDropdown({ setMenuActive }) {
     return () => { isMounted = false; };
   }, [language, langLoading, t.error]); 
 
+  // Логіка відкриття на головній
   useEffect(() => {
     if (isHomePage) {
       setIsOpen(true); 
@@ -65,6 +73,7 @@ export default function DynamicCatalogDropdown({ setMenuActive }) {
     }
   }, [isHomePage]);
 
+  // Закриття при кліку зовні
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -75,6 +84,7 @@ export default function DynamicCatalogDropdown({ setMenuActive }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isHomePage]);
 
+  // Клік по категорії
   const handleCategoryClick = useCallback((categoryKey, subKey = null) => {
     if (setMenuActive) setMenuActive(false);
     if (!isHomePage) setIsOpen(false);
@@ -86,49 +96,49 @@ export default function DynamicCatalogDropdown({ setMenuActive }) {
     navigate(url);
   }, [isHomePage, navigate, setMenuActive]);
 
-  const toggleDropdown = () => setIsOpen(prev => !prev);
-  const shouldShowList = isOpen; 
-
-  // 🔥 ЛОГІКА СКОРОЧЕННЯ:
-  // Якщо назва містить "&" (наприклад "Sofas & Armchairs"), беремо тільки "Sofas".
-  // Можна додати й інші розділювачі, якщо потрібно (наприклад "/").
-  const getShortLabel = (text) => {
-      if (!text) return "";
-      if (text.includes("&")) return text.split("&")[0].trim();
-      return text;
+  const toggleDropdown = () => {
+    if (!isHomePage) setIsOpen(prev => !prev);
   };
+
+  const shouldShowList = isOpen; 
 
   return (
     <div 
-      className={`catalog-sidebar-wrapper ${isHomePage ? "mode-home" : "mode-overlay"}`} 
+      className={`catalog-wrapper ${isHomePage ? "mode-home" : "mode-overlay"} ${isOpen ? "is-open" : ""}`} 
       ref={dropdownRef}
     >
-      <div className="catalog-header" onClick={toggleDropdown}>
-        <div className="header-content">
-          <FaBars className="burger-icon" />
-          <span className="header-title">
+      {/* HEADER BUTTON (TRIGGER) */}
+      <div className="catalog-trigger" onClick={toggleDropdown}>
+        <div className="trigger-content">
+          <FaBars className="trigger-icon" />
+          <span className="trigger-title">
              {t.title || (language === 'en' ? "PRODUCT CATALOG" : "КАТАЛОГ ТОВАРІВ")}
           </span>
         </div>
+        {/* Стрілка для індикації */}
+        {!isHomePage && (
+           <FaChevronRight className={`trigger-arrow ${isOpen ? "rotated" : ""}`} />
+        )}
       </div>
 
+      {/* DROPDOWN LIST */}
       {shouldShowList && (
         <ul className="catalog-list">
           {isLoading ? (
-            <li className="status-item"><FaSpinner className="spinner" /> 
-               {t.loading || tAuth.loading || (language === 'en' ? "Loading..." : "Завантаження...")}
+            <li className="catalog-status">
+                <FaSpinner className="spinner" /> 
+                <span>{t.loading || "Loading..."}</span>
             </li>
           ) : error ? (
-            <li className="status-item error"><FaExclamationTriangle /> {error}</li>
+            <li className="catalog-status error">
+                <FaExclamationTriangle /> 
+                <span>{error}</span>
+            </li>
           ) : categories.length > 0 ? (
             categories.map((cat) => {
                const key = cat._id || cat.category; 
                const hasChildren = cat.children && cat.children.length > 0;
-               
-               // 1. Отримуємо повну назву
-               const fullName = getDisplayName(cat, language);
-               // 2. Скорочуємо її для меню
-               const shortName = getShortLabel(fullName);
+               const shortName = getShortLabel(getDisplayName(cat, language));
                
                return (
                 <li 
@@ -140,31 +150,30 @@ export default function DynamicCatalogDropdown({ setMenuActive }) {
                   <Link
                     to={`/catalog/${cat.category}`}
                     className="catalog-link"
+                    onClick={(e) => !hasChildren && handleCategoryClick(cat.category)}
                   >
-                    {/* Виводимо скорочену назву */}
-                    <span className="cat-name">{shortName}</span>
-                    {hasChildren && <FaChevronRight className="arrow-icon" />}
+                    <span className="cat-text">{shortName}</span>
+                    {hasChildren && <FaChevronRight className="cat-arrow" />}
                   </Link>
 
+                  {/* SUBMENU POPUP */}
                   {hasChildren && hoveredCategory === cat.category && (
-                    <div className="subcategory-popup">
-                      <ul className="subcategory-list">
+                    <div className="submenu-wrap">
+                      <ul className="submenu-list">
                         {cat.children.map((child, idx) => {
-                          // Те саме для підкатегорій
-                          const childFullName = getDisplayName(child, language);
-                          const childShortName = getShortLabel(childFullName);
+                          const childShortName = getShortLabel(getDisplayName(child, language));
 
                           return (
-                            <li key={child.key || idx} className="subcategory-item">
+                            <li key={child.key || idx} className="submenu-item">
                               <Link 
                                 to={`/catalog/${cat.category}/${child.key}`}
-                                className="subcategory-link"
+                                className="submenu-link"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleCategoryClick(cat.category, child.key);
                                 }}
                               >
-                                <span className="sub-name">{childShortName}</span>
+                                {childShortName}
                               </Link>
                             </li>
                           );
@@ -176,8 +185,8 @@ export default function DynamicCatalogDropdown({ setMenuActive }) {
               );
             })
           ) : (
-            <li className="status-item">
-               {t.empty || (language === 'en' ? "No categories found" : "Категорії відсутні")}
+            <li className="catalog-status">
+               {t.empty || "No items"}
             </li>
           )}
         </ul>

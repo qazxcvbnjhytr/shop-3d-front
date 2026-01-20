@@ -1,83 +1,85 @@
-/* =========================
-   BUY BUTTON (dp-buy-btn)
-   ========================= */
-/* =========================
-   BUY BUTTON (dp-buy-btn)
-   ========================= */
+/* ============================================================
+   COMPONENT: BuyButton (Premium Sharp Design)
+   ============================================================ */
 
 .dp-buy-btn {
-  --dp-primary: var(--cart-primary, var(--color-primary, #00bfae));
-  --dp-primary-dark: var(--cart-primary-dark, var(--color-primary-dark, #009e8e));
-
+  /* Скидання */
+  appearance: none;
+  background-color: #1F1F1F; /* Глибокий графіт */
+  color: #FFFFFF;
+  border: 1px solid #1F1F1F;
+  
+  /* Геометрія */
   width: 100%;
-  margin-top: 12px;
-
-  display: inline-flex;
+  padding: 14px 20px;
+  display: flex;
   align-items: center;
   justify-content: center;
-
-  padding: 12px 14px;
-  border-radius: 14px;
-
-  /* акуратний бордер під “скляний” стиль */
-  border: 1px solid rgba(255, 255, 255, 0.28);
-
-  background: linear-gradient(180deg, var(--dp-primary), var(--dp-primary-dark));
-  color: #ffffff;
-
-  font-weight: 700;
-  letter-spacing: 0.2px;
-
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
-
+  gap: 10px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease,
-    opacity 0.15s ease;
-
   position: relative;
   overflow: hidden;
+  
+  /* Текстура */
+  font-family: 'Tektur', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  
+  /* ⚠️ ГОСТРІ КУТИ */
+  border-radius: 0;
+  
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-/* легкий “shine” зверху */
-.dp-buy-btn::after {
-  content: "";
+/* Ефекти тексту та іконки */
+.btn-label {
+  transition: transform 0.4s ease;
+}
+
+.btn-icon {
   position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    120% 90% at 50% 0%,
-    rgba(255, 255, 255, 0.30),
-    rgba(255, 255, 255, 0) 60%
-  );
-  pointer-events: none;
+  right: -30px; /* Схована за межами спочатку */
+  opacity: 0;
+  transition: all 0.4s ease;
+  display: flex;
+  align-items: center;
 }
 
+/* HOVER СТАН */
 .dp-buy-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.03) saturate(1.05);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+  background-color: #C25E00; /* Палена глина */
+  border-color: #C25E00;
+  box-shadow: 0 10px 20px rgba(194, 94, 0, 0.2);
 }
 
+.dp-buy-btn:hover .btn-label {
+  transform: translateX(-12px); /* Текст совається вліво */
+}
+
+.dp-buy-btn:hover .btn-icon {
+  right: 20px; /* Іконка виїжджає вправо */
+  opacity: 1;
+}
+
+/* ACTIVE (Клік) */
 .dp-buy-btn:active {
-  transform: translateY(0);
-  filter: brightness(0.98);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+  transform: scale(0.98);
+  background-color: #A34F00;
 }
 
-.dp-buy-btn:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--dp-primary) 55%, #ffffff 45%);
-  outline-offset: 3px;
-}
-
-/* fallback якщо color-mix не підтримується */
-@supports not (color: color-mix(in srgb, #000 50%, #fff 50%)) {
-  .dp-buy-btn:focus-visible {
-    outline: 3px solid rgba(0, 191, 174, 0.55);
-  }
-}
-
+/* Стан завантаження (опціонально) */
 .dp-buy-btn:disabled {
-  opacity: 0.55;
+  background-color: #ccc;
+  border-color: #ccc;
   cursor: not-allowed;
-  transform: none;
-  filter: none;
+}
+
+/* Адаптивність */
+@media (max-width: 480px) {
+  .dp-buy-btn {
+    padding: 12px 15px;
+    font-size: 11px;
+  }
 }

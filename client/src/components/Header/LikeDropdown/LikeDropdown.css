@@ -1,238 +1,297 @@
-/* client/src/components/Header/LikeDropdown/LikeDropdown.css */
+/* ============================================================
+   COMPONENT: LikeDropdown
+   THEME: Gallery Cream (Comfort & Stability Update)
+   ============================================================ */
 
+:root {
+  --ld-bg-dropdown: #FFFFFF;
+  --ld-bg-header: #F0EEE6;
+  --ld-text: #1F1F1F;
+  --ld-border: #1F1F1F;
+  --ld-border-soft: #E5E5E5;
+  --ld-accent: #C25E00;
+  
+  /* Трохи швидша анімація для кращого відгуку */
+  --ld-transition: 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  --ld-hover-bg: #1F1F1F;
+  --ld-hover-text: #FFFFFF;
+}
+
+/* 1. MAIN CONTAINER */
 .like-dd {
   position: absolute;
+  /* Прив'язуємо чітко до низу батьківського елемента */
+  top: 58%; 
   right: 0;
-  top: calc(100% + 10px);
-  width: 360px;
-  max-width: calc(100vw - 24px);
+  width: 360px; /* Трохи ширше для комфорту читання назв */
+  
+  /* Компенсуємо рамку, щоб виглядало цілісно */
+  margin-top: 0px; 
+  
+  background-color: var(--ld-bg-dropdown);
+  border: 1px solid var(--ld-border);
+  /* Верхню межу прибираємо, ніби воно виїхало з кнопки */
+  border-top: none; 
+  
+  box-shadow: 10px 15px 40px rgba(0, 0, 0, 0.12); /* М'якша, але глибока тінь */
+  z-index: 1100;
 
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 16px;
-
-  box-shadow:
-    0 18px 45px rgba(0, 0, 0, 0.16),
-    0 2px 10px rgba(0, 0, 0, 0.08);
-
-  overflow: hidden;
-
+  /* Анімація появи */
   opacity: 0;
-  transform: translateY(-6px);
-  pointer-events: none;
-  transition: opacity 160ms ease, transform 160ms ease;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all var(--ld-transition);
+}
+
+/* 🔥 "НЕВИДИМИЙ МІСТ" для комфортного наведення */
+/* Цей блок перекриває щілину між кнопкою і меню, щоб воно не зникало */
+.like-dd::before {
+  content: "";
+  position: absolute;
+  top: -20px; /* Тягнеться вгору до кнопки */
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  z-index: -1;
 }
 
 .like-dd.open {
   opacity: 1;
+  visibility: visible;
   transform: translateY(0);
-  pointer-events: auto;
 }
 
+/* 2. HEADER */
 .like-dd__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-
-  padding: 14px 14px;
-  background: linear-gradient(180deg, rgba(0,0,0,0.03), rgba(0,0,0,0.00));
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 14px 24px; /* Більше повітря по горизонталі */
+  
+  background-color: var(--ld-bg-header);
+  border-bottom: 1px solid var(--ld-border);
 }
 
 .like-dd__title {
-  display: inline-flex;
+  font-family: 'Tektur', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  color: var(--ld-text);
+  display: flex;
   align-items: center;
   gap: 10px;
-
-  font-weight: 800;
-  font-size: 14px;
-  letter-spacing: 0.2px;
 }
 
 .like-dd__count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  min-width: 22px;
-  height: 22px;
-  padding: 0 8px;
-
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.06);
-  font-size: 12px;
-  font-weight: 800;
+  background-color: var(--ld-text);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  min-width: 20px;
+  text-align: center;
+  border-radius: 0;
 }
 
 .like-dd__all {
-  font-size: 12px;
-  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   text-decoration: none;
-  color: rgba(0, 0, 0, 0.72);
-  padding: 8px 10px;
-  border-radius: 999px;
-  transition: background 160ms ease, color 160ms ease;
+  color: #888;
+  transition: color 0.2s;
 }
 
 .like-dd__all:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: rgba(0, 0, 0, 0.92);
+  color: var(--ld-accent);
 }
 
+/* 3. BODY */
 .like-dd__body {
-  padding: 10px 10px;
-  max-height: 420px;
-  overflow: auto;
+  max-height: 400px;
+  overflow-y: auto;
+  overscroll-behavior: contain; /* Щоб не скролилась сторінка, коли скролиш меню */
 }
 
 .like-dd__list {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 8px;
 }
 
+/* 4. ITEM (ROW) */
 .like-dd__item {
-  margin: 0;
-  padding: 0;
+  border-bottom: 1px solid var(--ld-border-soft);
+}
+.like-dd__item:last-child {
+  border-bottom: none;
 }
 
 .like-dd__link {
-  display: grid;
-  grid-template-columns: 52px 1fr auto;
-  align-items: center;
-  gap: 10px;
-
-  padding: 10px;
-  border-radius: 14px;
+  display: flex;
+  align-items: flex-start;
+  padding: 16px 24px; /* Великі зони кліку */
+  gap: 16px;
+  
   text-decoration: none;
-
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.9);
-
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  color: var(--ld-text);
+  background-color: transparent;
+  
+  /* Дуже плавна зміна кольору */
+  transition: background-color 0.2s ease, color 0.1s ease;
 }
 
+/* --- HOVER EFFECT --- */
 .like-dd__link:hover {
-  border-color: rgba(0, 0, 0, 0.12);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.10);
-  transform: translateY(-1px);
+  background-color: var(--ld-hover-bg);
+  cursor: pointer;
 }
 
+/* Інверсія кольорів при наведенні */
+.like-dd__link:hover .like-dd__name { color: var(--ld-hover-text); }
+.like-dd__link:hover .like-dd__old { color: #888; } /* Сірий на чорному читається краще */
+
+/* 5. IMAGE */
 .like-dd__img {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
+  width: 60px;
+  height: 60px;
   object-fit: cover;
-  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0,0,0,0.05); /* Легка рамка */
+  border-radius: 0;
+  background-color: #fff;
+  flex-shrink: 0;
 }
 
+/* 6. META INFO */
 .like-dd__meta {
-  min-width: 0;
-  display: grid;
-  gap: 6px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 60px; /* Вирівнюємо по висоті картинки */
 }
 
 .like-dd__name {
-  font-size: 13px;
-  font-weight: 800;
-  color: rgba(0, 0, 0, 0.90);
-
-  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ld-text);
+  margin-bottom: 4px;
+  
+  /* Обрізка до 2 рядків */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .like-dd__price {
-  display: inline-flex;
-  gap: 8px;
+  font-family: 'Tektur', monospace;
+  font-size: 14px;
+  display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto; /* Притискаємо ціну до низу */
 }
 
 .like-dd__old {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.45);
   text-decoration: line-through;
+  color: #999;
+  font-size: 12px;
 }
 
 .like-dd__now {
-  font-size: 12px;
-  font-weight: 900;
-  color: rgba(0, 0, 0, 0.88);
-}
-
-.like-dd__badge {
-  justify-self: end;
-  align-self: start;
-
-  font-size: 11px;
-  font-weight: 900;
-
-  padding: 6px 8px;
-  border-radius: 999px;
-
-  background: rgba(0, 0, 0, 0.08);
-  color: rgba(0, 0, 0, 0.92);
-}
-
-.like-dd__empty {
-  padding: 18px 10px;
-  text-align: center;
-  font-size: 13px;
   font-weight: 700;
-  color: rgba(0, 0, 0, 0.55);
+  color: var(--ld-accent);
 }
 
+/* 7. BADGE */
+.like-dd__badge {
+  align-self: flex-start; /* Бейдж зверху */
+  background-color: var(--ld-accent);
+  color: #fff;
+  font-family: 'Tektur', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 6px;
+  line-height: 1;
+  border-radius: 0;
+}
+
+/* 8. EMPTY STATE */
+.like-dd__empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #888;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+/* 9. FOOTER */
 .like-dd__footer {
-  padding: 10px 12px 12px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(0, 0, 0, 0.02);
+  padding: 16px 24px;
+  background-color: var(--ld-bg-header);
+  border-top: 1px solid var(--ld-border);
 }
 
 .like-dd__button {
-  display: inline-flex;
-  width: 100%;
-  justify-content: center;
+  display: flex;
   align-items: center;
-
-  text-decoration: none;
-  font-weight: 900;
-  font-weight: 900;
-  font-size: 13px;
-
-  padding: 10px 12px;
-  border-radius: 12px;
-
-  background: rgba(0, 0, 0, 0.86);
+  justify-content: center;
+  width: 100%;
+  height: 48px; /* Зручна висота для кліку */
+  
+  background-color: var(--ld-text);
   color: #fff;
-
-  transition: transform 140ms ease, background 140ms ease, opacity 140ms ease;
+  
+  font-family: 'Tektur', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  
+  border-radius: 0;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .like-dd__button:hover {
-  transform: translateY(-1px);
-  background: rgba(0, 0, 0, 0.92);
+  background-color: var(--ld-accent);
 }
 
 .like-dd__button:active {
-  transform: translateY(0);
-  opacity: 0.92;
+  transform: translateY(1px); /* Ефект натискання */
 }
 
-/* scrollbar cosmetics (optional) */
+/* 10. SCROLLBAR */
 .like-dd__body::-webkit-scrollbar {
-  width: 10px;
-}
-.like-dd__body::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.14);
-  border-radius: 999px;
-  border: 3px solid transparent;
-  background-clip: content-box;
+  width: 5px; /* Трохи ширше, щоб можна було вхопити */
 }
 .like-dd__body::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f5f5f5;
+}
+.like-dd__body::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 0;
+}
+.like-dd__body::-webkit-scrollbar-thumb:hover {
+  background: var(--ld-text);
+}
+
+/* MOBILE */
+@media (max-width: 500px) {
+  .like-dd {
+    width: 300px;
+    right: -70px; /* Зміщення для мобільних, щоб не вилазило */
+  }
+  .like-dd__link {
+    padding: 12px 16px;
+  }
 }

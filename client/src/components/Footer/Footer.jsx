@@ -13,101 +13,80 @@ import Logo from "../Logo/Logo";
 import { useTranslation } from "../../hooks/useTranslation";
 
 export default function Footer() {
-  const { t, loading } = useTranslation();
+  const { t, loading, language } = useTranslation();
 
   if (loading || !t) return null;
 
-  const header = t.header || {};
-  const footer = t.footer || {};
-
-  // Нормалізовані ключі (однаково для UA/EN)
-  const navTitle = footer.navigationTitle || "Navigation";
-  const contactsTitle = footer.contactsTitle || "Contacts";
-  const slogan = footer.mishura || "";
-  const rights = footer.rights || "All rights reserved.";
-
-  const emailText = footer.emailText || "info@meblihub.com";
-  const phoneText = footer.phoneText || "+38 (044) 123-45-67";
-  const address = footer.address || "";
-
-  const navItems = [
-    { to: "/catalog", label: header.catalog || "Catalog" },
-    { to: "/where-to-buy", label: header.whereToBuy || "Where to Buy" },
-    { to: "/news", label: header.news || "News" },
-    { to: "/contacts", label: header.contacts || "Contacts" },
-    { to: "/about", label: header.about || "About" },
-    { to: "/request-price", label: header.requestPrice || "Request Price" },
-    { to: "/download-catalog", label: header.downloadCatalog || "Download Catalog" },
-  ];
-
+  const f = t.footer || {};
   const year = new Date().getFullYear();
 
   return (
     <footer className="footer">
       <div className="footer-container">
-        {/* Column 1 */}
-        <div className="footer-col footer-brand">
-          <div className="footer-logo-wrapper">
-            <Logo title="MebliHub" />
-          </div>
-
-          {slogan && <p className="footer-slogan">{slogan}</p>}
-
-          <div className="footer-social" aria-label="Social links">
-            <a href="https://facebook.com/meblihub" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-              <FaFacebookF />
-            </a>
-            <a href="https://instagram.com/meblihub" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-              <FaInstagram />
-            </a>
-            <a href="https://t.me/meblihub" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
-              <FaTelegramPlane />
-            </a>
+        
+        {/* Колонна 1: Бренд та Підписка */}
+        <div className="footer-col brand-section">
+          <Logo title="MebliHub" />
+          <p className="footer-slogan">{f.mishura || "Створюємо простір для життя."}</p>
+          
+          <div className="footer-newsletter">
+            <h4 className="footer-small-title">{language === 'ua' ? 'Підписка' : 'Newsletter'}</h4>
+            <form className="subscribe-form" onSubmit={(e) => e.preventDefault()}>
+              <input type="email" placeholder="E-mail" />
+              <button type="submit">→</button>
+            </form>
           </div>
         </div>
 
-        {/* Column 2 */}
-        <div className="footer-col footer-nav-col">
-          <h3>{navTitle}</h3>
-          <nav className="footer-nav" aria-label={navTitle}>
+        {/* Колонна 2: Навігація */}
+        <div className="footer-col">
+          <h4 className="footer-small-title">{language === 'ua' ? 'Каталог' : 'Catalog'}</h4>
+          <nav className="footer-nav">
             <ul>
-              {navItems.map((item) => (
-                <li key={item.to}>
-                  <Link to={item.to}>{item.label}</Link>
-                </li>
-              ))}
+              <li><Link to="/catalog/sofas">{language === 'ua' ? 'Дивани' : 'Sofas'}</Link></li>
+              <li><Link to="/catalog/tables">{language === 'ua' ? 'Столи' : 'Tables'}</Link></li>
+              <li><Link to="/catalog/chairs">{language === 'ua' ? 'Стільці' : 'Chairs'}</Link></li>
+              <li><Link to="/collections">{language === 'ua' ? 'Колекції' : 'Collections'}</Link></li>
             </ul>
           </nav>
         </div>
 
-        {/* Column 3 */}
-        <div className="footer-col footer-contacts-col">
-          <h3>{contactsTitle}</h3>
+        {/* Колонна 3: Сервіс та Допомога */}
+        <div className="footer-col">
+          <h4 className="footer-small-title">{language === 'ua' ? 'Сервіс' : 'Service'}</h4>
+          <nav className="footer-nav">
+            <ul>
+              <li><Link to="/delivery">{language === 'ua' ? 'Доставка та оплата' : 'Delivery'}</Link></li>
+              <li><Link to="/warranty">{language === 'ua' ? 'Гарантія' : 'Warranty'}</Link></li>
+              <li><Link to="/designers">{language === 'ua' ? 'Дизайнерам' : 'For Designers'}</Link></li>
+              <li><Link to="/about">{language === 'ua' ? 'Про компанію' : 'About'}</Link></li>
+            </ul>
+          </nav>
+        </div>
 
+        {/* Колонна 4: Контакти */}
+        <div className="footer-col contacts-section">
+          <h4 className="footer-small-title">{language === 'ua' ? 'Контакти' : 'Contacts'}</h4>
           <div className="footer-contacts">
-            <div className="contact-item">
-              <FaEnvelope className="icon" />
-              <a href={`mailto:${emailText}`}>{emailText}</a>
-            </div>
-
-            <div className="contact-item">
-              <FaPhoneAlt className="icon" />
-              <a href={`tel:${phoneText.replace(/[^\d+]/g, "")}`}>{phoneText}</a>
-            </div>
-
-            {address && (
-              <div className="contact-item">
-                <FaMapMarkerAlt className="icon" />
-                <span>{address}</span>
-              </div>
-            )}
+            <a href="tel:+380441234567" className="contact-link"><FaPhoneAlt /> +38 (044) 123-45-67</a>
+            <a href="mailto:info@meblihub.com" className="contact-link"><FaEnvelope /> info@meblihub.com</a>
+            <p className="contact-address"><FaMapMarkerAlt /> {f.address || 'Київ, вул. Архітектора, 12'}</p>
+          </div>
+          <div className="footer-social">
+            <a href="#"><FaFacebookF /></a>
+            <a href="#"><FaInstagram /></a>
+            <a href="#"><FaTelegramPlane /></a>
           </div>
         </div>
       </div>
 
       <div className="footer-bottom">
         <div className="footer-bottom-content">
-          <span>© {year} MebliHub. {rights}</span>
+          <p>© {year} MebliHub. {f.rights || "Всі права захищені."}</p>
+          <div className="footer-legal-links">
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms</Link>
+          </div>
         </div>
       </div>
     </footer>

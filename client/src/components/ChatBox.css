@@ -1,119 +1,228 @@
+/* ============================================================
+   COMPONENT: ChatBox
+   THEME: Gallery Cream (Architectural, Sharp & Contrast)
+   ============================================================ */
+
+:root {
+  --cb-bg: #FFFFFF;            /* Білий фон контейнера */
+  --cb-border: #1F1F1F;        /* Чорна рамка */
+  
+  --cb-msg-me-bg: #1F1F1F;     /* Мої повідомлення (Чорний) */
+  --cb-msg-me-text: #FFFFFF;   /* Мій текст (Білий) */
+  
+  --cb-msg-them-bg: #F0EEE6;   /* Їхні повідомлення (Крем) */
+  --cb-msg-them-text: #1F1F1F; /* Їхній текст (Чорний) */
+  --cb-msg-them-border: #1F1F1F; /* Рамка для "них" */
+  
+  --cb-accent: #C25E00;        /* Палена глина (акцент) */
+  --cb-sys-text: #888888;      /* Системні повідомлення */
+  
+  --cb-font-body: 'Inter', sans-serif;
+  --cb-font-tech: 'Tektur', sans-serif;
+}
+
+/* 1. Main Container */
 .cb {
   display: flex;
   flex-direction: column;
+  width: 100%;
   height: 100%;
-  background: #f8fafc;
+  min-height: 400px; /* Мінімальна висота */
+  max-height: 600px;
+  
+  background-color: var(--cb-bg);
+  border: 1px solid var(--cb-border);
+  
+  /* ⚠️ ГОСТРІ КУТИ */
+  border-radius: 0; 
+  box-shadow: 10px 10px 0 rgba(0,0,0,0.1); /* Жорстка тінь */
+  overflow: hidden;
 }
 
-/* --- Messages List --- */
+/* 2. Messages Area */
 .cb-msgs {
-  flex: 1;
+  flex-grow: 1;
   padding: 20px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  scroll-behavior: smooth;
+  gap: 16px;
+  
+  /* Фонова сітка для технічного вигляду (опціонально) */
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 /* Custom Scrollbar */
-.cb-msgs::-webkit-scrollbar { width: 6px; }
-.cb-msgs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.cb-msgs::-webkit-scrollbar {
+  width: 4px;
+}
+.cb-msgs::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.cb-msgs::-webkit-scrollbar-thumb {
+  background: var(--cb-border);
+  border-radius: 0;
+}
 
-/* --- Message Bubbles --- */
+/* 3. Message Rows */
 .cb-row {
   display: flex;
   width: 100%;
-  margin-bottom: 4px;
 }
 
-.cb-row.me { justify-content: flex-end; }
-.cb-row.them { justify-content: flex-start; }
-.cb-row.sys { justify-content: center; }
+/* Alignments */
+.cb-row.me {
+  justify-content: flex-end; /* Праворуч */
+}
+.cb-row.them {
+  justify-content: flex-start; /* Ліворуч */
+}
+.cb-row.sys {
+  justify-content: center; /* По центру */
+  margin: 10px 0;
+}
 
+/* 4. Message Bubble */
 .cb-bubble {
   max-width: 80%;
   padding: 12px 16px;
-  border-radius: 18px;
   position: relative;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  font-size: 14px;
-  line-height: 1.5;
+  border-radius: 0; /* ⚠️ ГОСТРІ КУТИ */
+  
+  /* Анімація появи */
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Мої повідомлення */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Styles: ME (Black Block) --- */
 .cb-row.me .cb-bubble {
-  background: #2563eb;
-  color: white;
-  border-bottom-right-radius: 4px;
+  background-color: var(--cb-msg-me-bg);
+  color: var(--cb-msg-me-text);
+  /* Ефект "язичка" не робимо, робимо строгі блоки */
+  border: 1px solid var(--cb-msg-me-bg); 
 }
 
-/* Відповіді підтримки */
+/* --- Styles: THEM (Cream Block with Border) --- */
 .cb-row.them .cb-bubble {
-  background: white;
-  color: #1e293b;
-  border: 1px solid #e2e8f0;
-  border-bottom-left-radius: 4px;
+  background-color: var(--cb-msg-them-bg);
+  color: var(--cb-msg-them-text);
+  border: 1px solid var(--cb-msg-them-border);
 }
 
-/* Системні вітання */
+/* --- Styles: SYSTEM (No bubble, just text) --- */
 .cb-row.sys .cb-bubble {
-  background: #f1f5f9;
-  color: #64748b;
-  font-size: 12px;
+  background: transparent;
+  padding: 0;
+  max-width: 90%;
   text-align: center;
-  border-radius: 10px;
+}
+
+.cb-row.sys .cb-text {
+  color: var(--cb-sys-text);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.cb-row.sys .cb-time {
+  display: none; /* Час для системних не потрібен */
+}
+
+/* 5. Text & Time */
+.cb-text {
+  font-family: var(--cb-font-body);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  white-space: pre-wrap; /* Зберігаємо переноси */
+  word-break: break-word;
 }
 
 .cb-time {
-  font-size: 10px;
-  margin-top: 4px;
+  display: block;
+  margin-top: 6px;
+  font-family: var(--cb-font-tech);
+  font-size: 0.65rem;
   opacity: 0.7;
   text-align: right;
+  letter-spacing: 0.05em;
 }
 
-.cb-row.me .cb-time { color: rgba(255, 255, 255, 0.8); }
-
-/* --- Input Zone --- */
+/* 6. Input Area */
 .cb-input {
-  padding: 15px;
-  background: white;
-  border-top: 1px solid #e2e8f0;
   display: flex;
-  gap: 10px;
-  align-items: center;
+  align-items: stretch;
+  border-top: 1px solid var(--cb-border);
+  background-color: #fff;
+  height: 50px;
 }
 
 .cb-input input {
-  flex: 1;
-  background: #f1f5f9;
-  border: 1px solid transparent;
-  padding: 12px 18px;
-  border-radius: 25px;
-  outline: none;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.cb-input input:focus {
-  background: white;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.cb-input button {
-  background: #2563eb;
-  color: white;
+  flex-grow: 1;
   border: none;
-  padding: 10px 18px;
-  border-radius: 20px;
+  padding: 0 20px;
+  font-family: var(--cb-font-body);
+  font-size: 0.95rem;
+  outline: none;
+  background: transparent;
+  color: var(--cb-border);
+}
+
+.cb-input input::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+.cb-input input:disabled {
+  background-color: #f9f9f9;
+  cursor: not-allowed;
+}
+
+/* 7. Send Button */
+.cb-input button {
+  padding: 0 24px;
+  border: none;
+  border-left: 1px solid var(--cb-border); /* Розділювач */
+  background-color: var(--cb-border);      /* Чорна кнопка */
+  color: #fff;
+  
+  font-family: var(--cb-font-tech);
   font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  
   cursor: pointer;
-  transition: opacity 0.2s;
-  font-size: 14px;
+  transition: all 0.2s ease;
+  border-radius: 0;
+}
+
+.cb-input button:hover:not(:disabled) {
+  background-color: var(--cb-accent); /* Помаранчевий при наведенні */
+  color: #fff;
 }
 
 .cb-input button:disabled {
-  opacity: 0.5;
+  background-color: #e0e0e0;
+  color: #999;
+  border-left-color: #e0e0e0;
   cursor: not-allowed;
+}
+
+/* Mobile Adaptation */
+@media (max-width: 480px) {
+  .cb {
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+  
+  .cb-bubble {
+    max-width: 90%;
+  }
 }

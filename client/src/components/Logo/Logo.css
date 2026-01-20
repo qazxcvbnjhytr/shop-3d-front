@@ -1,120 +1,132 @@
-/* Імпорт шрифтів */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+/* ============================================================
+   COMPONENT: Logo
+   THEME: Gallery Cream (Architectural & Sharp)
+   ============================================================ */
 
+/* Змінні (для автономності, якщо потрібно) */
 :root {
-    --logo-color-dark: #2c3e50;
-    --logo-color-accent: #e67e22;
-    --logo-gradient-start: #00bfae;
-    --logo-gradient-end: #a3e635;
-    --logo-font-serif: 'Playfair Display', serif;
-    --logo-font-sans: 'Montserrat', sans-serif;
+  --logo-text: #1F1F1F;       /* Графіт */
+  --logo-bg-icon: #1F1F1F;    /* Фон іконки */
+  --logo-icon-fill: #F0EEE6;  /* Колір самої іконки (крем) */
+  --logo-accent: #C25E00;     /* Палена глина */
 }
 
-/* --- Контейнер --- */
+/* 1. Main Container */
 .site-logo-container {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    cursor: pointer;
-    text-decoration: none;
-    user-select: none;
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-    perspective: 800px; /* Для 3D ефекту */
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Відступ між знаком і текстом */
+  
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  
+  /* Для плавної анімації при наведенні на весь блок */
+  transition: opacity 0.2s ease;
 }
 
-.site-logo-container:active {
-    transform: scale(0.95);
-}
-
-/* --- Іконка (Крісло) --- */
+/* 2. Icon Wrapper (The Monolith) */
 .logo-icon-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    background: rgba(230, 126, 34, 0.08);
-    border-radius: 14px;
-    transition: all 0.45s ease;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  width: 44px; /* Фіксований квадрат */
+  height: 44px;
+  
+  background-color: var(--logo-bg-icon);
+  color: var(--logo-icon-fill);
+  
+  /* ⚠️ ГОСТРІ КУТИ */
+  border-radius: 0; 
+  
+  /* Ефект глибини або плоскості */
+  border: 1px solid var(--logo-bg-icon);
+  
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .logo-icon {
-    font-size: 26px;
-    color: var(--logo-color-accent);
-    transition: transform 0.45s cubic-bezier(0.68, -0.55, 0.27, 1.55), color 0.35s ease;
-    transform-origin: bottom center;
+  font-size: 1.4rem; /* Розмір самої іконки */
+  /* Невеликий нахил для динаміки, якщо хочеться, 
+     але для строгого стилю краще прямо */
+  transform: scale(1); 
+  transition: transform 0.3s ease;
 }
 
-/* Анімація крісла при наведенні */
-.site-logo-container:hover .logo-icon {
-    transform: rotate(-15deg) scale(1.15) translateY(-2px);
-    color: var(--logo-gradient-start);
-}
-
-.site-logo-container:hover .logo-icon-wrapper {
-    background: rgba(230, 126, 34, 0.18);
-    box-shadow: 0 6px 20px rgba(230, 126, 34, 0.25);
-}
-
-/* --- Текст --- */
+/* 3. Typography */
 .logo-title {
-    margin: 0;
-    line-height: 1;
-    display: flex;
-    align-items: baseline;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  margin: 0;
+  padding: 0;
+  
+  font-family: 'Tektur', sans-serif; /* Наш тех/арх шрифт */
+  font-size: 1.5rem; /* Великий, впевнений розмір */
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.02em; /* Щільний кернінг */
+  
+  display: flex;
+  flex-direction: column; /* Варіант для компактності */
+  align-items: flex-start;
+  
+  /* Або в рядок, якщо місця достатньо (розкоментуй нижче) */
+  flex-direction: row; 
+  gap: 2px;
+  align-items: baseline;
+  
+  color: var(--logo-text);
 }
 
-/* "Mebli" */
+/* 4. Text Parts */
 .title-bold {
-    font-family: var(--logo-font-serif);
-    font-size: 1.9rem;
-    font-weight: 700;
-    color: var(--logo-color-dark);
-    letter-spacing: -0.5px;
-    transition: transform 0.3s ease;
+  font-weight: 800; /* Дуже жирний */
+  color: var(--logo-text);
 }
 
-.site-logo-container:hover .title-bold {
-    transform: translateY(-2px);
-}
-
-/* "Hub" */
 .title-light {
-    font-family: var(--logo-font-sans);
-    font-size: 1.9rem;
-    font-weight: 300;
-    margin-left: 3px;
-    background: linear-gradient(135deg, var(--logo-color-dark) 30%, var(--logo-gradient-start) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    transition: all 0.35s ease;
+  font-weight: 300; /* Тонкий "інженерний" */
+  color: var(--logo-text);
+  /* Або можна зробити Hub акцентним кольором: */
+  /* color: var(--logo-accent); */
 }
 
-.site-logo-container:hover .title-light {
-    background: linear-gradient(135deg, var(--logo-gradient-start), var(--logo-gradient-end));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 400;
-    letter-spacing: 1.5px;
-    transform: translateY(-2px);
+/* Додамо "архітектурну крапку" в кінці логотипа */
+.logo-title::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 4px;
+  background-color: var(--logo-accent); /* Помаранчевий квадрат */
+  margin-bottom: 2px; /* Вирівнювання по базовій лінії */
 }
 
-/* --- Адаптивність --- */
-@media (max-width: 768px) {
-    .site-logo-container {
-        gap: 10px;
-    }
-    .logo-icon-wrapper {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-    }
-    .logo-icon {
-        font-size: 20px;
-    }
-    .title-bold, .title-light {
-        font-size: 1.5rem;
-    }
+/* 5. Hover Effects */
+
+/* При наведенні на логотип — квадрат стає помаранчевим */
+.site-logo-container:hover .logo-icon-wrapper {
+  background-color: var(--logo-accent);
+  border-color: var(--logo-accent);
+  color: #fff;
+}
+
+/* Іконка трохи зменшується, ніби натискається */
+.site-logo-container:hover .logo-icon {
+  transform: scale(0.9);
+}
+
+/* 6. Mobile Adaptation */
+@media (max-width: 480px) {
+  .logo-icon-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .logo-icon {
+    font-size: 1.1rem;
+  }
+
+  .logo-title {
+    font-size: 1.2rem;
+  }
 }
